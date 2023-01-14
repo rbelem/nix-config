@@ -24,27 +24,29 @@
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     in
     rec {
-      # Your custom packages
+      # Reusable nixos modules
+      # These are usually stuff to upstream into nixpkgs
+      nixosModules = import ./modules/nixos;
+
+      # Reusable home-manager modules
+      # These are usually stuff to upstream into home-manager
+      homeManagerModules = import ./modules/home-manager;
+
+      # Custom packages and modifications, exported as overlays
+      overlays = import ./overlays;
+
+      # Custom packages
       # Acessible through 'nix build', 'nix shell', etc
       packages = forAllSystems (system:
-        let pkgs = nixpkgs.legacyPackages.${system};
-        in import ./pkgs { inherit pkgs; }
+        import ./pkgs { pkgs = nixpkgs.legacyPackages.${system}; }
       );
+
       # Devshell for bootstrapping
       # Acessible through 'nix develop' or 'nix-shell' (legacy)
       devShells = forAllSystems (system:
         let pkgs = nixpkgs.legacyPackages.${system};
         in import ./shell.nix { inherit pkgs; }
       );
-
-      # Your custom packages and modifications, exported as overlays
-      overlays = import ./overlays;
-      # Reusable nixos modules you might want to export
-      # These are usually stuff you would upstream into nixpkgs
-      nixosModules = import ./modules/nixos;
-      # Reusable home-manager modules you might want to export
-      # These are usually stuff you would upstream into home-manager
-      homeManagerModules = import ./modules/home-manager;
 
       # NixOS configuration entrypoint
       # Available through 'nixos-rebuild --flake .#your-hostname'
