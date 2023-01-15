@@ -1,0 +1,15 @@
+rodrigo: ENC[AES256_GCM,data:AaKK9x8fCaWrUw==,iv:fag6sHGPbvng7CQvhecwsF9uhgU/FHeFxuA727IW2lw=,tag:zSXSQuROYna2L9x1ZPIY9Q==,type:str]
+sops:
+    kms: []
+    gcp_kms:
+        - resource_id: projects/rbelem/locations/global/keyRings/sops/cryptoKeys/nix-config
+          created_at: "2023-01-15T23:14:02Z"
+          enc: CiQALRnOXx2/b9z97jfX0e6Z5D4w5wPTtfiuwcTywHFh3uqUpa0SSQBIY+d6x3YQBuw5s+fBUWfd2rwNe9poiidJI9LHMIBqlPekm6rm7AcgnqOq/c27hj5/sobknWVX8lUpnpJNb85ZzaMmOxHWQZQ=
+    azure_kv: []
+    hc_vault: []
+    age: []
+    lastmodified: "2023-01-15T23:14:51Z"
+    mac: ENC[AES256_GCM,data:8ciO8N+bybeTinwQ4+eSbOMpDxcYNwOPC1bJ4svnt3K/wBSgQKfi1wKbDimpBiSvs2QRYn4S61WG41aBJWFJLjUTeVnZJ0EOgdYhIybce4in+G6Nnr8aaFYdQQWTEwsXfVSsZJmIOiEae8I/CXnPX4jnrnR6tKJgzbUOerGAo8U=,iv:Oj5z7ndx/+2GRKZ1ulLNx26RJsrF1uuUuMs+4Yqc2BQ=,tag:Qf7b9Ubss5oD/PRT3e8adg==,type:str]
+    pgp: []
+    unencrypted_suffix: _unencrypted
+    version: 3.7.3

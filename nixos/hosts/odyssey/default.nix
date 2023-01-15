@@ -11,6 +11,8 @@
     ./sound.nix
 
     ../common/global
+
+    ../../users/rodrigo
   ];
 
   # This value determines the NixOS release from which the default
