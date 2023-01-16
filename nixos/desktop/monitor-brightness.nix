@@ -1,4 +1,4 @@
-{ pkgs, flake, ... }: {
+{ pkgs, lib, flake, ... }: {
   # ddcutils requires i2c
   hardware.i2c.enable = true;
 
@@ -11,7 +11,6 @@
       brightnessctl
     ];
 
-  users.users.${flake.config.people.myself} = {
-    extraGroups = [ "i2c" ];
-  };
+  normalUsers = attrsets.filterAttrs (n: v: v.isNormalUser) users.users
+  users.groups.i2c.members = attrsets.mapAttrsToList (n: v: n) normalUsers
 }
