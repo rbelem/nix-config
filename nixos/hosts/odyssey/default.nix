@@ -1,7 +1,12 @@
 # Samsung Odyssey 2 | NP850XBC-XG1BR
-{ pkgs, ... }: {
+{ pkgs, inputs, ... }: {
 
   imports = [
+    inputs.hardware.nixosModules.common-cpu-intel
+    inputs.hardware.nixosModules.common-gpu-nvidia
+    inputs.hardware.nixosModules.common-pc-ssd
+
+
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ./bootloader.nix
