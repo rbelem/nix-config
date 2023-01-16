@@ -66,7 +66,7 @@
         "rodrigo@odyssey" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages."x86_64-linux";
           extraSpecialArgs = { inherit inputs outputs; };
-          modules = [ ./home-manager/rodrigo/hosts/odyssey.nix ];
+          modules = [ ./home-manager/rodrigo/hosts/odyssey ];
         };
       };
     };
