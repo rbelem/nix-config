@@ -3,6 +3,7 @@
   services.xserver = {
     layout = "br";
     xkbVariant = "nodeadkeys";
+    xkbOptions = "ctrl:nocaps";
   };
 
   # Configure console keymap
