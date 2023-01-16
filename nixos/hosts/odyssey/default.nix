@@ -15,7 +15,7 @@
     ./networking.nix
     ./sound.nix
 
-    ../common/global
+    ../../common
 
     ../../users/rodrigo
 
