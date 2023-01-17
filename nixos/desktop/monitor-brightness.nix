@@ -1,4 +1,4 @@
-{ pkgs, lib, flake, ... }: {
+{ config, pkgs, lib, flake, ... }: {
   # ddcutils requires i2c
   hardware.i2c.enable = true;
 
@@ -11,6 +11,11 @@
       brightnessctl
     ];
 
-  normalUsers = attrsets.filterAttrs (n: v: v.isNormalUser) users.users
-  users.groups.i2c.members = attrsets.mapAttrsToList (n: v: n) normalUsers
+  users.groups.i2c.members = with lib; (
+    let
+      normalUsersObj = attrsets.filterAttrs (n: v: v.isNormalUser) config.users.users;
+      normalUsersList = attrsets.mapAttrsToList (n: v: n) normalUsersObj;
+    in
+      normalUsersList
+  );
 }
