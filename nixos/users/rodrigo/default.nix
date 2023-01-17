@@ -6,7 +6,7 @@
     extraGroups = [
       "networkmanager"
       "wheel"
-    ]
+    ];
 
     passwordFile = config.sops.secrets.rodrigo.path;
     packages = [ pkgs.home-manager ];
