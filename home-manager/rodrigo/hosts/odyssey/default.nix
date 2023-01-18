@@ -14,6 +14,9 @@
     # ./nvim.nix
 
     ../../common/fonts.nix
+
+    ../../apps/tmux
+
     ./apps.nix
   ];
 
