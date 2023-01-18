@@ -8,13 +8,7 @@
       "wheel"
     ];
 
-    passwordFile = config.sops.secrets.rodrigo.path;
     packages = [ pkgs.home-manager ];
-  };
-
-  sops.secrets.rodrigo = {
-    sopsFile = ./rodrigo.sops.yaml;
-    neededForUsers = true;
   };
 
   home-manager.users.rodrigo = import ../../home-manager/rodrigo/hosts/${config.networking.hostName}.nix;
