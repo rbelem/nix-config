@@ -15,6 +15,7 @@
 
     ../../common/fonts.nix
 
+    ../../apps/neovim
     ../../apps/tmux
 
     ./apps.nix
