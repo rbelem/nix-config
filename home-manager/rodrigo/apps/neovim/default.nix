@@ -27,4 +27,14 @@ in {
     source = nvchadConfig;
     recursive = true;
   };
+
+  xdg.configFile."nvim/lua/custom/mappings.lua" = {
+    source = ./lua/custom/mappings.lua;
+    recursive = true;
+  };
+
+  xdg.configFile."nvim/lua/custom/chadrc.lua" = {
+    source = ./lua/custom/chadrc.lua;
+    recursive = true;
+  };
 }
