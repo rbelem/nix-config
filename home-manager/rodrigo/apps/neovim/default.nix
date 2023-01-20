@@ -37,4 +37,14 @@ in {
     source = ./lua/custom/chadrc.lua;
     recursive = true;
   };
+
+  xdg.configFile."nvim/lua/custom/plugins/init.lua" = {
+    source = ./lua/custom/plugins/init.lua;
+    recursive = true;
+  };
+
+  xdg.configFile."nvim/lua/custom/plugins/lspconfig.lua" = {
+    source = ./lua/custom/plugins/lspconfig.lua;
+    recursive = true;
+  };
 }
