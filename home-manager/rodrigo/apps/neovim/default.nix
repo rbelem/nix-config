@@ -10,7 +10,17 @@ let
   };
 in {
   home.packages = with pkgs; [
+    # Installation dependencies
+    gcc
+    unzip
+
+    # Runtime dependencies
+    nodejs
+    python310Packages.pip
+    python3Full
     ripgrep
+    tree-sitter
+    xclip
   ];
 
   xdg.configFile.nvim = {
