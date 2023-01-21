@@ -11,7 +11,9 @@ let
 in {
   home.packages = with pkgs; [
     # Installation dependencies
+    cargo
     gcc
+    rustc
     unzip
 
     # Runtime dependencies
