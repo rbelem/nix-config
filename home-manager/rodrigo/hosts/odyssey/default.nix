@@ -14,11 +14,8 @@
     # ./nvim.nix
 
     ../../common
-
-    ../../apps/neovim
-    ../../apps/tmux
-
-    ./apps.nix
+    ../../apps
+    ../../apps/desktop.nix
   ];
 
   nixpkgs = {
