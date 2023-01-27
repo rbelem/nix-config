@@ -21,11 +21,17 @@
     ];
 
     historyIgnore = [
-      "cd"
+      "bg"
+      "cd *"
       "clear"
+      "env"
       "exit"
+      "fg"
+      "history"
       "htop"
-      "ls"
+      "kill *"
+      "ls *"
+      "ps *"
       "top"
     ];
 
