@@ -35,8 +35,24 @@
       "top"
     ];
 
-    #shellOptions = [
-    #];
+    shellOptions = [
+      # Append to history file rather than replacing it.
+      "histappend"
+
+      # check the window size after each command and, if
+      # necessary, update the values of LINES and COLUMNS.
+      "checkwinsize"
+
+      # Extended globbing.
+      "extglob"
+      "globstar"
+
+      # Warn if closing shell with running jobs.
+      "checkjobs"
+
+      # Store multi-line commands in one history entry
+      "cmdhist"
+    ];
 
     sessionVariables = {
       GCM_CREDENTIAL_STORE = "secretservice";
