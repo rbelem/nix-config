@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 {
   programs.bash = {
     enable = true;
@@ -12,7 +12,7 @@
 
     # Change the file location because certain bash sessions truncate .bash_history file upon close.
     # http://superuser.com/questions/575479/bash-history-truncated-to-500-lines-on-each-login
-    historyFile = "~/.bash_history_unlimited";
+    historyFile = "${config.home.homeDirectory}/.bash_history_";
 
     historyControl = [
       "erasedups"
