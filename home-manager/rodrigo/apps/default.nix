@@ -2,6 +2,7 @@
   imports = [
     ./bash
     ./fzf
+    ./git
     ./neovim
     ./tmux
   ];
