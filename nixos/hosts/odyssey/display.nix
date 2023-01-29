@@ -1,6 +1,8 @@
 { config, ... }: {
   # Make wayland work with nvidia
-  boot.kernelParams = [ "nvidia-drm.modeset=1" ];
+  hardware.nvidia = {
+    modesetting.enable = true;
+  };
 
   services.xserver.enable = true;
 
