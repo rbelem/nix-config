@@ -9,4 +9,7 @@
   environment.systemPackages = with pkgs; [
     libsForQt5.bismuth
   ];
+
+  # Make GTK themes work with Wayland applications
+  programs.dconf.enable = true;
 }
