@@ -9,6 +9,7 @@
 
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./bluetooth.nix
     ./bootloader.nix
     ./display.nix
     ./keyboard.nix
