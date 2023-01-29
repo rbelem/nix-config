@@ -13,6 +13,7 @@
     ./bootloader.nix
     ./display.nix
     ./keyboard.nix
+    ./laptop.nix
     ./networking.nix
     ./sound.nix
 
