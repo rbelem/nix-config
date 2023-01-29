@@ -1,4 +1,9 @@
 { config, ... }: {
+
+  boot.extraModprobeConfig = ''
+    options snd_hda_intel model=alc256-samsung-headphone
+  '';
+
   # Enable sound with pipewire.
   sound.enable = true;
   hardware.pulseaudio.enable = false;
