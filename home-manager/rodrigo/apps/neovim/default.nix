@@ -5,8 +5,8 @@ let
   nvchadConfig = pkgs.fetchFromGitHub {
       owner = "nvchad";
       repo = "nvchad";
-      rev = "b9ec202f79148f60be142f88b11a01d7292b4e74";
-      sha256 = "sha256-8k2gWEIUWV998j6Jsvb2ubEm8zw8nj+lAX7JXJM2bPQ=";
+      rev = "d3ddae598f788140bd965c0f1e4450b9bde8a2a0";
+      sha256 = "sha256-p6NbShmA039vP1BIGmOxwjleuSu3SI8/9qn49Wi+scM=";
   };
 in {
   home.packages = with pkgs; [
