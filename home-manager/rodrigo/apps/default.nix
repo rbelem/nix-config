@@ -11,5 +11,7 @@
     exa
     jq
     lazygit
+    nix-prefetch
+    nixos-option
   ];
 }
