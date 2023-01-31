@@ -6,5 +6,6 @@
 
   programs.neovim.enable = true;
 
-  environment.variables.EDITOR = "nvim";
+  environment.variables.EDITOR = "vi";
+  environment.variables.VISUAL = "vi";
 }
