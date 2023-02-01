@@ -10,8 +10,17 @@ return {
     override_options = {
       ensure_installed = {
         "bash",
+        "diff",
+        "dockerfile",
+        "go",
+        "hcl",
         "lua",
+        "make",
         "nix",
+        "regex",
+        "terraform",
+        "toml",
+        "yaml",
       }
     }
   },
@@ -40,11 +49,18 @@ return {
   ["williamboman/mason.nvim"] = {
     override_options = {
       ensure_installed = {
+        "ansible-language-server",
         "bash-language-server",
+        "dockerfile-language-server",
+        "golangci-lint-langserver",
+        "gopls",
         "lua-language-server",
         "nil",
+        "salt-lsp",
         "shfmt",
         "shellcheck",
+        "terraform-ls",
+        "yaml-language-server",
       }
     }
   },

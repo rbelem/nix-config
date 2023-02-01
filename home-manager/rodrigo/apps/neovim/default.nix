@@ -13,6 +13,7 @@ in {
     # Installation dependencies
     cargo
     gcc
+    go
     rustc
     unzip
 
