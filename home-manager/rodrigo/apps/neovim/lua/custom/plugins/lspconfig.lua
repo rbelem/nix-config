@@ -9,6 +9,7 @@ local servers = {
   "dockerls",
   "gopls",
   "nil_ls",
+  "pylsp",
   "salt_ls",
   "terraformls",
   "yamlls",
