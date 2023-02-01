@@ -1,8 +1,13 @@
-{ config, ... }: {
+{ config, pkgs, ... }: {
 
   boot.extraModprobeConfig = ''
     options snd_hda_intel model=alc256-samsung-headphone
   '';
+
+  environment.systemPackages = with pkgs; [
+    # pulseaudio has pactl, which is needed by zoom-us
+    pulseaudio
+  ];
 
   # Enable sound with pipewire.
   sound.enable = true;
