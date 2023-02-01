@@ -405,9 +405,14 @@ tmux_conf_uninstall_plugins_on_reload=true
 # visit https://github.com/tmux-plugins for available plugins
 #set -g @plugin 'tmux-plugins/tmux-copycat'
 #set -g @plugin 'tmux-plugins/tmux-cpu'
-#set -g @plugin 'tmux-plugins/tmux-resurrect'
-#set -g @plugin 'tmux-plugins/tmux-continuum'
-#set -g @continuum-restore 'on'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+## Restore Neovim sessions
+set -g @resurrect-strategy-nvim 'session'
+## Restore Panes
+set -g @resurrect-capture-pane-contents 'on'
+## Restore last saved environment (automatically)
+set -g @continuum-restore 'on'
 
 
 # -- custom variables ----------------------------------------------------------
