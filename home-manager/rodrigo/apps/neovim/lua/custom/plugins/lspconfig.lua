@@ -4,6 +4,7 @@ local capabilities = require("plugins.configs.lspconfig").capabilities
 
 local lspconfig = require "lspconfig"
 local servers = {
+  "bashls",
   "nil_ls",
 }
 

@@ -9,6 +9,7 @@ return {
   ["nvim-treesitter/nvim-treesitter"] = {
     override_options = {
       ensure_installed = {
+        "bash",
         "lua",
         "nix",
       }
@@ -39,8 +40,11 @@ return {
   ["williamboman/mason.nvim"] = {
     override_options = {
       ensure_installed = {
+        "bash-language-server",
         "lua-language-server",
         "nil",
+        "shfmt",
+        "shellcheck",
       }
     }
   },
@@ -57,6 +61,13 @@ return {
       require('session_manager').setup {
         autoload_mode = require('session_manager.config').AutoloadMode.Disabled,
       }
+    end,
+  },
+
+  ["jose-elias-alvarez/null-ls.nvim"] = {
+    after = "nvim-lspconfig",
+    config = function()
+      require "custom.plugins.null-ls"
     end,
   },
 }

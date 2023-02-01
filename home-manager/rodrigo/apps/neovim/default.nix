@@ -49,4 +49,9 @@ in {
     source = ./lua/custom/plugins/lspconfig.lua;
     recursive = true;
   };
+
+  xdg.configFile."nvim/lua/custom/plugins/null-ls.lua" = {
+    source = ./lua/custom/plugins/null-ls.lua;
+    recursive = true;
+  };
 }
