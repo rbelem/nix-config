@@ -22,15 +22,14 @@
 
     historyIgnore = [
       "bg"
-      "cd *"
+      "cd"
       "clear"
       "env"
       "exit"
       "fg"
       "history"
       "htop"
-      "kill *"
-      "ls *"
+      "ls"
       "ps *"
       "top"
     ];
