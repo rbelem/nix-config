@@ -68,6 +68,7 @@ return {
         "salt-lsp",
         "shfmt",
         "shellcheck",
+        "stylua",
         "terraform-ls",
         "yaml-language-server",
       }
