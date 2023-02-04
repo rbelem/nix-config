@@ -23,8 +23,6 @@
 
     ../../desktop/kde.nix
     ../../desktop/monitor-brightness.nix
-
-    ../../shell/neovim.nix
   ];
 
   # This value determines the NixOS release from which the default

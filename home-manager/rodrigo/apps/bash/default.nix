@@ -93,9 +93,6 @@
 
       e = "nvim";
       ee = "nvim \"$(fzf)\"";
-      v = "nvim";
-      vi = "nvim";
-      vim = "nvim";
 
       tmp = "cd $(mktemp -d)";
     };
