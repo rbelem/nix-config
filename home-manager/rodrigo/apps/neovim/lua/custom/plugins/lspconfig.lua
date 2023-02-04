@@ -8,6 +8,7 @@ local servers = {
   "bashls",
   "dockerls",
   "gopls",
+  "jsonls",
   "marksman",
   "nil_ls",
   "pylsp",
