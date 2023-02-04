@@ -14,6 +14,7 @@ local servers = {
   "pylsp",
   "salt_ls",
   "terraformls",
+  "tsserver",
   "yamlls",
 }
 

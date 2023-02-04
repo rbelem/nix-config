@@ -7,8 +7,12 @@ end
 local b = null_ls.builtins
 
 local sources = {
+  b.code_actions.eslint_d,
+
+  b.formatting.deno_fmt,
   b.formatting.gofmt,
   b.formatting.goimports,
+  b.formatting.prettier.with { filetypes = { "html", "markdown", "css" } },
   b.formatting.shfmt,
   b.formatting.stylua,
   b.formatting.terraform_fmt,

@@ -18,6 +18,7 @@ in {
     unzip
 
     # Runtime dependencies
+    deno
     nodejs
     python310Packages.pip
     python3Full

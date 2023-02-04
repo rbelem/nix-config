@@ -10,6 +10,7 @@ return {
     override_options = {
       ensure_installed = {
         "bash",
+        "css",
         "diff",
         "dockerfile",
         "git_rebase",
@@ -18,6 +19,8 @@ return {
         "gitignore",
         "go",
         "hcl",
+        "html",
+        "javascript",
         "json",
         "lua",
         "make",
@@ -28,6 +31,7 @@ return {
         "regex",
         "terraform",
         "toml",
+        "typescript",
         "yaml",
       }
     }
@@ -59,7 +63,9 @@ return {
       ensure_installed = {
         "ansible-language-server",
         "bash-language-server",
+        "css-lsp",
         "dockerfile-language-server",
+        "eslint_d",
         "golangci-lint-langserver",
         "gopls",
         "json-lsp",
@@ -72,6 +78,7 @@ return {
         "shellcheck",
         "stylua",
         "terraform-ls",
+        "typescript-language-server",
         "yaml-language-server",
       }
     }
