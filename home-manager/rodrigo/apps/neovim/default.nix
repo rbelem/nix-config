@@ -24,6 +24,7 @@ in {
     python3Full
     ripgrep
     tree-sitter
+    wl-clipboard
     xclip
   ];
 
