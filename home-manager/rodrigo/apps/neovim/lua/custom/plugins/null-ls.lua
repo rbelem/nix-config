@@ -7,12 +7,14 @@ end
 local b = null_ls.builtins
 
 local sources = {
-  -- Shell
+  b.formatting.gofmt,
+  b.formatting.goimports,
   b.formatting.shfmt,
   b.formatting.stylua,
   b.formatting.terraform_fmt,
+
   b.diagnostics.shellcheck.with { diagnostics_format = "#{m} [#{c}]" },
-  b.diagnostics.golangci_lint,
+  b.diagnostics.golangci_lint.with { extra_args = { "--enable-all" } },
 }
 
 null_ls.setup {
