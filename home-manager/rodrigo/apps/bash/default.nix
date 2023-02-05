@@ -95,6 +95,8 @@
       ee = "nvim \"$(fzf)\"";
 
       tmp = "cd $(mktemp -d)";
+
+      cd = "z";
     };
 
     initExtra = ''
