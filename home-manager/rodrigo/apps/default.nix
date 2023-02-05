@@ -1,7 +1,6 @@
 { config, pkgs, ... }: {
   imports = [
     ./bash
-    ./fzf
     ./git
     ./neovim
     ./tmux
@@ -16,6 +15,9 @@
 
   programs.exa.enable = true;
   programs.exa.enableAliases = true;
+
+  programs.fzf.enable = true;
+  programs.fzf.tmux.enableShellIntegration = true;
 
   programs.zoxide.enable = true;
   programs.zoxide.enableBashIntegration = true;
