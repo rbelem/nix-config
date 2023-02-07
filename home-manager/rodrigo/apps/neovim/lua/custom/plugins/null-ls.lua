@@ -28,6 +28,12 @@ local sources = {
   -- lua
   b.formatting.stylua,
 
+  -- nix
+  b.code_actions.statix,
+  b.diagnostics.statix,
+  b.formatting.nixfmt,
+  b.formatting.nixpkgs_fmt,
+
   -- shell
   b.diagnostics.shellcheck.with { diagnostics_format = "#{m} [#{c}]" },
   b.formatting.shfmt,

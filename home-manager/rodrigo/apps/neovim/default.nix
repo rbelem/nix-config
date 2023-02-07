@@ -19,10 +19,13 @@ in {
 
     # Runtime dependencies
     deno
+    nixfmt
+    nixpkgs-fmt
     nodejs
     python310Packages.pip
     python3Full
     ripgrep
+    statix
     tree-sitter
     wl-clipboard
     xclip
