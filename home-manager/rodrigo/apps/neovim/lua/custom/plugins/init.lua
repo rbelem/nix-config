@@ -66,6 +66,7 @@ return {
         "css-lsp",
         "dockerfile-language-server",
         "eslint_d",
+        "gitlint",
         "golangci-lint-langserver",
         "gopls",
         "json-lsp",

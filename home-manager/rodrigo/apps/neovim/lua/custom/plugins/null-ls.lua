@@ -7,6 +7,11 @@ end
 local b = null_ls.builtins
 
 local sources = {
+  -- git
+  b.diagnostics.gitlint,
+  b.code_actions.gitrebase,
+  b.code_actions.gitsigns,
+
   -- go
   b.diagnostics.golangci_lint.with { extra_args = { "--enable-all" } },
   b.formatting.gofmt,
