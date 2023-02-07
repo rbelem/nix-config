@@ -7,6 +7,11 @@ end
 local b = null_ls.builtins
 
 local sources = {
+  -- general
+  b.diagnostics.trail_space,
+  b.formatting.trim_newlines,
+  b.formatting.trim_whitespace,
+
   -- docker
   b.diagnostics.hadolint,
 
