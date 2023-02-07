@@ -15,6 +15,7 @@ local servers = {
   "salt_ls",
   "taplo",
   "terraformls",
+  "tflint",
   "tsserver",
   "yamlls",
 }
