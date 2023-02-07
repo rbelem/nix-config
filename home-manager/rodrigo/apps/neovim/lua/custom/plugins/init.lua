@@ -81,6 +81,7 @@ return {
         "shfmt",
         "shellcheck",
         "stylua",
+        "taplo",
         "terraform-ls",
         "typescript-language-server",
         "yaml-language-server",

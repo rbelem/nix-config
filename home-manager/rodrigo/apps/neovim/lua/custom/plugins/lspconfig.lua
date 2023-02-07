@@ -13,6 +13,7 @@ local servers = {
   "nil_ls",
   "pylsp",
   "salt_ls",
+  "taplo",
   "terraformls",
   "tsserver",
   "yamlls",

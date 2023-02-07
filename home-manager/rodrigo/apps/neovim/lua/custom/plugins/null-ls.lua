@@ -44,6 +44,9 @@ local sources = {
   -- terraform
   b.diagnostics.tfsec,
   b.formatting.terraform_fmt,
+
+  -- toml
+  b.formatting.taplo,
 }
 
 null_ls.setup {
