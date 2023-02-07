@@ -68,6 +68,8 @@ return {
         "eslint_d",
         "gitlint",
         "golangci-lint-langserver",
+        "goimports",
+        "goimports-reviser",
         "gopls",
         "json-lsp",
         "lua-language-server",

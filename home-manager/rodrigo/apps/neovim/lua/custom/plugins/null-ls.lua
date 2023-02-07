@@ -16,6 +16,7 @@ local sources = {
   b.diagnostics.golangci_lint.with { extra_args = { "--enable-all" } },
   b.formatting.gofmt,
   b.formatting.goimports,
+  b.formatting.goimports_reviser,
 
   -- html
   b.formatting.prettier.with { filetypes = { "html", "markdown", "css" } },
