@@ -71,6 +71,7 @@ return {
         "goimports",
         "goimports-reviser",
         "gopls",
+        "hadolint",
         "json-lsp",
         "lua-language-server",
         "marksman",

@@ -7,6 +7,9 @@ end
 local b = null_ls.builtins
 
 local sources = {
+  -- docker
+  b.diagnostics.hadolint,
+
   -- git
   b.diagnostics.gitlint,
   b.code_actions.gitrebase,
