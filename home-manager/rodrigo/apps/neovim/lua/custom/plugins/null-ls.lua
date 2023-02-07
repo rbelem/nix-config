@@ -39,6 +39,7 @@ local sources = {
   b.formatting.shfmt,
 
   -- terraform
+  b.diagnostics.tfsec,
   b.formatting.terraform_fmt,
 }
 

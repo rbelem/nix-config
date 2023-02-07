@@ -26,6 +26,7 @@ in {
     python3Full
     ripgrep
     statix
+    tfsec
     tree-sitter
     wl-clipboard
     xclip
