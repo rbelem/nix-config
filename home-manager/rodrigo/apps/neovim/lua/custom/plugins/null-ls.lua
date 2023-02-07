@@ -50,6 +50,10 @@ local sources = {
 
   -- toml
   b.formatting.taplo,
+
+  -- yaml
+  b.diagnostics.yamllint,
+  b.formatting.yamlfmt,
 }
 
 null_ls.setup {

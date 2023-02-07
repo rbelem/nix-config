@@ -86,7 +86,9 @@ return {
         "terraform-ls",
         "tflint",
         "typescript-language-server",
+        "yamlfmt",
         "yaml-language-server",
+        "yamllint",
       }
     }
   },
