@@ -41,6 +41,9 @@ local sources = {
   b.diagnostics.shellcheck.with { diagnostics_format = "#{m} [#{c}]" },
   b.formatting.shfmt,
 
+  -- spell checker
+  b.diagnostics.codespell,
+
   -- terraform
   b.diagnostics.tfsec,
   b.formatting.terraform_fmt,

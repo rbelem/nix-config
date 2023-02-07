@@ -63,6 +63,7 @@ return {
       ensure_installed = {
         "ansible-language-server",
         "bash-language-server",
+        "codespell",
         "css-lsp",
         "dockerfile-language-server",
         "eslint_d",
