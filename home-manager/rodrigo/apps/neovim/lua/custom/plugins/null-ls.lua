@@ -7,18 +7,27 @@ end
 local b = null_ls.builtins
 
 local sources = {
-  b.code_actions.eslint_d,
-
-  b.formatting.deno_fmt,
+  -- go
+  b.diagnostics.golangci_lint.with { extra_args = { "--enable-all" } },
   b.formatting.gofmt,
   b.formatting.goimports,
-  b.formatting.prettier.with { filetypes = { "html", "markdown", "css" } },
-  b.formatting.shfmt,
-  b.formatting.stylua,
-  b.formatting.terraform_fmt,
 
+  -- html
+  b.formatting.prettier.with { filetypes = { "html", "markdown", "css" } },
+
+  -- javascript
+  b.code_actions.eslint_d,
+  b.formatting.deno_fmt,
+
+  -- lua
+  b.formatting.stylua,
+
+  -- shell
   b.diagnostics.shellcheck.with { diagnostics_format = "#{m} [#{c}]" },
-  b.diagnostics.golangci_lint.with { extra_args = { "--enable-all" } },
+  b.formatting.shfmt,
+
+  -- terraform
+  b.formatting.terraform_fmt,
 }
 
 null_ls.setup {
