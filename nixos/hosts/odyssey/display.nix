@@ -1,5 +1,5 @@
 { config, ... }: {
-  boot.kernelParams = [ "nvidia.NVreg_EnableBacklightHandler=0" ];
+  boot.kernelParams = [ "nvidia.NVreg_RegistryDwords=EnableBrightnessControl=1" ];
   # Make wayland work with nvidia
   hardware.nvidia = {
     modesetting.enable = true;
