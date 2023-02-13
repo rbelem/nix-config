@@ -1,12 +1,12 @@
 { pkgs, config, ... }:
 let
   # cli to update the sha256
-  # nix-prefetch fetchFromGitHub --owner nvchad --repo nvchad --rev b9ec202f79148f60be142f88b11a01d7292b4e74
+  # nix-prefetch fetchFromGitHub --owner nvchad --repo nvchad --rev 32b0a008a96a3dd04675659e45a676b639236a98
   nvchadConfig = pkgs.fetchFromGitHub {
       owner = "nvchad";
       repo = "nvchad";
-      rev = "eac36d40bb2214ceb2527e8a5915e28fa2506a54";
-      sha256 = "sha256-VWh6o0k+3RMhpqbRqTzsD2ceNRpsPDzm+MDqUFI6WqQ=";
+      rev = "32b0a008a96a3dd04675659e45a676b639236a98";
+      sha256 = "sha256-IfVcysO6LTm7xFv5m7+GExmplj0P+IVGSeoMCT9qvBY=";
   };
 in {
   home.packages = with pkgs; [
