@@ -11,6 +11,7 @@
     kate
     keybase-gui
     logseq
+    signal-desktop
     thunderbird
   ];
 }
