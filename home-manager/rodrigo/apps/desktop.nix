@@ -1,5 +1,6 @@
 { config, pkgs, ... }: {
   home.packages = with pkgs; [
+    ark
     brave
     calibre
     discord
