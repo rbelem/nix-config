@@ -13,5 +13,6 @@
     logseq
     signal-desktop
     thunderbird
+    zoom-us
   ];
 }
