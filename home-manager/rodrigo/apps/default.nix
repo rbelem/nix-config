@@ -1,6 +1,7 @@
 { config, pkgs, ... }: {
   imports = [
     ./bash
+    ./devbox
     ./git
     ./neovim
     ./tmux
