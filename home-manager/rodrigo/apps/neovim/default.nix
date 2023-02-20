@@ -22,8 +22,8 @@ in {
     nixfmt
     nixpkgs-fmt
     nodejs
-    python310Packages.pip
-    python3Full
+    # python deps installed by
+    # ../python
     ripgrep
     statix
     tfsec

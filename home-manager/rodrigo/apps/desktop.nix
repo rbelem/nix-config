@@ -1,4 +1,8 @@
 { config, pkgs, ... }: {
+  imports = [
+    ./python
+  ];
+
   home.packages = with pkgs; [
     ark
     brave
