@@ -61,31 +61,66 @@ return {
   ["williamboman/mason.nvim"] = {
     override_options = {
       ensure_installed = {
-        "ansible-language-server",
-        "bash-language-server",
+        -- general
         "codespell",
+
+        -- ansible
+        "ansible-language-server",
+
+        -- css
         "css-lsp",
+
+        -- docker
         "dockerfile-language-server",
-        "eslint_d",
+        "hadolint",
+
+        -- git
         "gitlint",
+
+        -- go
         "golangci-lint-langserver",
         "goimports",
         "goimports-reviser",
         "gopls",
-        "hadolint",
+
+        -- javascript
+        "eslint_d",
+
+        -- json
         "json-lsp",
+
+        -- lua
         "lua-language-server",
+        "stylua",
+
+        -- markdown
         "marksman",
+
+        -- nix
         "nil",
+
+        -- python
         "python-lsp-server",
+
+        -- saltstack
         "salt-lsp",
+
+        -- shellscript
+        "bash-language-server",
         "shfmt",
         "shellcheck",
-        "stylua",
-        "taplo",
+
+        -- terraform
         "terraform-ls",
         "tflint",
+
+        -- toml
+        "taplo",
+
+        -- typescript
         "typescript-language-server",
+
+        -- yaml
         "yamlfmt",
         "yaml-language-server",
         "yamllint",
