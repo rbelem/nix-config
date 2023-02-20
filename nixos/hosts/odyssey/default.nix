@@ -21,6 +21,7 @@
 
     ../../users/rodrigo
 
+    ../../desktop/fonts.nix
     ../../desktop/kde.nix
     ../../desktop/monitor-brightness.nix
   ];
