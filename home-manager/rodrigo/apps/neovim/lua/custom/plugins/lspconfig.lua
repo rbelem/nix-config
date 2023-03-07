@@ -11,6 +11,7 @@ local servers = {
   "jsonls",
   "marksman",
   "nil_ls",
+  "perlnavigator",
   "pylsp",
   "salt_ls",
   "taplo",

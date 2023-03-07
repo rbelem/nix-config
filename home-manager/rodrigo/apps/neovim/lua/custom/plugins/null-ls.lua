@@ -42,6 +42,9 @@ local sources = {
   b.formatting.nixfmt,
   b.formatting.nixpkgs_fmt,
 
+  -- perl
+  b.formatting.perltidy,
+
   -- shell
   b.diagnostics.shellcheck.with { diagnostics_format = "#{m} [#{c}]" },
   b.formatting.shfmt,

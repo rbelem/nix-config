@@ -27,6 +27,7 @@ return {
         "markdown",
         "markdown_inline",
         "nix",
+        "perl",
         "python",
         "regex",
         "terraform",
@@ -98,6 +99,9 @@ return {
 
         -- nix
         "nil",
+
+        -- perl
+        "perlnavigator",
 
         -- python
         "python-lsp-server",

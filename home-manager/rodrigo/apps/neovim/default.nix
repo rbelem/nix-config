@@ -24,6 +24,7 @@ in {
     nodejs
     # python deps installed by
     # ../python
+    perl536Packages.PerlTidy
     ripgrep
     statix
     tfsec
