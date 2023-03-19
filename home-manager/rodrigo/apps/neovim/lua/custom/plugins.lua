@@ -68,6 +68,28 @@ local plugins = {
       }
     end,
   },
+
+  {
+    "zbirenbaum/copilot.lua",
+    event = "InsertEnter",
+    lazy = false,
+    config = function()
+      vim.schedule(function()
+        require("copilot").setup()
+      end)
+    end,
+  },
+
+  {
+    "zbirenbaum/copilot-cmp",
+    lazy = false,
+    config = function()
+      require("copilot_cmp").setup()
+    end,
+    dependencies = {
+      "zbirenbaum/copilot.lua",
+    },
+  },
 }
 
 return plugins
