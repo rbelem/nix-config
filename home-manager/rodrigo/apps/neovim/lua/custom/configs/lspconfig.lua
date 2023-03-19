@@ -1,8 +1,8 @@
--- custom.plugins.lspconfig
 local on_attach = require("plugins.configs.lspconfig").on_attach
 local capabilities = require("plugins.configs.lspconfig").capabilities
 
 local lspconfig = require "lspconfig"
+
 local servers = {
   "ansiblels",
   "bashls",
@@ -27,3 +27,6 @@ for _, lsp in ipairs(servers) do
     capabilities = capabilities,
   }
 end
+
+--
+-- lspconfig.pyright.setup { blabla}

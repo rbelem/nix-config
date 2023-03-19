@@ -1,7 +1,6 @@
--- lua/custom/mappings
+---@type MappingsTable
 local M = {}
 
--- add this table only when you want to disable default keys
 M.disabled = {
   i = {
     -- go to  beginning and end
@@ -29,6 +28,14 @@ M.disabled = {
     ["<C-c>"] = "",
   }
 }
+
+M.general = {
+  n = {
+    [";"] = { ":", "enter command mode", opts = { nowait = true } },
+  },
+}
+
+-- more keybinds!
 
 M.nvimtree = {
   plugin = true,

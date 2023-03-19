@@ -5,8 +5,8 @@ let
   nvchadConfig = pkgs.fetchFromGitHub {
       owner = "nvchad";
       repo = "nvchad";
-      rev = "32b0a008a96a3dd04675659e45a676b639236a98";
-      sha256 = "sha256-IfVcysO6LTm7xFv5m7+GExmplj0P+IVGSeoMCT9qvBY=";
+      rev = "8214d4e8589aa6625c6db077b8eb199e7ebc1929";
+      sha256 = "sha256-1w7RPJ5EXD73pkeJV0mt3daaMHPiRQgtHT/OUErfDi4=";
   };
 in {
   home.packages = with pkgs; [
@@ -39,33 +39,23 @@ in {
     vimAlias = true;
   };
 
-  xdg.configFile.nvim = {
-    source = nvchadConfig;
+  xdg.configFile."nvim/init.lua" = {
+    source = nvchadConfig + "/init.lua";
     recursive = true;
   };
 
-  xdg.configFile."nvim/lua/custom/mappings.lua" = {
-    source = ./lua/custom/mappings.lua;
+  xdg.configFile."nvim/lua/core" = {
+    source = nvchadConfig + "/lua/core";
     recursive = true;
   };
 
-  xdg.configFile."nvim/lua/custom/chadrc.lua" = {
-    source = ./lua/custom/chadrc.lua;
+  xdg.configFile."nvim/lua/plugins" = {
+    source = nvchadConfig + "/lua/plugins";
     recursive = true;
   };
 
-  xdg.configFile."nvim/lua/custom/plugins/init.lua" = {
-    source = ./lua/custom/plugins/init.lua;
-    recursive = true;
-  };
-
-  xdg.configFile."nvim/lua/custom/plugins/lspconfig.lua" = {
-    source = ./lua/custom/plugins/lspconfig.lua;
-    recursive = true;
-  };
-
-  xdg.configFile."nvim/lua/custom/plugins/null-ls.lua" = {
-    source = ./lua/custom/plugins/null-ls.lua;
+  xdg.configFile."nvim/lua/custom" = {
+    source = ./lua/custom;
     recursive = true;
   };
 }

@@ -27,11 +27,11 @@ local sources = {
   b.formatting.goimports_reviser,
 
   -- html
-  b.formatting.prettier.with { filetypes = { "html", "markdown", "css" } },
+  b.formatting.prettier.with { filetypes = { "html", "markdown", "css" } }, -- so prettier works only on these filetypes
 
   -- javascript
   b.code_actions.eslint_d,
-  b.formatting.deno_fmt,
+  b.formatting.deno_fmt, -- choosed deno for ts/js files cuz its very fast!
 
   -- lua
   b.formatting.stylua,
