@@ -26,6 +26,12 @@ M.disabled = {
 
     -- Copy all
     ["<C-c>"] = "",
+
+    -- new horizontal term
+    ["<leader>h"] = "",
+
+    -- new vertical term
+    ["<leader>v"] = "",
   }
 }
 
