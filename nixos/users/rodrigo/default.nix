@@ -8,8 +8,6 @@
       "wheel"
     ];
 
-    packages = [ pkgs.home-manager ];
+    packages = [ pkgs.devbox ];
   };
-
-  services.geoclue2.enable = true;
 }

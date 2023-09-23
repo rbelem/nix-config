@@ -57,6 +57,11 @@
           specialArgs = { inherit inputs outputs; };
           modules = [ ./nixos/hosts/odyssey ];
         };
+        # Laptop
+        book3 = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs outputs; };
+          modules = [ ./nixos/hosts/book3 ];
+        };
       };
 
       # Standalone home-manager configuration entrypoint
@@ -67,6 +72,12 @@
           pkgs = nixpkgs.legacyPackages."x86_64-linux";
           extraSpecialArgs = { inherit inputs outputs; };
           modules = [ ./home-manager/rodrigo/hosts/odyssey ];
+        };
+        # Laptop
+        "rodrigo@book3" = home-manager.lib.homeManagerConfiguration {
+          pkgs = nixpkgs.legacyPackages."x86_64-linux";
+          extraSpecialArgs = { inherit inputs outputs; };
+          modules = [ ./home-manager/rodrigo/hosts/book3 ];
         };
       };
     };
