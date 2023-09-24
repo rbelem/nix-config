@@ -25,6 +25,7 @@
   ];
 
   # Services
+  services.flatpak.enable = true;
   services.geoclue2.enable = true;
   services.printing.enable = true;
 
