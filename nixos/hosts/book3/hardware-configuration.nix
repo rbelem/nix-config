@@ -4,47 +4,85 @@
 { config, lib, pkgs, modulesPath, ... }:
 
 {
-  imports = [
-    (modulesPath + "/installer/scan/not-detected.nix")
-  ];
+  imports =
+    [ (modulesPath + "/installer/scan/not-detected.nix")
+    ];
 
-  boot.initrd.availableKernelModules = [
-    "xhci_pci"
-    "thunderbolt"
-    "nvme"
-    "uas"
-    "usbhid"
-    "usb_storage"
-    "sd_mod"
-    "rtsx_usb_sdmmc"
-  ];
+  boot.initrd.availableKernelModules = [ "xhci_pci" "thunderbolt" "nvme" "usbhid" "usb_storage" "sd_mod" "rtsx_usb_sdmmc" ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
-  fileSystems."/" = {
-    device = "/dev/disk/by-uuid/c32e96ac-2777-437c-845d-68b7ca5c7c50";
-    fsType = "ext4";
-  };
+  fileSystems."/" =
+    { device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
+      fsType = "btrfs";
+      options = [ "subvol=rootfs" "compress=lzo" ];
+    };
 
-  fileSystems."/home" = {
-    device = "/dev/disk/by-uuid/2860c633-978c-49c1-9cbd-fce875548860";
-    fsType = "btrfs";
-  };
+  fileSystems."/nix" =
+    { device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
+      fsType = "btrfs";
+      options = [ "subvol=nix" "compress=lzo" "noatime" ];
+    };
 
-  fileSystems."/boot" = {
-    device = "/dev/disk/by-uuid/0035-9EE8";
-    fsType = "vfat";
-  };
+  fileSystems."/snapshots" =
+    { device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
+      fsType = "btrfs";
+      options = [ "subvol=snapshots" "compress=lzo" "noatime" ];
+    };
 
-  fileSystems."/swap" = {
-    device = "/dev/disk/by-uuid/545353bc-238b-4a5b-bb48-94832272e0b2";
-    fsType = "btrfs";
-    # Note these options effect the entire BTRFS filesystem and not just this
-    # volume, with the exception of `"subvol=swap"`, the other options are
-    # repeated in my other `fileSystem` mounts
-    options = [ "subvol=swap" "compress=lzo" "noatime" ];
-  };
+  fileSystems."/swap" =
+    { device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
+      fsType = "btrfs";
+      options = [ "subvol=swap" "noatime" ];
+    };
+
+  fileSystems."/var/cache" =
+    { device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
+      fsType = "btrfs";
+      options = [ "subvol=varcache" "compress=lzo" "noatime" ];
+    };
+
+  fileSystems."/var/log" =
+    { device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
+      fsType = "btrfs";
+      options = [ "subvol=varlog" "compress=lzo" "noatime" ];
+    };
+
+  fileSystems."/var/tmp" =
+    { device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
+      fsType = "btrfs";
+      options = [ "subvol=vartmp" "compress=lzo" "noatime" ];
+    };
+
+  fileSystems."/var/lib/systemd/coredump" =
+    { device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
+      fsType = "btrfs";
+      options = [ "subvol=systemdcoredump" "compress=lzo" "noatime" ];
+    };
+
+  fileSystems."/boot" =
+    { device = "/dev/disk/by-uuid/0035-9EE8";
+      fsType = "vfat";
+    };
+
+  fileSystems."/home" =
+    { device = "/dev/disk/by-uuid/35de4991-aab4-43a5-ba5f-aa91b9f730fc";
+      fsType = "btrfs";
+      options = [ "subvol=homefs" "compress=lzo" ];
+    };
+
+  fileSystems."/home/rodrigo/.cache" =
+    { device = "/dev/disk/by-uuid/35de4991-aab4-43a5-ba5f-aa91b9f730fc";
+      fsType = "btrfs";
+      options = [ "subvol=.cache" "compress=lzo" "noatime" ];
+    };
+
+  fileSystems."/home/rodrigo/.var/cache" =
+    { device = "/dev/disk/by-uuid/35de4991-aab4-43a5-ba5f-aa91b9f730fc";
+      fsType = "btrfs";
+      options = [ "subvol=.varcache" "compress=lzo" "noatime" ];
+    };
 
   swapDevices = [{
     device = "/swap/swapfile";
