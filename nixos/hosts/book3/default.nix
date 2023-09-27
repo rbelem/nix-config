@@ -14,6 +14,7 @@
     ./keyboard.nix
     ./networking.nix
     ./sound.nix
+    ./touch.nix
 
     ../../common
 
