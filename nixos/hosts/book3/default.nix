@@ -28,6 +28,8 @@
     ../../desktop/monitor-brightness.nix
   ];
 
+  boot.tmp.cleanOnBoot = true;
+
   # Services
   services = {
     flatpak.enable = true;
