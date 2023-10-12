@@ -18,13 +18,12 @@
     sops-nix.url = "github:mic92/sops-nix";
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }@inputs:
-    let
+  outputs = { self, nixpkgs, home-manager, ... } @ inputs: let
       inherit (self) outputs;
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
+      supportedSystems = [ "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     in
-    rec {
+    {
       # Reusable nixos modules
       # These are usually stuff to upstream into nixpkgs
       nixosModules = import ./modules/nixos;
@@ -34,7 +33,7 @@
       homeManagerModules = import ./modules/home-manager;
 
       # Custom packages and modifications, exported as overlays
-      overlays = import ./overlays;
+      overlays = import ./overlays { inherit inputs outputs; };
 
       # Custom packages
       # Acessible through 'nix build', 'nix shell', etc

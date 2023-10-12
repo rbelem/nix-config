@@ -1,5 +1,4 @@
-# This file defines overlays
-{
+{ inputs, ... }: {
   # This one brings our custom packages from the 'pkgs' directory
   additions = final: _prev: import ../pkgs { pkgs = final; };
 
@@ -7,8 +6,24 @@
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: {
-    # example = prev.example.overrideAttrs (oldAttrs: rec {
-    # ...
-    # });
+    devbox =  prev.devbox.override rec {
+      buildGoModule = args: prev.buildGoModule.override { go = prev.go_1_21; } ( args // {
+        version = "0.7.0";
+        src = final.fetchFromGitHub {
+          owner = "jetpack-io";
+          repo = "devbox";
+          rev = "0.7.0";
+          sha256 = "sha256-G3ThYV2rmczSyFNnshyHvKOTt4Rv7m7bryJSsT/KG+Q=";
+        };
+        # To update the vendorHash
+        # vendorHash = final.lib.fakeHash;
+        vendorHash = "sha256-fDh+6aBrHUqioNbgufFiD5c4i8SGAYrUuFXgTVmhrRE=";
+        ldflags = [
+          "-s"
+          "-w"
+          "-X go.jetpack.io/devbox/internal/build.Version=0.7.0"
+        ];
+      });
+    };
   };
 }

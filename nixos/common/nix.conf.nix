@@ -1,4 +1,4 @@
-{ config, ... }: {
+{ inputs, outputs, ... }: {
   nix = {
     settings = {
       experimental-features = [ "nix-command" "flakes" "repl-flake" ];
@@ -6,5 +6,8 @@
     };
   };
 
-  nixpkgs.config.allowUnfree = true;
+  nixpkgs = {
+    overlays = builtins.attrValues outputs.overlays;
+    config.allowUnfree = true;
+  };
 }
