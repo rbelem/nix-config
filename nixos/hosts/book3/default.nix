@@ -14,6 +14,7 @@
     ./id.nix
     ./keyboard.nix
     ./networking.nix
+    ./nvme.nix
     ./sensors.nix
     ./sound.nix
     ./touch.nix
