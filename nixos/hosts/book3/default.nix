@@ -27,10 +27,11 @@
   ];
 
   # Services
-  services.flatpak.enable = true;
-  services.geoclue2.enable = true;
-  services.printing.enable = true;
-
+  services = {
+    flatpak.enable = true;
+    geoclue2.enable = true;
+    printing.enable = true;
+  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
