@@ -17,4 +17,5 @@
   };
 
   security.pam.services.sddm.enableKwallet = true;
+  security.pam.services.kdewallet.enableKwallet = true;
 }
