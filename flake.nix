@@ -44,11 +44,6 @@
       # Available through 'nixos-rebuild --flake .#your-hostname'
       nixosConfigurations = rec {
         # Laptop
-        odyssey = nixpkgs.lib.nixosSystem {
-          specialArgs = { inherit inputs outputs; };
-          modules = [ ./nixos/hosts/odyssey ];
-        };
-        # Laptop
         book3 = nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs outputs; };
           modules = [ ./nixos/hosts/book3 ];
