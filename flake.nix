@@ -5,10 +5,6 @@
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    # Home manager
-    home-manager.url = "github:nix-community/home-manager";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
-
     hardware.url = "github:nixos/nixos-hardware";
 
     # Shameless plug: looking for a way to nixify your themes and make
@@ -27,10 +23,6 @@
       # Reusable nixos modules
       # These are usually stuff to upstream into nixpkgs
       nixosModules = import ./modules/nixos;
-
-      # Reusable home-manager modules
-      # These are usually stuff to upstream into home-manager
-      homeManagerModules = import ./modules/home-manager;
 
       # Custom packages and modifications, exported as overlays
       overlays = import ./overlays { inherit inputs outputs; };
@@ -60,23 +52,6 @@
         book3 = nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs outputs; };
           modules = [ ./nixos/hosts/book3 ];
-        };
-      };
-
-      # Standalone home-manager configuration entrypoint
-      # Available through 'home-manager --flake .#your-username@your-hostname'
-      homeConfigurations = {
-        # Laptop
-        "rodrigo@odyssey" = home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages."x86_64-linux";
-          extraSpecialArgs = { inherit inputs outputs; };
-          modules = [ ./home-manager/rodrigo/hosts/odyssey ];
-        };
-        # Laptop
-        "rodrigo@book3" = home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages."x86_64-linux";
-          extraSpecialArgs = { inherit inputs outputs; };
-          modules = [ ./home-manager/rodrigo/hosts/book3 ];
         };
       };
     };
