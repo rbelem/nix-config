@@ -32,9 +32,17 @@
 
   # Services
   services = {
+    avahi = {
+      enable = true;
+      nssmdns = true;
+      openFirewall = true;
+    };
     flatpak.enable = true;
     geoclue2.enable = true;
-    printing.enable = true;
+    printing = {
+      enable = true;
+      drivers = [ pkgs.epson-escpr ];
+    };
   };
 
   # This value determines the NixOS release from which the default
