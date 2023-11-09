@@ -17,5 +17,8 @@
       "boot.shell_on_fail"
     ];
     initrd.verbose = false;
+    kernel.sysctl = { "vm.swappiness" = 100; };
   };
+
+  zramSwap.enable = true;
 }
