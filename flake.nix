@@ -10,11 +10,9 @@
     # Shameless plug: looking for a way to nixify your themes and make
     # everything match nicely? Try nix-colors!
     # nix-colors.url = "github:misterio77/nix-colors";
-
-    sops-nix.url = "github:mic92/sops-nix";
   };
 
-  outputs = { self, nixpkgs, home-manager, ... } @ inputs: let
+  outputs = { self, nixpkgs, ... } @ inputs: let
       inherit (self) outputs;
       supportedSystems = [ "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
