@@ -6,7 +6,6 @@
       timeout = 1;
     };
 
-    consoleLogLevel = 0;
     kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "quiet"
@@ -16,8 +15,15 @@
       "udev.log_priority=3"
       "boot.shell_on_fail"
     ];
-    initrd.verbose = false;
     kernel.sysctl = { "vm.swappiness" = 100; };
+
+    consoleLogLevel = 0;
+    plymouth.enable = true;
+    initrd = {
+      verbose = false;
+      # Show the plymouth login screen to unlock luks
+      systemd.enable = true;
+    };
   };
 
   zramSwap.enable = true;
