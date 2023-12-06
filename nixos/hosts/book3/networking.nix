@@ -10,4 +10,10 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
+
+  # Restart NetworkManager after suspend
+  systemd.services.NetworkManager = {
+    wantedBy = [ "suspend.target" ];
+    after = [ "suspend.target" ];
+  };
 }
