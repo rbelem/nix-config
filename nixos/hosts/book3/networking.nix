@@ -1,4 +1,4 @@
-{ config, ... }: {
+{ config, pkgs, ... }: {
   networking.hostName = "book3"; # Define your hostname.
 
   # Enables wireless support via wpa_supplicant.
@@ -12,8 +12,22 @@
   networking.networkmanager.enable = true;
 
   # Restart NetworkManager after suspend
-  systemd.services.NetworkManager = {
+  systemd.services.nmcli-radio-on = {
     wantedBy = [ "suspend.target" ];
     after = [ "suspend.target" ];
+    script =
+      ''
+        sleep 10
+        ${pkgs.networkmanager}/bin/nmcli radio wifi on
+      '';
+    serviceConfig.Type = "oneshot";
+  };
+
+  # Restart NetworkManager after suspend
+  systemd.services.nmcli-radio-off = {
+    wantedBy = [ "suspend.target" ];
+    before = [ "suspend.target" ];
+    script = "${pkgs.networkmanager}/bin/nmcli radio wifi off";
+    serviceConfig.Type = "oneshot";
   };
 }
