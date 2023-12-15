@@ -26,6 +26,7 @@
     ../../desktop/fonts.nix
     ../../desktop/kde.nix
     ../../desktop/monitor-brightness.nix
+    ../../desktop/waydroid.nix
   ];
 
   boot.tmp.cleanOnBoot = true;
