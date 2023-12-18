@@ -1,5 +1,6 @@
 { config, ... }: {
   imports = [
+    ./alien.nix
     ./locales.nix
     ./nix.conf.nix
     ./timezone.nix
