@@ -44,6 +44,9 @@
       enable = true;
       drivers = [ pkgs.epson-escpr ];
     };
+    udev.packages = [
+      pkgs.android-udev-rules
+    ];
   };
 
   # This value determines the NixOS release from which the default
