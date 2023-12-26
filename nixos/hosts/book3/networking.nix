@@ -13,21 +13,15 @@
 
   # Restart NetworkManager after suspend
   systemd.services.nmcli-radio-on = {
+    enable = true;
     wantedBy = [ "suspend.target" ];
-    after = [ "suspend.target" ];
+    after = [ "systemd-suspend.service" ];
     script =
       ''
-        sleep 10
+        ${pkgs.networkmanager}/bin/nmcli radio wifi off
+        sleep 3
         ${pkgs.networkmanager}/bin/nmcli radio wifi on
       '';
-    serviceConfig.Type = "oneshot";
-  };
-
-  # Restart NetworkManager after suspend
-  systemd.services.nmcli-radio-off = {
-    wantedBy = [ "suspend.target" ];
-    before = [ "suspend.target" ];
-    script = "${pkgs.networkmanager}/bin/nmcli radio wifi off";
     serviceConfig.Type = "oneshot";
   };
 }
