@@ -8,24 +8,24 @@
   modifications = final: prev: {
     devbox =  prev.devbox.override rec {
       buildGoModule = args: prev.buildGoModule.override { go = prev.go_1_21; } ( args // {
-        version = "0.8.5";
+        version = "0.8.7";
         src = final.fetchFromGitHub {
           owner = "jetpack-io";
           repo = "devbox";
-          rev = "0.8.5";
+          rev = "0.8.7";
           # To update the sha256
           # sha256 = final.lib.fakeHash;
-          sha256 = "sha256-Vgke4CTVU5KW7iDyzk6P1ab5nOyICblvJtUQTISc2jg=";
+          sha256 = "sha256-v4wHSk3W01gausdh96I1ljeWN1QcY0+FHnSfVSqr9io=";
 
         };
         # To update the vendorHash
         # vendorHash = final.lib.fakeHash;
-        vendorHash = "sha256-rP3vktCfmUeZhc0DaU2osVryNabsnaWWyfFYFy7W1pc=";
+        vendorHash = "sha256-8G1JX4vdpDAicx6A9Butl8XTjszlHMbh34pJVQyzEs4=";
 
         ldflags = [
           "-s"
           "-w"
-          "-X go.jetpack.io/devbox/internal/build.Version=0.8.5"
+          "-X go.jetpack.io/devbox/internal/build.Version=0.8.7"
         ];
       });
     };
