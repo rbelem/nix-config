@@ -1,9 +1,9 @@
 { config, ... }: {
   # Configure keymap in X11
-  services.xserver = {
+  services.xserver.xkb = {
     layout = "br";
-    xkbVariant = "nodeadkeys";
-    xkbOptions = "ctrl:nocaps,lv3:ralt_switch_multikey";
+    variant = "nodeadkeys";
+    options = "ctrl:nocaps,lv3:ralt_switch_multikey";
   };
 
   # Configure console keymap
