@@ -46,6 +46,7 @@
     };
     udev.packages = [
       pkgs.android-udev-rules
+      pkgs.qmk-udev-rules
     ];
   };
 

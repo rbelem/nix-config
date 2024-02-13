@@ -8,4 +8,6 @@
 
   # Configure console keymap
   console.keyMap = "br-abnt2";
+
+  hardware.keyboard.qmk.enable = true;
 }
