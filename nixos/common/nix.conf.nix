@@ -1,6 +1,7 @@
 { inputs, outputs, ... }: {
   nix = {
     settings = {
+      max-jobs = 1;
       experimental-features = [ "nix-command" "flakes" "repl-flake" ];
       system-features = [ "kvm" "big-parallel" ];
     };
