@@ -7,25 +7,25 @@
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: {
     devbox =  prev.devbox.override rec {
-      buildGoModule = args: prev.buildGoModule.override { go = prev.go_1_21; } ( args // {
-        version = "0.9.1";
+      buildGoModule = args: prev.buildGoModule.override { go = prev.go_1_22; } ( args // {
+        version = "0.10.0-dev";
         src = final.fetchFromGitHub {
           owner = "jetpack-io";
           repo = "devbox";
-          rev = "0.9.1";
+          rev = "0.10.0-dev";
           # To update the sha256
           # sha256 = final.lib.fakeHash;
-          sha256 = "sha256-3KZWXVwvzy3mZkh6pGZpeQQp2aU4V9TyBcJXU4Au4Rs=";
+          sha256 = "sha256-Kulmjh7oYwK5g2gndYT9jpuqM2bDUHw0ivOuXBypsxU=";
 
         };
         # To update the vendorHash
         # vendorHash = final.lib.fakeHash;
-        vendorHash = "sha256-8G1JX4vdpDAicx6A9Butl8XTjszlHMbh34pJVQyzEs4=";
+        vendorHash = "sha256-QnmU8+J+5IIajfVQ5XPrtuo2ELB7AD56KsHsT8wLDws=";
 
         ldflags = [
           "-s"
           "-w"
-          "-X go.jetpack.io/devbox/internal/build.Version=0.9.1"
+          "-X go.jetpack.io/devbox/internal/build.Version=0.10.0-dev"
         ];
       });
     };
