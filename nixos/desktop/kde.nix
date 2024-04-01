@@ -14,6 +14,7 @@
 
   # Make GTK themes work with Wayland applications
   programs.dconf.enable = true;
+  programs.kdeconnect.enable = true;
 
   xdg.portal = {
     enable = true;
