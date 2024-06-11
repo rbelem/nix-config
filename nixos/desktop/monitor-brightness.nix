@@ -6,6 +6,7 @@
     [
       # ddcutil can manage *external* monitor's brightness
       ddcutil
+      ddcui
 
       # This can control the laptop display.
       brightnessctl
