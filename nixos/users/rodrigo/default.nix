@@ -4,7 +4,9 @@
     isNormalUser = true;
     shell = pkgs.bash;
     extraGroups = [
+      "corectrl"
       "networkmanager"
+      "video"
       "wheel"
     ];
 

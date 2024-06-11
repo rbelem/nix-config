@@ -6,6 +6,18 @@
       timeout = 1;
     };
 
+    extraModulePackages = with config.boot.kernelPackages; [
+      v4l2loopback
+    ];
+    kernelModules = [
+      "v4l2loopback"
+      "snd-aloop"
+    ];
+
+    extraModprobeConfig = ''
+      options v4l2loopback video_nr=42 exclusive_caps=1 max_width=4096 max_height=4096 card_label="Virtual Webcam"
+    '';
+
     kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "quiet"
