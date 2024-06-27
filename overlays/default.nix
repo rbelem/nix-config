@@ -7,21 +7,22 @@
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: rec {
     go = prev.go_1_22.overrideAttrs (finalAttrs: previousAttrs: rec {
-      version = "1.22.4";
+      version = "1.22.5";
 
       src = final.fetchurl {
         url = "https://go.dev/dl/go${version}.src.tar.gz";
-        sha256 = "sha256-/tcgZ45yinyjC6jR3tHKr+J9FgKPqwIyuLqOIgCPt4Q=";
+        # sha256 = final.lib.fakeHash;
+        sha256 = "sha256-rJxyPyJJaa7mJLw0/TTJ4T8qIS11xxyAfeZEu0bhEvY=";
       };
 
     });
     devbox =  prev.devbox.override rec {
       buildGoModule = args: prev.buildGoModule.override { go = go; } ( args // {
-        version = "0.12.0-devb)";
+        version = "0.12.0)";
         src = final.fetchFromGitHub {
           owner = "jetify-com";
           repo = "devbox";
-          rev = "0.12.0-devb";
+          rev = "0.12.0";
           # To update the sha256
           # sha256 = final.lib.fakeHash;
           sha256 = "sha256-+bnFaopmK8Yz2XSkN3wPiipoO5TsRD0IuAKUlx1KvKM=";
@@ -34,7 +35,7 @@
         ldflags = [
           "-s"
           "-w"
-          "-X go.jetify.com/devbox/internal/build.Version=0.12.0-devb"
+          "-X go.jetify.com/devbox/internal/build.Version=0.12.0"
         ];
       });
     };
