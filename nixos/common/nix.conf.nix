@@ -2,7 +2,7 @@
   nix = {
     settings = {
       max-jobs = 1;
-      experimental-features = [ "nix-command" "flakes" "repl-flake" ];
+      experimental-features = [ "nix-command" "flakes" ];
       system-features = [ "kvm" "big-parallel" ];
     };
   };
