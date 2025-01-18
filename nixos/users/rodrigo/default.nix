@@ -10,6 +10,9 @@
       "wheel"
     ];
 
-    packages = [ pkgs.devbox ];
+    packages = [
+      pkgs.devbox
+      pkgs.ghostty
+    ];
   };
 }
