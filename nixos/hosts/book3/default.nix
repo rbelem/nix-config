@@ -23,6 +23,7 @@
 
     ../../users/rodrigo
 
+    ../../desktop/android.nix
     ../../desktop/fonts.nix
     ../../desktop/kde.nix
     ../../desktop/monitor-brightness.nix
