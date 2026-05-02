@@ -17,6 +17,7 @@
 
     extraModprobeConfig = ''
       options v4l2loopback video_nr=42 exclusive_caps=1 max_width=4096 max_height=4096 card_label="Virtual Webcam"
+      options iwlwifi power_save=1
     '';
 
     kernelPackages = pkgs.linuxPackages_latest;
