@@ -33,6 +33,8 @@
 
   boot.tmp.cleanOnBoot = true;
 
+  hardware.enableAllFirmware = true;
+
   # Services
   services = {
     avahi = {
