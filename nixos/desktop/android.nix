@@ -1,3 +1,5 @@
 { pkgs, lib, ... }: {
-  programs.adb.enable = true;
+  services.udev.packages = [
+    pkgs.android-tools
+  ];
 }
