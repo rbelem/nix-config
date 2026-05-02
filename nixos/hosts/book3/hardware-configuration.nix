@@ -15,7 +15,7 @@
       "rtsx_usb_sdmmc"
     ];
     initrd.kernelModules = [ ];
-    kernelModules = [ "kvm-intel" ];
+    kernelModules = [ "kvm-intel" "ntsync" ];
     extraModulePackages = [ ];
   };
 
