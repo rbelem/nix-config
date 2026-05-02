@@ -13,6 +13,9 @@
     packages = [
       pkgs.devbox
       pkgs.ghostty
+      pkgs.exfat
+      pkgs.exfatprogs
+      pkgs.ntfs3g
     ];
   };
 }
