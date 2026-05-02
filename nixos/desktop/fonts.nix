@@ -12,7 +12,7 @@
       roboto-mono
       roboto-slab
       gyre-fonts
-      ubuntu_font_family
+      ubuntu-classic
       courier-prime
       gelasio
       merriweather
