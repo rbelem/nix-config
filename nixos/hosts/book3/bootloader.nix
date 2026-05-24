@@ -36,8 +36,18 @@
       "i915.enable_dc=2"
       # SOF audio DSP power saving
       "snd-sof-pci.power_save=1"
+      # Suspend mode: s2idle (freeze) for Samsung Galaxy Book
+      # Try "mem_sleep_default=deep" if S3 is supported
+      "mem_sleep_default=s2idle"
     ];
-    kernel.sysctl = { "vm.swappiness" = 100; };
+    kernel.sysctl = {
+      "vm.swappiness" = 100;
+      # Kernel hardening
+      "kernel.kptr_restrict" = 2;
+      "kernel.dmesg_restrict" = 1;
+      "net.ipv4.conf.all.rp_filter" = 1;
+      "net.ipv4.tcp_syncookies" = 1;
+    };
 
     consoleLogLevel = 0;
     plymouth.enable = true;

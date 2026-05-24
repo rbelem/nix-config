@@ -35,6 +35,16 @@
 
   hardware.enableAllFirmware = true;
 
+  # Power management
+  services.logind = {
+    lidSwitch = "suspend";
+    lidSwitchExternalPower = "suspend";
+    lidSwitchDocked = "ignore";
+  };
+
+  # Thunderbolt device authorization daemon
+  services.hardware.bolt.enable = true;
+
   # Services
   services = {
     avahi = {

@@ -18,5 +18,16 @@
       merriweather
       source-sans-pro
     ];
+    fontconfig = {
+      defaultFonts = {
+        serif = [ "DejaVu Serif" ];
+        sansSerif = [ "DejaVu Sans" ];
+        monospace = [ "Roboto Mono" ];
+      };
+      hinting.enable = true;
+      hinting.style = "slight";
+      subpixel.rgba = "rgb";
+      subpixel.lcdfilter = "light";
+    };
   };
 }
