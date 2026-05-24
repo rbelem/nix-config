@@ -2,7 +2,7 @@
 
   services = {
     displayManager = {
-      defaultSession = "plasma6";
+      defaultSession = "plasma";
       sddm = {
         enable = true;
         wayland.enable = true;
