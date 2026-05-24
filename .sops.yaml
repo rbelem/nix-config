@@ -1,3 +1,0 @@
-creation_rules:
-  - path_regex: ^(.+/)?.*\.sops\.ya?ml$
-    gcp_kms: 'projects/rbelem/locations/global/keyRings/sops/cryptoKeys/nix-config'

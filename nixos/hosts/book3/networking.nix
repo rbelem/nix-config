@@ -14,6 +14,8 @@
   networking.networkmanager.enable = true;
   networking.networkmanager.wifi.backend = "iwd";
 
+  # Firewall
+  networking.firewall.enable = true;
 
   # Restart NetworkManager after suspend
   systemd.services.nmcli-radio-on = {
