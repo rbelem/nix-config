@@ -28,6 +28,14 @@
       "rd.udev.log_level=3"
       "udev.log_priority=3"
       "boot.shell_on_fail"
+      # Backlight control for Samsung Galaxy Book
+      "acpi_backlight=native"
+      # Intel GPU power saving
+      "i915.enable_fbc=1"
+      "i915.enable_psr=1"
+      "i915.enable_dc=2"
+      # SOF audio DSP power saving
+      "snd-sof-pci.power_save=1"
     ];
     kernel.sysctl = { "vm.swappiness" = 100; };
 
@@ -41,4 +49,7 @@
   };
 
   zramSwap.enable = true;
+
+  # Dynamic power profiles (integrates with KDE Power Management)
+  services.power-profiles-daemon.enable = true;
 }

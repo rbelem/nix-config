@@ -23,49 +23,49 @@
     "/" = {
       device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
       fsType = "btrfs";
-      options = [ "subvol=rootfs" "compress=lzo" ];
+      options = [ "subvol=rootfs" "compress=zstd" "noatime" "ssd" "discard=async" ];
     };
 
     "/nix" = {
       device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
       fsType = "btrfs";
-      options = [ "subvol=nix" "compress=lzo" "noatime" ];
+      options = [ "subvol=nix" "compress=zstd" "noatime" "ssd" "discard=async" ];
     };
 
     "/snapshots" = {
       device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
       fsType = "btrfs";
-      options = [ "subvol=snapshots" "compress=lzo" "noatime" ];
+      options = [ "subvol=snapshots" "compress=zstd" "noatime" "ssd" "discard=async" ];
     };
 
     "/swap" = {
       device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
       fsType = "btrfs";
-      options = [ "subvol=swap" "noatime" ];
+      options = [ "subvol=swap" "noatime" "ssd" "discard=async" ];
     };
 
     "/var/cache" = {
       device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
       fsType = "btrfs";
-      options = [ "subvol=varcache" "compress=lzo" "noatime" ];
+      options = [ "subvol=varcache" "compress=zstd" "noatime" "ssd" "discard=async" ];
     };
 
     "/var/log" = {
       device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
       fsType = "btrfs";
-      options = [ "subvol=varlog" "compress=lzo" "noatime" ];
+      options = [ "subvol=varlog" "compress=zstd" "noatime" "ssd" "discard=async" ];
     };
 
     "/var/tmp" = {
       device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
       fsType = "btrfs";
-      options = [ "subvol=vartmp" "compress=lzo" "noatime" ];
+      options = [ "subvol=vartmp" "compress=zstd" "noatime" "ssd" "discard=async" ];
     };
 
     "/var/lib/systemd/coredump" = {
       device = "/dev/disk/by-uuid/93ef5a4d-6ffb-49b0-8dc3-307105961945";
       fsType = "btrfs";
-      options = [ "subvol=systemdcoredump" "compress=lzo" "noatime" ];
+      options = [ "subvol=systemdcoredump" "compress=zstd" "noatime" "ssd" "discard=async" ];
     };
 
     "/boot" = {
@@ -76,19 +76,19 @@
     "/home" = {
       device = "/dev/disk/by-uuid/35de4991-aab4-43a5-ba5f-aa91b9f730fc";
       fsType = "btrfs";
-      options = [ "subvol=homefs" "compress=lzo" ];
+      options = [ "subvol=homefs" "compress=zstd" "noatime" "ssd" "discard=async" ];
     };
 
     "/home/rodrigo/.cache" = {
       device = "/dev/disk/by-uuid/35de4991-aab4-43a5-ba5f-aa91b9f730fc";
       fsType = "btrfs";
-      options = [ "subvol=.cache" "compress=lzo" "noatime" ];
+      options = [ "subvol=.cache" "compress=zstd" "noatime" "ssd" "discard=async" ];
     };
 
     "/home/rodrigo/.var/cache" = {
       device = "/dev/disk/by-uuid/35de4991-aab4-43a5-ba5f-aa91b9f730fc";
       fsType = "btrfs";
-      options = [ "subvol=.varcache" "compress=lzo" "noatime" ];
+      options = [ "subvol=.varcache" "compress=zstd" "noatime" "ssd" "discard=async" ];
     };
   };
 
