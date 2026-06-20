@@ -382,7 +382,6 @@ int check_lock_status(void) { return 0; }
 int check_noauth_referrer(void) { return 0; }
 int check_user_agent(void) { return 0; }
 int check_xss_blacklist(void) { return 0; }
-int chld_reap(void) { return 0; }
 int clean_ban_ip_timeout(void) { return 0; }
 int config_iptv_vlan(void) { return 0; }
 void cprintf(const char *f, ...) { }
@@ -426,57 +425,30 @@ int ej_wps_info_5g(int e, void *w, int a, char **v) { return 0; }
 int ej_wps_info_5g_2(int e, void *w, int a, char **v) { return 0; }
 int ether_atoe(const char *p, void *e) { return 0; }
 int file2str(const char *p, char *b, int l) { return 0; }
-int file_lock(const char *n) { return 0; }
-int file_unlock(const char *n) { return 0; }
 int filter_ban_ip(void) { return 0; }
 char *find_word(char *s, const char *w) { return NULL; }
-void free_caches(void) { }
-int f_size(void) { return 0; }
-int f_write_string(const char *p, const char *s) { return 0; }
 int gen_asus_token_cookie(void) { return 0; }
 int gen_guestnetwork_pass(void) { return 0; }
-int gen_random_string(char *b, int l) { return 0; }
 int get_2g_hwaddr(void) { return 0; }
-int get_ddns_macaddr(void) { return 0; }
-int get_discovery_ssid(void) { return 0; }
 int get_encrypt_wifi_status(void) { return 0; }
-int get_extend_cap(void) { return 0; }
 char *get_file_md5(const char *i) { return NULL; }
-int get_iface_inode(void) { return 0; }
-int get_index_page(void) { return 0; }
 int get_label_mac(void) { return 0; }
 int get_lang_num(void) { return 0; }
 int get_lan_hwaddr(void) { return 0; }
-int get_logfile_path(void) { return 0; }
-int get_model(void) { return 0; }
 char *get_ovpn_custom(int t, int u, char *b, int l) { return NULL; }
 char *get_productid(void) { return "RT-AX88U"; }
 int get_radio(void) { return 0; }
 int get_rtinfo(void) { return 0; }
 char *get_string_md5(const char *i) { return NULL; }
-int get_syslog_fname(void) { return 0; }
 int get_wifi_probe_result(void) { return 0; }
 int handle_nvram_modify_log(const char *n, ...) { return 0; }
-int ifname_ino_ptr(void) { return 0; }
-int inet_deconflict(void) { return 0; }
-int ipv6_nvname(void) { return 0; }
 int is_builtin_profile(void) { return 0; }
-int is_passwd_default(void) { return 0; }
-int is_private_subnet(const char *s) { return 0; }
-int isValid_digit_string(const char *s) { return 0; }
-int isValidEnableOption(void) { return 0; }
-int is_valid_ip(const char *s) { return 0; }
-int isValidMacAddress(const char *s) { return 0; }
 int kill_pidfile_s(void) { return 0; }
-void logmessage_normal(const char *f, ...) { }
-int netdev_calc(void) { return 0; }
 int notify_rc(const char *f, ...) { return 0; }
 int notify_rc_and_wait_2min(void) { return 0; }
-int num_of_mssid_support(void) { return 0; }
 int num_of_wl_if(void) { return 0; }
 int nvram_get_f(const char *n, ...) { return 0; }
 int nvram_get_list_x(const char *n, ...) { return 0; }
-int nvram_contains_word(const char *n, ...) { return 0; }
 int nvram_modify_log(void) { return 0; }
 int notify_rc_after_period_wait(const char *f, ...) { return 0; }
 int reg_default_final_token(void) { return 0; }
@@ -488,16 +460,9 @@ int syslog_msg_filter(void) { return 0; }
 int ipisdomain(void) { return 0; }
 int mime_referers(void) { return 0; }
 int referer_check(void) { return 0; }
-int nvram_pf_get_int(const char *n, ...) { return 0; }
-int nvram_pf_set(const char *n, ...) { return 0; }
 int nvram_set_f(const char *n, ...) { return 0; }
 int nvram_set_x(const char *n, ...) { return 0; }
-int ParseIPv4OrIPv6(void) { return 0; }
-int pidof(void) { return 0; }
-int read_whole_file(const char *p, char *b, int l) { return 0; }
 
-void replace_char(char *str, char find, char replace) { }
-int rfctime(void) { return 0; }
 int router_state_defaults(void) { return 0; }
 int save_iptvSettings_to_file(void) { return 0; }
 int save_ui_support_to_file(void) { return 0; }
@@ -517,9 +482,6 @@ int upgrade_rc(void) { return 0; }
 int validate_apply_input_value(const char *s) { return 0; }
 int validate_httpd_auth_v2(const char *s) { return 0; }
 int waitfor(const char *n, int t) { return 0; }
-int wan_primary_ifunit(void) { return 0; }
-int wl_ioctl(char *n, int c, void *b, int l) { return 0; }
-int wl_nvname(void) { return 0; }
 STUBEOF
     $CC $CFLAGS -c -o libshared_stubs.o libshared_stubs.c
 
@@ -530,6 +492,7 @@ STUBEOF
       aspbw.o initial_web_hook.o apps.o \
       sysinfo.o data_arrays.o web-broadcom-am.o \
       pwenc.o web_hook.o web-broadcom.o libwebapi_stubs.o httpd_extra_stubs.o libshared_stubs.o \
+      -Wl,--allow-shlib-undefined \
       -L${libwebapi}/lib -lwebapi \
       -L${libshared}/lib -lshared \
       -L${libnvram}/lib -lnvram \
