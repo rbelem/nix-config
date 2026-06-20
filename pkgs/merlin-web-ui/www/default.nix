@@ -15,7 +15,12 @@ stdenv.mkDerivation {
     mkdir -p $out/www
     cp -r $src/release/src-rt-5.02axhnd/router/www/* $out/www/
     chmod -R u+w $out/www
+    # Remove broken symlinks (cross-model links for other hardware)
+    find $out/www -type l ! -exec test -e {} \; -delete
   '';
+
+  # Merlin www has cross-model symlinks — cleaned up in installPhase
+  dontCheckBrokenSymlinks = true;
 
   meta = {
     description = "ASUSWRT-Merlin web UI static files";
