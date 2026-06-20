@@ -4,7 +4,7 @@
 let
   mwu = pkgs.merlin-web-ui;
 in {
-  imports = [ ../../modules/merlin-web-ui.nix ];
+  imports = [ ../../../modules/merlin-web-ui.nix ];
 
   services.merlin-webui = {
     enable = true;

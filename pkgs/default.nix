@@ -33,7 +33,8 @@ in rec {
 
   # Merlin web UI — piecemeal source build from Merlin tree
   # Each component is cross-compiled for aarch64
-  merlin-web-ui = if crossPkgs != null then rec {
+  # Individual web UI packages (accessed via .merlin-web-ui.<name>)
+  merlin-web-ui = if crossPkgs != null then let
     www = crossPkgs.callPackage ./merlin-web-ui/www { inherit merlin-src; };
     libshared = crossPkgs.callPackage ./merlin-web-ui/libshared { inherit merlin-src; };
     libnvram = crossPkgs.callPackage ./merlin-web-ui/libnvram {
@@ -55,8 +56,14 @@ in rec {
       inherit merlin-src libshared libnvram libpasswd mssl libwebapi;
       openssl = crossPkgs.openssl;
       jsonc = crossPkgs.json_c;
+      libxcrypt = crossPkgs.libxcrypt;
     };
-  } else
+  in crossPkgs.symlinkJoin {
+    name = "merlin-web-ui";
+    paths = [ www libshared libnvram libpasswd mssl libwebapi httpd ];
+    meta.description = "All Merlin web UI components";
+  } // { inherit www libshared libnvram libpasswd mssl libwebapi httpd; }
+  else
     builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
 
   # Validation checks for all RT-AX88U packages

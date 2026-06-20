@@ -12,7 +12,7 @@
   ];
 
   # Hardware drivers built into kernel (not modules)
-  boot.blacklistKernelModules = [ ];
+  boot.blacklistedKernelModules = [ ];
 
   # Broadcom NVRAM driver
   boot.kernelModules = [ "mtd" "mtdblock" ];

@@ -25,10 +25,10 @@ stdenv.mkDerivation {
       echo "FAIL: Kernel Image not found at $KERNEL"
       errors=$((errors + 1))
     else
-      # Check aarch64 ELF
-      file "$KERNEL" | grep -q "ELF 64-bit LSB executable, ARM aarch64" && \
-        echo "OK: Image is aarch64 ELF" || \
-        { echo "FAIL: Image is not aarch64 ELF"; errors=$((errors + 1)); }
+      # Check ARM64 boot executable
+      file "$KERNEL" | grep -q "ARM64" && \
+        echo "OK: Image is ARM64 boot executable" || \
+        { echo "FAIL: Image is not ARM64"; errors=$((errors + 1)); }
 
       # Check key symbols (using nm on the vmlinux inside would need extraction,
       # but for now just check the config has expected options)
@@ -49,7 +49,7 @@ stdenv.mkDerivation {
     # --- 2. Web UI packages check ---
     for pkg in www libshared libnvram libpasswd mssl libwebapi httpd; do
       case "$pkg" in
-        www)    file="${merlin-web-ui.www}/www/index.html" ;;
+        www)    file="${merlin-web-ui.www}/www/APP_Installation.asp" ;;
         httpd)  file="${merlin-web-ui.httpd}/sbin/httpd" ;;
         libshared) file="${merlin-web-ui.libshared}/lib/libshared.so" ;;
         libnvram)  file="${merlin-web-ui.libnvram}/lib/libnvram.so" ;;
