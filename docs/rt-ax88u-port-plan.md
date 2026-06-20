@@ -2171,4 +2171,60 @@ curl -T result/firmware.trx tftp://192.168.1.1/
    → test → etc. Each change is a separate flash with static validation.
 6. **Accept the brick risk.** Without UART or CFE recovery button procedure,
    a booting-but-crashing kernel is a brick. This is not a safe project.
-   Consider buying a Raspberry Pi or cheap UART adapter for safety.
+    Consider buying a Raspberry Pi or cheap UART adapter for safety.
+
+---
+
+## Implementation Progress (Jun 20 2026)
+
+### Deliverables
+
+| # | Component | Status | Commit |
+|---|---|---|---|
+| 1 | `bcm4908lzma` — LZMA wrapper | ✅ Done | *earlier* |
+| 2 | `rt-ax88u-bsp-kernel` — BSP kernel | ✅ **9.4 MB arm64 Image** | `544fa28` |
+| 3 | `merlin-web-ui/*` — 7 packages | ❌ Not yet built | N/A |
+| 4 | `nixos/hosts/rt-ax88u/` — NixOS config | ✅ Written (unused) | `698a7d5` |
+| 5 | TRX firmware image | ❌ Not yet created | N/A |
+| 6 | Validation pipeline | ✅ `pkgs/rt-ax88u-validation` | `429f8c5` |
+
+### Kernel Build — Key Technical Decisions
+
+| Problem | Fix |
+|---|---|
+| `sourceRoot = "."` kept build in wrong dir | Remove — auto-detect `source/` subdir |
+| `make -C` needed for PWD isolation | All phases use `make -C "$KERNEL_DIR"` |
+| `preConfigure` not evaluated when `configurePhase` overridden | Moved blob deploy into `configurePhase` |
+| HOSTCC missing on cross-build | Explicit `HOSTCC = ` store path to native gcc |
+| `dtc` linker error (`yylloc` duplicate) | `HOSTLDFLAGS = -Wl,--allow-multiple-definition` |
+| Assembly `#alloc` syntax (GAS 2.46) | `sed` patch → `"ax"` format |
+| `Kconfig.autogen` missing | Create empty stub |
+| `BCM_KF` not set (kernel ifdef gate) | Env var `BCM_KF = "1"` |
+| `built-in.o` link error from empty path | `INC_UTILS_PATH` → real dir with obj-y |
+| Merlin make vars not set | `merlinMakeArgs` let-block → all make invocations |
+| RDP target dirs lack Makefiles | Create minimal `obj-y` Makefiles in `configurePhase` |
+| Missing include headers (long tail) | `KCFLAGS` with all Broadcom include roots |
+| `wl` is executable (no `.o` ext) | Fixed `cp` target name |
+| Char driver dirs not created for blobs | Added `mkdir -p` for all blob destinations |
+
+### Merlin source rev
+
+Updated from `e1b0940d` (non-existent) to `68d0ffc5` (main HEAD).
+Hash: `17ac05gqkl7pmv9bm950nnwrm3gc45485n4al5klxbrsdwrmai2r` (base32).
+
+### Blob deployment
+
+All 77 prebuilt blobs extracted from `router-sysdep.rt-ax88u/hnd_extra/prebuilt/`
+into the bcmdrivers tree (`_preb` naming convention). Blobs deployed as part of
+`configurePhase`, not `preConfigure` (which is silent when `configurePhase` is
+overridden in Nix).
+
+### Remaining Work
+
+1. **Build 7 web UI packages** — starts with `libshared` (simplest), ends with `httpd`
+   (largest — 44K-line web.c, prebuilt pwenc + web_hook)
+2. **Create TRX firmware** — `bcm4908lzma` compress Image + add TRX header
+3. **Build NixOS host config** — test that `nixos-rebuild` evaluates
+4. **Validation** — `nix flake check` to run kernel ELF + config checks
+5. **Hardware test** — web UI upload (brick risk, no serial recovery)
+
