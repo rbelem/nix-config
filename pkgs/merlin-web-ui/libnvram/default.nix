@@ -1,18 +1,12 @@
 { stdenv, lib, merlin-src, libshared }:
 
 # libnvram — Broadcom NVRAM access library.
-#
-# Provides read/write access to the CFE NVRAM variables stored in
-# a dedicated flash partition. Uses the kernel MTD device (/dev/mtdblockX)
-# via ioctl calls to the Broadcom NVRAM driver.
-# Links against libshared for utility functions.
+# Provides read/write access to CFE NVRAM via MTD.
+# Links against libshared.
 
 let
   srcBase = "${merlin-src}/release/src-rt-5.02axhnd";
-  router = "${srcBase}/router";
-  nvramDir = "${router}/nvram";
-  kernelDir = "${srcBase}/kernel/linux-4.1";
-
+  kernelConfig = "${srcBase}/kernel/linux-4.1/config_base.6a";
   toolPrefix = stdenv.cc.targetPrefix;
 
 in stdenv.mkDerivation {
@@ -25,15 +19,27 @@ in stdenv.mkDerivation {
     export CC="${toolPrefix}gcc"
 
     CFLAGS="-Os -Wall -fPIC"
-    CFLAGS+=" -I${nvramDir}"
-    CFLAGS+=" -I${router}/shared"
+
+    SRC="$PWD/release/src-rt-5.02axhnd"
+
+    # Generate rtconfig.h (needed by shared.h)
+    echo "--- Generating rtconfig.h ---"
+    echo "/* Auto-generated */" > "$SRC/router/shared/rtconfig.h"
+    while IFS='=' read -r key val; do
+      case "X$key" in
+        XCONFIG_*) echo "#define RTCONFIG_$(echo "$key" | sed 's/^CONFIG_//') $val" ;;
+      esac
+    done < "${kernelConfig}" >> "$SRC/router/shared/rtconfig.h"
+
+    CFLAGS+=" -I$SRC/router/nvram"
+    CFLAGS+=" -I$SRC/router/shared"
     CFLAGS+=" -I${srcBase}/include"
-    CFLAGS+=" -I${kernelDir}/include"
-    CFLAGS+=" -I${kernelDir}/arch/arm64/include"
+    CFLAGS+=" -I${srcBase}/bcmdrivers/broadcom/net/wl/impl51/main/src/include"
 
     echo "=== Building libnvram ==="
+    echo "CFLAGS: $CFLAGS"
 
-    cd "${nvramDir}"
+    cd "$SRC/router/nvram"
 
     # Compile NVRAM sources
     $CC $CFLAGS -c -o nvram_linux.o nvram_linux.c
@@ -46,9 +52,10 @@ in stdenv.mkDerivation {
   '';
 
   installPhase = ''
+    SRC="$PWD/release/src-rt-5.02axhnd"
     mkdir -p $out/lib $out/include
-    cp "${nvramDir}/libnvram.so" $out/lib/
-    cp "${nvramDir}/nvram_convert.h" $out/include/
+    cp "$SRC/router/nvram/libnvram.so" $out/lib/
+    cp "$SRC/router/nvram/nvram_convert.h" $out/include/
   '';
 
   meta = {
