@@ -78,7 +78,11 @@ in stdenv.mkDerivation {
     # Also add writable component stub paths for missing Broadcom headers.
     mkdir -p "$PWD/components"
     CFLAGS="-I$SDIR -I$SRC/router/nvram -I$PWD/components $CFLAGS"
-    CFLAGS+=" -Wno-unused-result -include ctype.h"
+    CFLAGS+=" -Wno-unused-result -Wno-error=format-security"
+    CFLAGS+=" -include ctype.h -include $PWD/components/sighandler_compat.h"
+    CFLAGS+=" -DOFFSET_MTD_FACTORY=0x40000 -DSPI_PARALLEL_NOR_FLASH_FACTORY_LENGTH=0x10000"
+    CFLAGS+=" -DRT_VERSION=\\\"merlin-ng\\\" -DRT_SERIALNO=\\\"\\\" -DRT_RCNO=\\\"\\\""
+    CFLAGS+=" -DRT_BUILD_NAME=\\\"RT-AX88U\\\" -DBUILD_NAME=\\\"RT-AX88U\\\""
 
     # Generate stub headers for Broadcom SDK headers not distributed in Merlin GPL
     cat > "$PWD/components/epivers.h" << 'STUB_EOF'
@@ -218,6 +222,23 @@ STUB_EOF
     mkdir -p "$PWD/components/proto"
     cat > "$PWD/components/proto/ethernet.h" << 'STUB_EOF'
 #include <ethernet.h>
+STUB_EOF
+    # sighandler_t compat — removed in modern glibc, replaced by sig_t
+    cat > "$PWD/components/sighandler_compat.h" << 'STUB_EOF'
+#ifndef _SIGHANDLER_COMPAT_H
+#define _SIGHANDLER_COMPAT_H
+#ifndef sighandler_t
+#define sighandler_t sig_t
+#endif
+#endif
+STUB_EOF
+    # flash_mtd.h — provides OFFSET_MTD_FACTORY etc. for flash_mtd.c
+    cat > "$PWD/components/flash_mtd.h" << 'STUB_EOF'
+#ifndef _FLASH_MTD_H_
+#define _FLASH_MTD_H_
+#define OFFSET_MTD_FACTORY 0x40000
+#define SPI_PARALLEL_NOR_FLASH_FACTORY_LENGTH 0x10000
+#endif
 STUB_EOF
 
     # Generate rtconfig.h from Merlin kernel config

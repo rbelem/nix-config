@@ -337,23 +337,13 @@ STUB
     $CC $CFLAGS -c -o web-broadcom.o web-broadcom_stub.c
     # Stub missing symbol implementations for libwebapi dependencies
     cat > libwebapi_stubs.c << 'STUB'
-int _eval(char *const argv[], char *stdout_path, int timeout, int *out) { return 0; }
-int check_if_file_exist(const char *path) { return 0; }
-int _vstrsep(char **ptr, const char *delim, char *buf, size_t bufsz) { return 0; }
-void dbg(const char *fmt, ...) { }
-int nvram_set_int(const char *name, int val) { return 0; }
-int nvram_get_int(const char *name) { return 0; }
-int get_string_in_62(const char *buf, const char *name, char *out, int outlen) { return 0; }
 STUB
     $CC $CFLAGS -c -o libwebapi_stubs.o libwebapi_stubs.c
     # More stubs for data_arrays.o, webapi.o, libpasswd, libshared deps
     cat > httpd_extra_stubs.c << 'STUB'
-int get_ipv6_service(void) { return 0; }
 char *nvram_default_get(const char *name, const char *def) { return NULL; }
 char *get_wan6face(void) { return NULL; }
-int getifaddr(char *ifname, char *addr, int len) { return 0; }
 char *ipv6_gateway_address(void) { return NULL; }
-int sync_profile_update_time(int type) { return 0; }
 char *router_defaults(void) { return NULL; }
 char *nvram_pf_get(const char *name) { return NULL; }
 STUB
@@ -384,7 +374,6 @@ int check_user_agent(void) { return 0; }
 int check_xss_blacklist(void) { return 0; }
 int clean_ban_ip_timeout(void) { return 0; }
 int config_iptv_vlan(void) { return 0; }
-void cprintf(const char *f, ...) { }
 int customized_match(void) { return 0; }
 int delete_logout_from_list(void) { return 0; }
 int do_chpass(void) { return 0; }
@@ -397,7 +386,6 @@ int do_register_app_cnonce_cgi(void) { return 0; }
 int do_save_all_profile_cgi(void) { return 0; }
 int do_set_fw_path_cgi(void) { return 0; }
 int do_start_config_sync_cgi(void) { return 0; }
-int doSystem(const char *c, ...) { return 0; }
 int do_upload_blacklist_config_cgi(void) { return 0; }
 int do_upload_config_sync_cgi(void) { return 0; }
 int do_upload_config_sync_post(void) { return 0; }
@@ -423,8 +411,6 @@ int ej_wps_info(int e, void *w, int a, char **v) { return 0; }
 int ej_wps_info_2g(int e, void *w, int a, char **v) { return 0; }
 int ej_wps_info_5g(int e, void *w, int a, char **v) { return 0; }
 int ej_wps_info_5g_2(int e, void *w, int a, char **v) { return 0; }
-int ether_atoe(const char *p, void *e) { return 0; }
-int file2str(const char *p, char *b, int l) { return 0; }
 int filter_ban_ip(void) { return 0; }
 char *find_word(char *s, const char *w) { return NULL; }
 int gen_asus_token_cookie(void) { return 0; }
@@ -443,10 +429,8 @@ char *get_string_md5(const char *i) { return NULL; }
 int get_wifi_probe_result(void) { return 0; }
 int handle_nvram_modify_log(const char *n, ...) { return 0; }
 int is_builtin_profile(void) { return 0; }
-int kill_pidfile_s(void) { return 0; }
 int notify_rc(const char *f, ...) { return 0; }
 int notify_rc_and_wait_2min(void) { return 0; }
-int num_of_wl_if(void) { return 0; }
 int nvram_get_f(const char *n, ...) { return 0; }
 int nvram_get_list_x(const char *n, ...) { return 0; }
 int nvram_modify_log(void) { return 0; }
@@ -481,7 +465,6 @@ char *trimNL(char *s) { return s; }
 int upgrade_rc(void) { return 0; }
 int validate_apply_input_value(const char *s) { return 0; }
 int validate_httpd_auth_v2(const char *s) { return 0; }
-int waitfor(const char *n, int t) { return 0; }
 STUBEOF
     $CC $CFLAGS -c -o libshared_stubs.o libshared_stubs.c
 
