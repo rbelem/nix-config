@@ -26,10 +26,10 @@ let
     + " SHARED_DIR=../../shared"
     + " INC_BRCMBOARDPARMS_PATH=../../shared/opensource/boardparms"
     + " BRCM_BOARD=bcm963xx"
-    + " INC_UTILS_PATH=."
     + " INC_FLASH_PATH=../../shared/opensource/flash"
+    + " INC_UTILS_PATH=../../shared/opensource/utils"
     + " INC_SPI_PATH=../../shared/opensource/spi"
-    + " PROJECT_DIR=../../rdp/projects/WL4908";
+    + " PROJECT_DIR=../../rdp/projects/NO_TARGET";
 
   # Merlin build constants (interpolated into phase strings)
   bcm_chip = "4908";
@@ -194,6 +194,23 @@ in stdenv.mkDerivation {
     echo "Blobs deployed: $(find "$HND_SRC" -name '*_preb.o' | wc -l)"
     )  # subshell for cd
 
+    # Create Makefiles for RDP target directories (kernel build descends
+    # into these via brcmdrivers-y but they don't ship Makefiles).
+    for dir in bdmf rdpa rdpa_gpl rdpa_user; do
+      tdir="$HND_SRC/rdp/projects/WL4908/target/$dir"
+      if [ -d "$tdir" ] && [ ! -f "$tdir/Makefile" ]; then
+        case "$dir" in
+          bdmf)      mod=bdmf; obj=bdmf ;;
+          rdpa)      mod=rdpa; obj=rdpa ;;
+          rdpa_gpl)  mod=rdpa_gpl; obj=rdpa_gpl ;;
+          rdpa_user) mod=rdpa_usr; obj=rdpa_usr ;;
+        esac
+        printf '%s-objs := %s_preb.o\n' "$mod" "$obj" > "$tdir/Makefile"
+        printf 'obj-y += %s.o\n' "$mod" >> "$tdir/Makefile"
+        printf 'clean:\n\trm -f core *.ko *.o *.a *.s\n' >> "$tdir/Makefile"
+      fi
+    done
+
     # Generate bcmdrivers Kconfig.autogen (required by kernel Kconfig.bcm)
     echo "--- Creating bcmdrivers Kconfig.autogen ---"
     echo "# Auto-generated stub" > "$HND_SRC/bcmdrivers/Kconfig.autogen"
@@ -270,6 +287,7 @@ KCONFIG
     echo "=== Installing kernel ==="
     KERNEL_DIR="$PWD/release/src-rt-5.02axhnd/kernel/linux-4.1"
 
+    mkdir -p "$out"
     cp "$KERNEL_DIR/arch/arm64/boot/Image" "$out/Image"
     cp "$KERNEL_DIR/.config" "$out/config"
     echo "${version}" > "$out/kernel.release"
