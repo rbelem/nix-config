@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, buildPackages }:
+{ lib, stdenv, fetchFromGitHub, buildPackages, merlin-src }:
 
 # BSP kernel for ASUS RT-AX88U (BCM4908)
 #
@@ -14,14 +14,8 @@
 let
   pname = "linux";
   version = "4.1.51-rt-ax88u";
-  rev = "e1b0940dd13456e4ac9e5fa96e4ae4154235d18c";  # asuswrt-merlin.ng 3004.388.8.4
 
-  src = fetchFromGitHub {
-    owner = "RMerl";
-    repo = "asuswrt-merlin.ng";
-    rev = rev;
-    sha256 = lib.fakeSha256;  # FIXME: resolve on first build
-  };
+  src = merlin-src;
 
   # Merlin build constants (interpolated into phase strings)
   bcm_chip = "4908";

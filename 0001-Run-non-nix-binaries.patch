@@ -1,0 +1,35 @@
+From 6ceda574b559abe4ab0a1bfe179a73c148c66777 Mon Sep 17 00:00:00 2001
+From: Rodrigo Belem <rodrigo.belem@gmail.com>
+Date: Mon, 18 Dec 2023 00:21:12 -0400
+Subject: [PATCH] Run non-nix binaries
+
+---
+ nixos/common/alien.nix   | 4 ++++
+ nixos/common/default.nix | 1 +
+ 2 files changed, 5 insertions(+)
+ create mode 100644 nixos/common/alien.nix
+
+diff --git a/nixos/common/alien.nix b/nixos/common/alien.nix
+new file mode 100644
+index 0000000..1e94051
+--- /dev/null
++++ b/nixos/common/alien.nix
+@@ -0,0 +1,4 @@
++{
++  programs.nix-ld.enable = true;
++  services.envfs.enable = true;
++}
+diff --git a/nixos/common/default.nix b/nixos/common/default.nix
+index a49e076..cf8a640 100644
+--- a/nixos/common/default.nix
++++ b/nixos/common/default.nix
+@@ -1,5 +1,6 @@
+ { config, ... }: {
+   imports = [
++    ./alien.nix
+     ./locales.nix
+     ./nix.conf.nix
+     ./timezone.nix
+-- 
+2.41.0
+

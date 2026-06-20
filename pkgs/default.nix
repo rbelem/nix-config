@@ -9,8 +9,8 @@ let
   merlin-src = args.merlin-src or (pkgs.fetchFromGitHub {
     owner = "RMerl";
     repo = "asuswrt-merlin.ng";
-    rev = "e1b0940dd13456e4ac9e5fa96e4ae4154235d18c";
-    sha256 = lib.fakeSha256;  # FIXME: resolve on first build
+    rev = "68d0ffc5fe96b7173952af80cc60e48065685873";
+    sha256 = "17ac05gqkl7pmv9bm950nnwrm3gc45485n4al5klxbrsdwrmai2r";
   });
 
   # target pkgs for aarch64: cross-compile from x86_64, native on aarch64
@@ -27,7 +27,7 @@ in rec {
 
   # BSP kernel — cross-compiled with Broadcom blobs
   rt-ax88u-bsp-kernel = if crossPkgs != null then
-    crossPkgs.callPackage ./rt-ax88u-bsp-kernel { }
+    crossPkgs.callPackage ./rt-ax88u-bsp-kernel { inherit merlin-src; }
   else
     builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
 

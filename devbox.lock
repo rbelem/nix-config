@@ -1,0 +1,206 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "libusb1@latest": {
+      "last_modified": "2024-08-02T23:16:43Z",
+      "resolved": "github:NixOS/nixpkgs/81610abc161d4021b29199aa464d6a1a521e0cc9#libusb1",
+      "source": "devbox-search",
+      "version": "1.0.27",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/sbc3dsw5ajh0cgdxdrdcr1maqyjf7vip-libusb-1.0.27",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/vr4n0w3hc007yfwiyfxlsxm7wn5rdxhg-libusb-1.0.27-dev"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/if30g8v04lz374mg3c16ay1ifqb58652-libusb-1.0.27-doc"
+            }
+          ],
+          "store_path": "/nix/store/sbc3dsw5ajh0cgdxdrdcr1maqyjf7vip-libusb-1.0.27"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/2psyg3fqlsd0m6788bhrj1ijbq2f0k8f-libusb-1.0.27",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/h10nfnd4d91sl124s1n2pvkdygmvkj1v-libusb-1.0.27-dev"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/zy3fh62g8v686bwg1cywhxyfj0np1g53-libusb-1.0.27-doc"
+            }
+          ],
+          "store_path": "/nix/store/2psyg3fqlsd0m6788bhrj1ijbq2f0k8f-libusb-1.0.27"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/q4krs556jmibrcc4hwir6y9qpws4wxb4-libusb-1.0.27",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/3ddqzjqj21a9vrslfp85p62vn2vpmb5i-libusb-1.0.27-dev"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/n4s92misd9h375d7w3ay8j16p6q3izcm-libusb-1.0.27-doc"
+            }
+          ],
+          "store_path": "/nix/store/q4krs556jmibrcc4hwir6y9qpws4wxb4-libusb-1.0.27"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/gkhma9q8dm7vgjzqhjg1p34pflmpz6jz-libusb-1.0.27",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/a12ffvgqpl4j9q8mnfj9sdj37vjpva7p-libusb-1.0.27-dev"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/4d8zsdvamps2s6l46l2ywf7wrfzlb6qh-libusb-1.0.27-doc"
+            }
+          ],
+          "store_path": "/nix/store/gkhma9q8dm7vgjzqhjg1p34pflmpz6jz-libusb-1.0.27"
+        }
+      }
+    },
+    "python312Packages.pyusb@latest": {
+      "last_modified": "2024-07-07T07:43:47Z",
+      "resolved": "github:NixOS/nixpkgs/b60793b86201040d9dee019a05089a9150d08b5b#python312Packages.pyusb",
+      "source": "devbox-search",
+      "version": "1.2.1",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/rimrg64bm0lnz6vligslqhc63w1hrviv-python3.12-pyusb-1.2.1",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/i5ard7yxxc8cjdwjv43r52i5hrqx179z-python3.12-pyusb-1.2.1-dist"
+            }
+          ],
+          "store_path": "/nix/store/rimrg64bm0lnz6vligslqhc63w1hrviv-python3.12-pyusb-1.2.1"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/n7qwlva11xln9n513fjsg4161zl17c90-python3.12-pyusb-1.2.1",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/caa09w4p3dj33bcmyisdzqhffx17qn3i-python3.12-pyusb-1.2.1-dist"
+            }
+          ],
+          "store_path": "/nix/store/n7qwlva11xln9n513fjsg4161zl17c90-python3.12-pyusb-1.2.1"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/sf6k7fpj3hijzxmg2lzih1bh80k99p7l-python3.12-pyusb-1.2.1",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/jd16yq5x1sa3s54gki200ciw4qm2w292-python3.12-pyusb-1.2.1-dist"
+            }
+          ],
+          "store_path": "/nix/store/sf6k7fpj3hijzxmg2lzih1bh80k99p7l-python3.12-pyusb-1.2.1"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/rq6hg58z47r61bsllmx72f8mbm9apvsz-python3.12-pyusb-1.2.1",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/vx1nhxzi2878gs5k2m6d96p87csjxjaz-python3.12-pyusb-1.2.1-dist"
+            }
+          ],
+          "store_path": "/nix/store/rq6hg58z47r61bsllmx72f8mbm9apvsz-python3.12-pyusb-1.2.1"
+        }
+      }
+    },
+    "python@latest": {
+      "last_modified": "2024-07-07T07:43:47Z",
+      "plugin_version": "0.0.3",
+      "resolved": "github:NixOS/nixpkgs/b60793b86201040d9dee019a05089a9150d08b5b#python3",
+      "source": "devbox-search",
+      "version": "3.12.4",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3swy1vadi125g0c1vxqp8ykdr749803j-python3-3.12.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/3swy1vadi125g0c1vxqp8ykdr749803j-python3-3.12.4"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/sz2facg15yq3ziqkidb1dkkglwzkkg8a-python3-3.12.4",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/19vjjqg7jbfblqapf63nm9ich1xdq9dx-python3-3.12.4-debug"
+            }
+          ],
+          "store_path": "/nix/store/sz2facg15yq3ziqkidb1dkkglwzkkg8a-python3-3.12.4"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/dh1i1387ibdzw0ala5rkl3s3ylf8i8pa-python3-3.12.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/dh1i1387ibdzw0ala5rkl3s3ylf8i8pa-python3-3.12.4"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/z7xxy35k7620hs6fn6la5fg2lgklv72l-python3-3.12.4",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/3x6jqv5yw212v8rlwql88cn94dginq32-python3-3.12.4-debug"
+            }
+          ],
+          "store_path": "/nix/store/z7xxy35k7620hs6fn6la5fg2lgklv72l-python3-3.12.4"
+        }
+      }
+    }
+  }
+}
