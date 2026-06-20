@@ -14,25 +14,24 @@
 
   outputs = { self, nixpkgs, ... } @ inputs: let
       inherit (self) outputs;
-      supportedSystems = [ "x86_64-linux" ];
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     in
     {
       # Reusable nixos modules
-      # These are usually stuff to upstream into nixpkgs
       nixosModules = import ./modules/nixos;
 
       # Custom packages and modifications, exported as overlays
       overlays = import ./overlays { inherit inputs outputs; };
 
       # Custom packages
-      # Acessible through 'nix build', 'nix shell', etc
+      # Accessible through 'nix build', 'nix shell', etc
+      # RT-AX88U packages are cross-compiled to aarch64 from any system
       packages = forAllSystems (system:
         import ./pkgs { pkgs = nixpkgs.legacyPackages.${system}; }
       );
 
       # Devshell for bootstrapping
-      # Acessible through 'nix develop' or 'nix-shell' (legacy)
       devShells = forAllSystems (system:
         let pkgs = nixpkgs.legacyPackages.${system};
         in import ./shell.nix { inherit pkgs; }
@@ -43,8 +42,16 @@
       nixosConfigurations = rec {
         # Laptop
         book3 = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
           specialArgs = { inherit inputs outputs; };
           modules = [ ./nixos/hosts/book3 ];
+        };
+
+        # Router — cross-built from x86_64, runs on aarch64-linux
+        rt-ax88u = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          specialArgs = { inherit inputs outputs; };
+          modules = [ ./nixos/hosts/rt-ax88u ];
         };
       };
     };

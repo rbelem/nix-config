@@ -13,9 +13,11 @@ let
     sha256 = lib.fakeSha256;  # FIXME: resolve on first build
   });
 
-  # Cross-compilation pkgs for aarch64
-  crossPkgs = if pkgs ? pkgsCross.aarch64-multiplatform then
-    pkgs.pkgsCross.aarch64-multiplatform
+  # target pkgs for aarch64: cross-compile from x86_64, native on aarch64
+  crossPkgs = if pkgs.stdenv.isAarch64 then
+    pkgs  # native aarch64
+  else if pkgs ? pkgsCross.aarch64-multiplatform then
+    pkgs.pkgsCross.aarch64-multiplatform  # cross-compile from x86_64
   else null;
 
 in rec {
