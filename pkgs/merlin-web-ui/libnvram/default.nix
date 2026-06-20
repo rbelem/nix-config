@@ -18,7 +18,7 @@ in stdenv.mkDerivation {
   buildPhase = ''
     export CC="${toolPrefix}gcc"
 
-    CFLAGS="-Os -Wall -fPIC"
+    CFLAGS="-Os -Wall -fPIC -std=gnu17"
 
     SRC="$PWD/release/src-rt-5.02axhnd"
 
@@ -35,13 +35,38 @@ in stdenv.mkDerivation {
     CFLAGS+=" -I$SRC/router/shared"
     CFLAGS+=" -I${srcBase}/include"
     CFLAGS+=" -I${srcBase}/bcmdrivers/broadcom/net/wl/impl51/main/src/include"
+    CFLAGS+=" -include .nvram_prefix.h"
 
     echo "=== Building libnvram ==="
     echo "CFLAGS: $CFLAGS"
 
     cd "$SRC/router/nvram"
 
-    # Compile NVRAM sources
+    # Merlin's prebuilt target: copy sysdeps over originals first
+    cp sysdeps/* ./ -f
+
+    # Prepend declarations for missing Broadcom utility functions
+    # (_file_lock/_file_unlock from missing utils.h)
+    cat > .nvram_prefix.h << 'PRIVEOF'
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/file.h>
+static inline int _file_lock(const char *dir, const char *tag) {
+    char path[256];
+    snprintf(path, sizeof(path), "%s/.%s.lock", dir, tag);
+    int fd = open(path, O_CREAT | O_RDWR, 0644);
+    if (fd < 0) return -1;
+    if (flock(fd, LOCK_EX) < 0) { close(fd); return -1; }
+    return fd;
+}
+static inline void _file_unlock(int fd) {
+    if (fd >= 0) { flock(fd, LOCK_UN); close(fd); }
+}
+PRIVEOF
+
+    # Compile NVRAM sources (include prefix to provide missing symbols)
     $CC $CFLAGS -c -o nvram_linux.o nvram_linux.c
     $CC $CFLAGS -c -o nvram_convert.o nvram_convert.c
 
@@ -52,8 +77,8 @@ in stdenv.mkDerivation {
   '';
 
   installPhase = ''
-    SRC="$PWD/release/src-rt-5.02axhnd"
     mkdir -p $out/lib $out/include
+    # Files are at SRC/router/nvram/ after buildPhase's cd
     cp "$SRC/router/nvram/libnvram.so" $out/lib/
     cp "$SRC/router/nvram/nvram_convert.h" $out/include/
   '';

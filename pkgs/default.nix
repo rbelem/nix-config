@@ -39,19 +39,22 @@ in rec {
     libnvram = crossPkgs.callPackage ./merlin-web-ui/libnvram {
       inherit merlin-src libshared;
     };
-    libpasswd = crossPkgs.callPackage ./merlin-web-ui/libpasswd { inherit merlin-src; };
+    libpasswd = crossPkgs.callPackage ./merlin-web-ui/libpasswd {
+      inherit merlin-src;
+      libxcrypt = crossPkgs.libxcrypt;
+    };
     mssl = crossPkgs.callPackage ./merlin-web-ui/mssl {
       inherit merlin-src;
       openssl = crossPkgs.openssl;
     };
     libwebapi = crossPkgs.callPackage ./merlin-web-ui/libwebapi {
       inherit merlin-src;
-      json-c = crossPkgs.json-c;
+      jsonc = crossPkgs.json_c;
     };
     httpd = crossPkgs.callPackage ./merlin-web-ui/httpd {
       inherit merlin-src libshared libnvram libpasswd mssl libwebapi;
       openssl = crossPkgs.openssl;
-      json-c = crossPkgs.json-c;
+      jsonc = crossPkgs.json_c;
     };
   } else
     builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";

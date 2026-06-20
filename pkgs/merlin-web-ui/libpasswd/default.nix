@@ -1,36 +1,37 @@
-{ stdenv, lib, merlin-src }:
+{ stdenv, lib, merlin-src, libxcrypt }:
 
 # Password hashing library used by httpd for authentication.
 # Two files: passwd.c + passwd.h — statically linked into httpd.
 
 let
   srcBase = "${merlin-src}/release/src-rt-5.02axhnd";
-  router = "${srcBase}/router";
 in stdenv.mkDerivation {
   pname = "libpasswd";
   version = "merlin-ng";
 
   src = merlin-src;
 
+  buildInputs = [ libxcrypt ];
+
   buildPhase = ''
-    export AR="$CC -arch $ARCH -syslibroot /"
     export CC="${stdenv.cc.targetPrefix}gcc"
-    export CROSS_COMPILE="${stdenv.cc.targetPrefix}"
+    CFLAGS="-Os -Wall -fPIC -std=gnu17"
 
-    CFLAGS="-Os -Wall -fPIC"
-    CFLAGS+=" -I${router}/libpasswd"
+    SRC="$PWD/release/src-rt-5.02axhnd"
+    CFLAGS+=" -I$SRC/router/libpasswd"
     CFLAGS+=" -I${srcBase}/include"
-    CFLAGS+=" -I${router}"
+    CFLAGS+=" -I$SRC/router"
+    CFLAGS+=" -Ddbg(fmt,args...)=fprintf(stderr,fmt,##args)"
 
-    cd ${router}/libpasswd
+    cd "$SRC/router/libpasswd"
     $CC $CFLAGS -c -o passwd.o passwd.c
     ${stdenv.cc.targetPrefix}ar rcs libpasswd.a passwd.o
   '';
 
   installPhase = ''
     mkdir -p $out/lib $out/include
-    cp libpasswd.a $out/lib/
-    cp passwd.h $out/include/
+    cp "$SRC/router/libpasswd/libpasswd.a" $out/lib/
+    cp "$SRC/router/libpasswd/passwd.h" $out/include/
   '';
 
   meta = {
