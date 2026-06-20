@@ -37,6 +37,15 @@
         in import ./shell.nix { inherit pkgs; }
       );
 
+      # Validation checks (nix flake check)
+      checks = forAllSystems (system:
+        let pkgs = nixpkgs.legacyPackages.${system};
+            custom = import ./pkgs { inherit pkgs; };
+        in {
+          rt-ax88u-validation = custom.rt-ax88u-validation or null;
+        }
+      );
+
       # NixOS configuration entrypoint
       # Available through 'nixos-rebuild --flake .#your-hostname'
       nixosConfigurations = rec {

@@ -55,4 +55,12 @@ in rec {
     };
   } else
     builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
+
+  # Validation checks for all RT-AX88U packages
+  rt-ax88u-validation = if crossPkgs != null then
+    crossPkgs.callPackage ./rt-ax88u-validation {
+      inherit rt-ax88u-bsp-kernel merlin-web-ui;
+    }
+  else
+    builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
 }
