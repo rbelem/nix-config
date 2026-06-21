@@ -351,6 +351,7 @@ KCONFIG
     homepage = "https://github.com/RMerl/asuswrt-merlin.ng";
     license = lib.licenses.gpl2Only;
     maintainers = with lib.maintainers; [ ];
-    platforms = [ "aarch64-linux" ];
+    # Cross-compiled from x86_64, runs on aarch64
+    platforms = lib.platforms.all;
   };
 }

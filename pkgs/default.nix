@@ -73,4 +73,21 @@ in rec {
     }
   else
     builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
+
+  # TRX firmware image for RT-AX88U
+  # Links together kernel LZMA compression + TRX header
+  rt-ax88u-firmware = if crossPkgs != null then
+    pkgs.callPackage ./rt-ax88u-firmware {
+      inherit rt-ax88u-bsp-kernel bcm4908lzma addtrx;
+    }
+  else
+    builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
+
+  # === Host tools (architecture-independent) ===
+
+  # bcm4908lzma — LZMA wrapper for BCM4908 CFE bootloader
+  bcm4908lzma = pkgs.callPackage ./bcm4908lzma { };
+
+  # addtrx — TRX V1 header prepender
+  addtrx = pkgs.callPackage ./addtrx { };
 }
