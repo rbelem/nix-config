@@ -14,11 +14,4 @@ in {
     loglevel = "3";
   };
 
-  # Lighttpd fallback for static files (works without Merlin httpd)
-  services.lighttpd = {
-    enable = true;
-    documentRoot = "${mwu.www}/www";
-    port = 8080;
-    enableModules = [ "mod_redirect" ];
-  };
 }

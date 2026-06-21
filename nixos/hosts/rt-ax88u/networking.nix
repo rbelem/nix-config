@@ -19,19 +19,18 @@
     }];
   };
 
-  # DHCP server for LAN
-  services.dhcpd4 = {
+  # DHCP server for LAN (dnsmasq replaces removed isc-dhcpd)
+  services.dnsmasq = {
     enable = true;
-    interfaces = [ "br0" ];
-    extraConfig = ''
-      option subnet-mask 255.255.255.0;
-      option broadcast-address 192.168.1.255;
-      option routers 192.168.1.1;
-      option domain-name-servers 1.1.1.1, 8.8.8.8;
-      subnet 192.168.1.0 netmask 255.255.255.0 {
-        range 192.168.1.100 192.168.1.254;
-      }
-    '';
+    resolveLocalQueries = false;
+    settings = {
+      interface = "br0";
+      dhcp-range = [ "192.168.1.100,192.168.1.254,255.255.255.0,12h" ];
+      dhcp-option = [
+        "3,192.168.1.1"     # router
+        "6,1.1.1.1,8.8.8.8" # DNS
+      ];
+    };
   };
 
   # NAT for LAN→WAN

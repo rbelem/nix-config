@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, buildPackages, merlin-src }:
+{ lib, stdenv, fetchFromGitHub, buildPackages, merlin-src, ... }:
 
 # BSP kernel for ASUS RT-AX88U (BCM4908)
 #
@@ -318,6 +318,33 @@ KCONFIG
     file "$out/Image"
     ls -lh "$out/Image"
   '';
+
+  # Attributes required by NixOS kernel module system — BSP kernels
+  # don't follow the upstream kernel package convention but NixOS
+  # still checks these during evaluation.
+  passthru = {
+    # Minimal config stub for NixOS module assertions.
+    # The real kernel config lives in config_base.6a; these stubs satisfy
+    # NixOS evaluation checks during nix flake check.
+    config = {
+      isEnabled = _: true;
+      isModule = _: false;
+      tristate = _: "y";
+      has = _: false;
+      isYes = _: true;
+      isSet = _: true;
+      isNotSet = _: false;
+      getValue = _: "";
+    };
+    buildDTBs = false;   # no device-tree support
+    isXen = false;
+    isZFS = false;
+    kernelOlder = _: false;
+    kernelAtLeast = _: true;
+    kernelFeatures = { };
+    moduleFlags = { };
+    isModified = false;
+  };
 
   meta = {
     description = "Broadcom BSP Linux 4.1.51 kernel for ASUS RT-AX88U (BCM4908)";

@@ -4,8 +4,12 @@
 
   imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
 
-  # BSP kernel (not upstream linuxPackages)
-  boot.kernelPackages = lib.mkForce pkgs.linuxPackagesFor pkgs.rt-ax88u-bsp-kernel;
+  # BSP kernel via linuxPackagesFor wrapper.
+  # Use base linuxPackages set for the NixOS module API (extend, etc.).
+  boot.kernelPackages = pkgs.linuxPackagesFor pkgs.rt-ax88u-bsp-kernel;
+  # BSP kernel doesn't use upstream device-tree infrastructure
+  hardware.deviceTree.enable = false;
+  boot.kernelModules = [ "mtd" "mtdblock" ];
   boot.kernelParams = [
     "console=ttyS0,115200"
     "earlycon"
@@ -33,13 +37,6 @@
     fsType = "jffs2";
     options = [ "rw" "noatime" ];
   };
-
-  # NVRAM device (CFE environment)
-  boot.kernelModules = [ "mtd" "mtdblock" "mtdram" ];
-
-  # Broadcom hardware watchdog
-  hardware.watchdog.enable = true;
-  hardware.watchdog.package = pkgs.rt-ax88u-bsp-kernel;
 
   nixpkgs.hostPlatform = "aarch64-linux";
 }

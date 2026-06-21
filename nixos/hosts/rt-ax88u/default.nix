@@ -8,6 +8,10 @@
     ./merlin-web-ui.nix
   ];
 
+  # Embedded CFE bootloader — no GRUB
+  boot.loader.grub.enable = false;
+  boot.loader.generic-extlinux-compatible.enable = true;
+
   # Router-optimized NixOS
   boot.tmp.cleanOnBoot = true;
   system.stateVersion = "24.11";

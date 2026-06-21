@@ -32,8 +32,8 @@ in {
     };
 
     nvramConfig = mkOption {
-      type = types.path;
-      default = "";
+      type = types.nullOr types.path;
+      default = null;
       description = "Path to pre-populated NVRAM config file";
     };
 
@@ -95,7 +95,7 @@ in {
           ${cfg.package}/sbin/httpd \
             -p ${toString cfg.listenPort} \
             -w /var/www \
-            ${optionalString (cfg.nvramConfig != "") "-n ${cfg.nvramConfig}"} \
+            ${optionalString (cfg.nvramConfig != null) "-n ${cfg.nvramConfig}"} \
             -l ${cfg.loglevel} \
             ${optionalString cfg.debug "-d"}
         '';
@@ -118,14 +118,6 @@ in {
         AmbientCapabilities = "CAP_NET_BIND_SERVICE CAP_NET_RAW";
         CapabilityBoundingSet = "CAP_NET_BIND_SERVICE CAP_NET_RAW";
       };
-    };
-
-    # Alternative: lighttpd as a fallback if Merlin httpd is unavailable
-    services.lighttpd = mkIf (!pathExists "${cfg.package}/sbin/httpd") {
-      enable = true;
-      documentRoot = "/var/www";
-      port = cfg.listenPort;
-      enableModules = [ "mod_cgi" "mod_redirect" ];
     };
 
     # Firewall — open web UI ports

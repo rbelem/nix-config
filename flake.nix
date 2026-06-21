@@ -60,7 +60,12 @@
         rt-ax88u = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
           specialArgs = { inherit inputs outputs; };
-          modules = [ ./nixos/hosts/rt-ax88u ];
+          modules = [
+            ./nixos/hosts/rt-ax88u
+            # Apply overlay so pkgs.rt-ax88u-bsp-kernel and pkgs.merlin-web-ui
+            # are available in NixOS modules when cross-evaluated
+            { nixpkgs.overlays = [ outputs.overlays.additions ]; }
+          ];
         };
       };
     };
