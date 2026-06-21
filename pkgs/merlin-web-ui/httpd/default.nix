@@ -1,4 +1,4 @@
-{ lib, stdenv, merlin-src, libshared, libnvram, libpasswd, mssl, libwebapi, openssl, jsonc, libxcrypt }:
+{ lib, stdenv, asus-src, libshared, libnvram, libpasswd, mssl, libwebapi, openssl, jsonc, libxcrypt }:
 
 # httpd — ASUSWRT-Merlin web server and UI backend.
 #
@@ -11,7 +11,7 @@
 # when available, or create stubs when not.
 
 let
-  srcBase = "${merlin-src}/release/src-rt-5.02axhnd";
+  srcBase = "${asus-src}/release/src-rt-5.02axhnd";
   httpdDir = "${srcBase}/router/httpd";
   prebuiltDir = "${httpdDir}/prebuild/RT-AX88U";
   wlSrc = "${srcBase}/bcmdrivers/broadcom/net/wl/impl51/main/src/include";
@@ -23,7 +23,7 @@ in stdenv.mkDerivation {
   pname = "merlin-httpd";
   version = "merlin-ng";
 
-  src = merlin-src;
+  src = asus-src;
 
   buildPhase = ''
     export CC="${toolPrefix}gcc"
@@ -56,6 +56,11 @@ in stdenv.mkDerivation {
     CFLAGS+=" -I$SRC/router/shared"
     CFLAGS+=" -I${wlSrc}"
     CFLAGS+=" -I${wlShared}/bcmwifi/include"
+    # nvram/bcmutils.h redirect — included as <nvram/bcmutils.h> in ASUS httpd code
+    mkdir -p "$PWD/components/nvram"
+    cat > "$PWD/components/nvram/bcmutils.h" << 'STUB_H'
+#include <bcmutils.h>
+STUB_H
     # Stub out missing Broadcom components include paths
     mkdir -p "$PWD/components/proto" "$PWD/components/wlioctl/include"
     # Aggressive stub generation for ALL missing Broadcom component headers
@@ -181,6 +186,7 @@ ETHERNET_H
 
     # Missing Broadcom/feature constants (for web.c compatibility)
     CFLAGS+=" -DASUS_DDNS -DTRANSLATE_ON_FLY -DFLASH_EMULATOR -DLinux -DWSC"
+    CFLAGS+=" -DRTCONFIG_ODMPID"  # define REPLACE_PRODUCTID_S struct in httpd.h
     CFLAGS+=" -DLINUX_KERNEL_VERSION=264451"
 
     # External library includes
@@ -241,6 +247,15 @@ VERSION_H
 #ifndef HTTPD_ROOTCA_KEY
 #define HTTPD_ROOTCA_KEY "/etc/cert.key"
 #endif
+#ifndef HTTPD_ROOTCA_CERT
+#define HTTPD_ROOTCA_CERT "/etc/cert.crt"
+#endif
+#ifndef HTTPD_ROOTCA_GEN_CERT
+#define HTTPD_ROOTCA_GEN_CERT "/etc/cert_gen.crt"
+#endif
+#ifndef HTTPD_ROOTCA_GEN_KEY
+#define HTTPD_ROOTCA_GEN_KEY "/etc/cert_gen.key"
+#endif
 #ifndef HTTPD_CERT
 #define HTTPD_CERT "/etc/cert.crt"
 #endif
@@ -295,10 +310,10 @@ MERLIN_DEFS
 #include <httpd.h>
 #include <shared.h>
 #include <bcmnvram.h>
-int ej_wl_status_array(int eid, webs_t wp, int argc, char **argv) {
+int ej_wl_status_array(int eid, void *wp, int argc, char **argv) {
     return websWrite(wp, "\"\",\"\",\"\",\"\",\"\",\"\"");
 }
-int ej_wl_extent_channel(int eid, webs_t wp, int argc, char **argv) {
+int ej_wl_extent_channel(int eid, void *wp, int argc, char **argv) {
     return websWrite(wp, "\"\"");
 }
 int wl_control_channel(int unit) { return 0; }
@@ -310,7 +325,7 @@ STUB_WEB_BCM
     for src in \
       httpd.c cgi.c ej.c web.c common.c \
       aspbw.c initial_web_hook.c apps.c \
-      sysinfo.c data_arrays.c \
+      libcaptcha.c \
       sysdeps/web-broadcom-am.c; do
       base=$(basename "$src" .c)
       echo "  CC $src"
@@ -359,6 +374,58 @@ int app_auth(void) { return 0; }
 int asusdebuglog(int level, char *path, int conlog, int showtime, unsigned int filesize, const char *msgfmt, ...) { return 0; }
 int ATE_FACTORY_MODE_STR(void) { return 0; }
 int auth_check(const char *s) { return 0; }
+void dbg(const char *fmt, ...) { }
+
+
+/* Needed at link time — libshared has these but the static linker
+   may not resolve them from a .so for static .o references. */
+int _eval(char *const argv[], char *stdout_path, int timeout, int *out) { return 0; }
+int _vstrsep(char **ptr, const char *delim, char *buf, size_t bufsz) { return 0; }
+void cprintf(const char *f, ...) { }
+int waitfor(const char *n, int t) { return 0; }
+int doSystem(const char *c, ...) { return 0; }
+int file2str(const char *p, char *b, int l) { return 0; }
+int kill_pidfile_s(void) { return 0; }
+int nvram_set_x(const char *n, ...) { return 0; }
+int num_of_wl_if(void) { return 0; }
+int ether_atoe(const char *p, void *e) { return 0; }
+int notify_rc(const char *f, ...) { return 0; }
+/* ej_* stubs for ASUS web.c (Wi-Fi 6E/6GHz handlers) */
+int ej_SiteSurvey(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_bcmbsd_def_policy(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_cable_diag(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_cap_2g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_cap_5g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_cap_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_cap_6g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_channel_list_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_channel_list_5g_20m(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_channel_list_5g_40m(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_channel_list_5g_80m(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_channel_list_60g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_channel_list_6g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_chanspecs_2g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_chanspecs_5g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_chanspecs_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_chanspecs_6g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_chipnum_2g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_chipnum_5g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_chipnum_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_chipnum_6g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_control_channel(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_edmg_channel(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_rate_2g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_rate_5g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_rate_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_rate_6g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_rssi_2g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_rssi_5g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_rssi_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_scan_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_sta_list_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_stainfo_list_2g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_stainfo_list_5g(int eid, void *wp, int argc, char **argv) { return 0; }
+int ej_wl_stainfo_list_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
 int captcha_on(void) { return 0; }
 int change_preferred_lang(void) { return 0; }
 char *char_to_ascii_safe(char *s) { return s; }
@@ -429,7 +496,6 @@ char *get_string_md5(const char *i) { return NULL; }
 int get_wifi_probe_result(void) { return 0; }
 int handle_nvram_modify_log(const char *n, ...) { return 0; }
 int is_builtin_profile(void) { return 0; }
-int notify_rc(const char *f, ...) { return 0; }
 int notify_rc_and_wait_2min(void) { return 0; }
 int nvram_get_f(const char *n, ...) { return 0; }
 int nvram_get_list_x(const char *n, ...) { return 0; }
@@ -445,7 +511,6 @@ int ipisdomain(void) { return 0; }
 int mime_referers(void) { return 0; }
 int referer_check(void) { return 0; }
 int nvram_set_f(const char *n, ...) { return 0; }
-int nvram_set_x(const char *n, ...) { return 0; }
 
 int router_state_defaults(void) { return 0; }
 int save_iptvSettings_to_file(void) { return 0; }
@@ -473,17 +538,19 @@ STUBEOF
     $CC -o httpd \
       httpd.o cgi.o ej.o web.o common.o \
       aspbw.o initial_web_hook.o apps.o \
-      sysinfo.o data_arrays.o web-broadcom-am.o \
+      libcaptcha.o web-broadcom-am.o \
       pwenc.o web_hook.o web-broadcom.o libwebapi_stubs.o httpd_extra_stubs.o libshared_stubs.o \
       -Wl,--allow-shlib-undefined \
-      -L${libwebapi}/lib -lwebapi \
+      -Wl,--start-group \
       -L${libshared}/lib -lshared \
+      -L${libwebapi}/lib -lwebapi \
       -L${libnvram}/lib -lnvram \
       -L${libpasswd}/lib -lpasswd \
       -L${mssl}/lib -lmssl \
       -L${libxcrypt}/lib -lcrypt \
       -L${openssl.out}/lib -lssl -lcrypto -ldl \
       -L${jsonc}/lib -ljson-c \
+      -Wl,--end-group \
       -lm -lpthread -lgcc_s
   '';
 

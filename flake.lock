@@ -1,5 +1,18 @@
 {
   "nodes": {
+    "asus-gpl-rtax88u": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1727073590,
+        "narHash": "sha256-UnEcfIiRNwvWvGTYDGG4ETa+MzXtln3OGMnkuRDdEj8=",
+        "path": "/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt",
+        "type": "path"
+      }
+    },
     "hardware": {
       "inputs": {
         "nixpkgs": "nixpkgs"
@@ -49,6 +62,7 @@
     },
     "root": {
       "inputs": {
+        "asus-gpl-rtax88u": "asus-gpl-rtax88u",
         "hardware": "hardware",
         "nixpkgs": "nixpkgs_2"
       }

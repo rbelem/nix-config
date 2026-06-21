@@ -1,4 +1,4 @@
-{ stdenv, lib, merlin-src }:
+{ stdenv, lib, asus-src }:
 
 # Static web UI files from Merlin — no compilation needed.
 # These are the HTML, JS, CSS, and image files served by httpd.
@@ -7,7 +7,7 @@ stdenv.mkDerivation {
   pname = "merlin-www";
   version = "merlin-ng";
 
-  src = merlin-src;
+  src = asus-src;
 
   buildPhase = "true";
 

@@ -1,15 +1,15 @@
-{ stdenv, lib, merlin-src, libxcrypt }:
+{ stdenv, lib, asus-src, libxcrypt }:
 
 # Password hashing library used by httpd for authentication.
 # Two files: passwd.c + passwd.h — statically linked into httpd.
 
 let
-  srcBase = "${merlin-src}/release/src-rt-5.02axhnd";
+  srcBase = "${asus-src}/release/src-rt-5.02axhnd";
 in stdenv.mkDerivation {
   pname = "libpasswd";
   version = "merlin-ng";
 
-  src = merlin-src;
+  src = asus-src;
 
   buildInputs = [ libxcrypt ];
 

@@ -1,11 +1,17 @@
 # Custom packages, that can be defined similarly to ones from nixpkgs
 # You can build them using 'nix build .#example' or (legacy) 'nix-build -A example'
 
-{ pkgs ? (import ../nixpkgs.nix) { } } @ args:
+{ pkgs ? (import ../nixpkgs.nix) { }, inputs ? { } } @ args:
 
 let
   lib = pkgs.lib;
 
+  # ASUS GPL source (newer than Merlin — RT-AX88U 3.0.0.4.388_24209)
+  # Passed via flake input asus-gpl-rtax88u (path:/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt)
+  asus-src = args.asus-src or inputs.asus-gpl-rtax88u or
+    (builtins.throw "ASUS GPL source not available. Run: nix flake lock --update-input asus-gpl-rtax88u");
+
+  # Merlin source (kept for nvram library which Broadcom doesn't distribute in ASUS GPL)
   merlin-src = args.merlin-src or (pkgs.fetchFromGitHub {
     owner = "RMerl";
     repo = "asuswrt-merlin.ng";
@@ -27,33 +33,35 @@ in rec {
 
   # BSP kernel — cross-compiled with Broadcom blobs
   rt-ax88u-bsp-kernel = if crossPkgs != null then
-    crossPkgs.callPackage ./rt-ax88u-bsp-kernel { inherit merlin-src; }
+    crossPkgs.callPackage ./rt-ax88u-bsp-kernel { asus-src = asus-src; }
   else
     builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
 
-  # Merlin web UI — piecemeal source build from Merlin tree
+  # Merlin web UI — piecemeal source build from ASUS GPL source tree
   # Each component is cross-compiled for aarch64
   # Individual web UI packages (accessed via .merlin-web-ui.<name>)
   merlin-web-ui = if crossPkgs != null then let
-    www = crossPkgs.callPackage ./merlin-web-ui/www { inherit merlin-src; };
-    libshared = crossPkgs.callPackage ./merlin-web-ui/libshared { inherit merlin-src; };
+    www = crossPkgs.callPackage ./merlin-web-ui/www { asus-src = asus-src; };
+    libshared = crossPkgs.callPackage ./merlin-web-ui/libshared { asus-src = asus-src; };
     libnvram = crossPkgs.callPackage ./merlin-web-ui/libnvram {
+      # nvram source only in Merlin GPL, not in ASUS GPL
       inherit merlin-src libshared;
     };
     libpasswd = crossPkgs.callPackage ./merlin-web-ui/libpasswd {
-      inherit merlin-src;
+      asus-src = asus-src;
       libxcrypt = crossPkgs.libxcrypt;
     };
     mssl = crossPkgs.callPackage ./merlin-web-ui/mssl {
-      inherit merlin-src;
+      asus-src = asus-src;
       openssl = crossPkgs.openssl;
     };
     libwebapi = crossPkgs.callPackage ./merlin-web-ui/libwebapi {
-      inherit merlin-src;
+      asus-src = asus-src;
       jsonc = crossPkgs.json_c;
     };
     httpd = crossPkgs.callPackage ./merlin-web-ui/httpd {
-      inherit merlin-src libshared libnvram libpasswd mssl libwebapi;
+      asus-src = asus-src;
+      inherit libshared libnvram libpasswd mssl libwebapi;
       openssl = crossPkgs.openssl;
       jsonc = crossPkgs.json_c;
       libxcrypt = crossPkgs.libxcrypt;

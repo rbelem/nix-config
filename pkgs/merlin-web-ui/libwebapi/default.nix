@@ -1,4 +1,4 @@
-{ stdenv, lib, merlin-src, jsonc }:
+{ stdenv, lib, asus-src, jsonc }:
 
 # Web API library — provides REST API endpoints for the web UI.
 # Used by httpd to expose router configuration via HTTP.
@@ -7,7 +7,7 @@ stdenv.mkDerivation {
   pname = "libwebapi";
   version = "merlin-ng";
 
-  src = merlin-src;
+  src = asus-src;
 
   NIX_CFLAGS_COMPILE = [ "-I${jsonc.dev}/include/json-c" ];
 
@@ -16,7 +16,7 @@ stdenv.mkDerivation {
     CFLAGS="-Os -Wall -fPIC -std=gnu17"
 
     SRC="$PWD/release/src-rt-5.02axhnd"
-    KCFG="${merlin-src}/release/src-rt-5.02axhnd/kernel/linux-4.1/config_base.6a"
+    KCFG="${asus-src}/release/src-rt-5.02axhnd/kernel/linux-4.1/config_base.6a"
 
     # Generate rtconfig.h (needed by shared.h)
     echo "/* Auto-generated */" > "$SRC/router/shared/rtconfig.h"
@@ -44,11 +44,11 @@ REPLACE_HEADER
 
     CFLAGS+=" -include $SRC/router/libwebapi/replace_productid.h"
     CFLAGS+=" -I$SRC/router/libwebapi"
-    CFLAGS+=" -I${merlin-src}/release/src-rt-5.02axhnd/include"
+    CFLAGS+=" -I${asus-src}/release/src-rt-5.02axhnd/include"
     CFLAGS+=" -I$SRC/router"
     CFLAGS+=" -I$SRC/router/shared"
     CFLAGS+=" -I$SRC/router/httpd"
-    CFLAGS+=" -I${merlin-src}/release/src-rt-5.02axhnd/bcmdrivers/broadcom/net/wl/impl51/main/src/include"
+    CFLAGS+=" -I${asus-src}/release/src-rt-5.02axhnd/bcmdrivers/broadcom/net/wl/impl51/main/src/include"
 
     cd "$SRC/router/libwebapi"
     $CC $CFLAGS -c -o webapi.o webapi.c

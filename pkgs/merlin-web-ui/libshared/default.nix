@@ -1,4 +1,4 @@
-{ stdenv, lib, merlin-src }:
+{ stdenv, lib, asus-src }:
 
 # libshared — ASUSWRT-Merlin shared utility library.
 #
@@ -7,7 +7,7 @@
 # Build flags match Merlin's router/shared/Makefile for HND_ROUTER_AX.
 
 let
-  srcBase = "${merlin-src}/release/src-rt-5.02axhnd";
+  srcBase = "${asus-src}/release/src-rt-5.02axhnd";
   router = "${srcBase}/router";
   hndSrc = srcBase;
   kernelConfig = "${srcBase}/kernel/linux-4.1/config_base.6a";
@@ -59,7 +59,7 @@ in stdenv.mkDerivation {
   pname = "libshared";
   version = "merlin-ng";
 
-  src = merlin-src;
+  src = asus-src;
 
   buildPhase = ''
     export CC="${toolPrefix}gcc"

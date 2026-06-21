@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, buildPackages, merlin-src, ... }:
+{ lib, stdenv, fetchFromGitHub, buildPackages, asus-src, ... }:
 
 # BSP kernel for ASUS RT-AX88U (BCM4908)
 #
@@ -15,7 +15,7 @@ let
   pname = "linux";
   version = "4.1.51-rt-ax88u";
 
-  src = merlin-src;
+  src = asus-src;
 
   # Merlin build system paths used by kernel Makefile's bcmdrivers-y logic.
   # These are relative to the kernel source dir ($KERNEL_DIR).
@@ -57,7 +57,7 @@ in stdenv.mkDerivation {
   KBUILD_BUILD_HOST = "nixos";
   HOST_EXTRACFLAGS = "-fno-common";
   HOSTLDFLAGS = "-Wl,--allow-multiple-definition";
-  KCFLAGS = "-I../../bcmdrivers/opensource/include/bcm963xx -I../../shared/opensource/include -I../../shared/opensource/include/bcm963xx -I../../shared/opensource/flash -I../../shared/opensource/include/drv/phys -I../../router-sysdep.rt-ax88u/bcm_util -I../../shared/opensource/include/pmc -I../../shared/opensource/include/drv/mdio -I../../shared/opensource/include/drv -I../../bcmdrivers/broadcom/include/bcm963xx";
+  KCFLAGS = "-I../../bcmdrivers/opensource/include/bcm963xx -I../../shared/opensource/include -I../../shared/opensource/include/bcm963xx -I../../shared/opensource/flash -I../../shared/opensource/include/drv/phys -I../../router-sysdep/bcm_util -I../../shared/opensource/include/pmc -I../../shared/opensource/include/drv/mdio -I../../shared/opensource/include/drv -I../../bcmdrivers/broadcom/include/bcm963xx";
 
   # disable warnings-as-errors for modern gcc
   NIX_CFLAGS_COMPILE = [ "-Wno-error" ];
@@ -79,7 +79,7 @@ in stdenv.mkDerivation {
     echo "=== Configuring kernel ==="
     HND_SRC="$PWD/release/src-rt-5.02axhnd"
     KERNEL_DIR="$HND_SRC/kernel/linux-4.1"
-    BLOBS="$HND_SRC/router-sysdep.rt-ax88u/hnd_extra/prebuilt"
+    BLOBS="$HND_SRC/router-sysdep/hnd_extra/prebuilt"
 
     # === Deploy prebuilt blobs ===
     echo "--- Deploying prebuilt blobs ---"

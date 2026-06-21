@@ -1,4 +1,4 @@
-{ stdenv, lib, merlin-src, openssl }:
+{ stdenv, lib, asus-src, openssl }:
 
 # Mini SSL wrapper — simple HTTPS abstraction used by httpd.
 # Provides a thin layer over OpenSSL for HTTPS support.
@@ -7,7 +7,7 @@ stdenv.mkDerivation {
   pname = "libmssl";
   version = "merlin-ng";
 
-  src = merlin-src;
+  src = asus-src;
 
   buildPhase = ''
     export CC="${stdenv.cc.targetPrefix}gcc"
@@ -16,7 +16,7 @@ stdenv.mkDerivation {
     SRC="$PWD/release/src-rt-5.02axhnd"
     CFLAGS+=" -I$SRC/router/mssl"
     CFLAGS+=" -I${openssl.dev}/include"
-    CFLAGS+=" -I${merlin-src}/release/src-rt-5.02axhnd/include"
+    CFLAGS+=" -I${asus-src}/release/src-rt-5.02axhnd/include"
     CFLAGS+=" -I$SRC/router"
 
     cd "$SRC/router/mssl"
