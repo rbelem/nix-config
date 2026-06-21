@@ -332,6 +332,14 @@ STUB_WEB_BCM
       $CC $CFLAGS -c -o "$base.o" "$src"
     done
 
+    # === Compile ASUS http.c (needs -include shared.h for dprintf macro) ===
+    echo "  CC http.c"
+    $CC $CFLAGS -include shared.h -c -o http.o "$SRC/router/httpd/http.c" || true
+
+    # === Compile ASUS nvram_f.c ===
+    echo "  CC nvram_f.c"
+    $CC $CFLAGS -c -o nvram_f.o "$SRC/router/httpd/nvram_f.c"
+
     # === Stub prebuilt objects (wrong arch for cross-compile) ===
     # pwenc.o and web_hook.o are prebuilt ARM objects from Merlin's prebuild
     # directory. They don't work for aarch64 cross-compilation.
@@ -386,7 +394,6 @@ int waitfor(const char *n, int t) { return 0; }
 int doSystem(const char *c, ...) { return 0; }
 int file2str(const char *p, char *b, int l) { return 0; }
 int kill_pidfile_s(void) { return 0; }
-int nvram_set_x(const char *n, ...) { return 0; }
 int num_of_wl_if(void) { return 0; }
 int ether_atoe(const char *p, void *e) { return 0; }
 int notify_rc(const char *f, ...) { return 0; }
@@ -538,9 +545,9 @@ STUBEOF
     $CC -o httpd \
       httpd.o cgi.o ej.o web.o common.o \
       aspbw.o initial_web_hook.o apps.o \
-      libcaptcha.o web-broadcom-am.o \
+      libcaptcha.o nvram_f.o http.o web-broadcom-am.o \
       pwenc.o web_hook.o web-broadcom.o libwebapi_stubs.o httpd_extra_stubs.o libshared_stubs.o \
-      -Wl,--allow-shlib-undefined \
+      -Wl,--allow-shlib-undefined -Wl,--allow-multiple-definition \
       -Wl,--start-group \
       -L${libshared}/lib -lshared \
       -L${libwebapi}/lib -lwebapi \
