@@ -1,4 +1,4 @@
-{ lib, stdenv, asus-src, libshared, libnvram, libpasswd, mssl, libwebapi, openssl, jsonc, libxcrypt }:
+{ lib, stdenv, asus-src, libshared, libnvram, libpasswd, mssl, libwebapi, openssl, jsonc, libxcrypt, geoip }:
 
 # httpd — ASUSWRT-Merlin web server and UI backend.
 #
@@ -56,10 +56,45 @@ in stdenv.mkDerivation {
     CFLAGS+=" -I$SRC/router/shared"
     CFLAGS+=" -I${wlSrc}"
     CFLAGS+=" -I${wlShared}/bcmwifi/include"
-    # nvram/bcmutils.h redirect — included as <nvram/bcmutils.h> in ASUS httpd code
+    # nvram/bcmutils.h — included as <nvram/bcmutils.h> from bcmutils.c.
+    # For bcmutils.c compilation, we provide an empty stub because:
+    # 1. bcmutils.c DEFINES all the functions that bcmutils.h DECLARES
+    # 2. Including the real bcmutils.h causes conflicting-type errors
+    #    (e.g., char* vs const char*, crc8 vs hndcrc8, etc.)
+    # For other files that include <nvram/bcmutils.h>, the real header
+    # is still available via -I${wlSrc}, but files compiled with -I
+    # explicit paths will use whichever comes first in the search order.
+    # By keeping this empty, bcmutils.c can define its own functions.
+    # Other files that need declarations from bcmutils.h still get them
+    # from the ${wlSrc} include path.
     mkdir -p "$PWD/components/nvram"
     cat > "$PWD/components/nvram/bcmutils.h" << 'STUB_H'
-#include <bcmutils.h>
+/* Minimal stub for bcmutils.c compilation.
+ * Provides types and macros without the function declarations that
+ * would conflict with bcmutils.c's own definitions. */
+#ifndef _nvram_bcmutils_h_
+#define _nvram_bcmutils_h_
+
+#include <typedefs.h>
+
+/* CRC constants used by crc8/crc16/crc32 functions */
+#define CRC8_INIT_VALUE  0xff
+#define CRC16_INIT_VALUE 0xffff
+#define CRC32_INIT_VALUE 0xffffffff
+
+/* Packet queue struct (needed by pktqinit/pktenq/pktdeq).
+   We define struct pktq ourselves instead of including hnd_pktq.h,
+   because hnd_pktq.h defines pktqinit/pktenq/pktdeq as MACROS which
+   conflict with the FUNCTION definitions in bcmutils.c. */
+#ifndef MAXQLEN
+#define MAXQLEN 64
+#endif
+struct pktq {
+    volatile uint head;
+    volatile uint tail;
+    void *p[MAXQLEN];
+};
+#endif
 STUB_H
     # Stub out missing Broadcom components include paths
     mkdir -p "$PWD/components/proto" "$PWD/components/wlioctl/include"
@@ -336,6 +371,17 @@ STUB_WEB_BCM
     echo "  CC http.c"
     $CC $CFLAGS -include shared.h -c -o http.o "$SRC/router/httpd/http.c" || true
 
+    # === Compile ASUS bcmutils.c (empty nvram/bcmutils.h stub avoids SDK conflicts) ===
+    echo "  CC bcmutils.c"
+    $CC $CFLAGS -c -o bcmutils.o "$SRC/router/httpd/bcmutils.c" || true
+
+    # === Compile ASUS geoiplookup.c (needs GeoIP library) ===
+    echo "  CC geoiplookup.c"
+    $CC $CFLAGS \
+      -I${geoip}/include \
+      -I$SRC/router/GeoIP-1.6.2/libGeoIP \
+      -c -o geoiplookup.o "$SRC/router/httpd/geoiplookup.c" || true
+
     # === Compile ASUS nvram_f.c ===
     echo "  CC nvram_f.c"
     $CC $CFLAGS -c -o nvram_f.o "$SRC/router/httpd/nvram_f.c"
@@ -545,7 +591,7 @@ STUBEOF
     $CC -o httpd \
       httpd.o cgi.o ej.o web.o common.o \
       aspbw.o initial_web_hook.o apps.o \
-      libcaptcha.o nvram_f.o http.o web-broadcom-am.o \
+      bcmutils.o geoiplookup.o libcaptcha.o nvram_f.o http.o web-broadcom-am.o \
       pwenc.o web_hook.o web-broadcom.o libwebapi_stubs.o httpd_extra_stubs.o libshared_stubs.o \
       -Wl,--allow-shlib-undefined -Wl,--allow-multiple-definition \
       -Wl,--start-group \
@@ -557,6 +603,7 @@ STUBEOF
       -L${libxcrypt}/lib -lcrypt \
       -L${openssl.out}/lib -lssl -lcrypto -ldl \
       -L${jsonc}/lib -ljson-c \
+      -L${geoip}/lib -lGeoIP \
       -Wl,--end-group \
       -lm -lpthread -lgcc_s
   '';

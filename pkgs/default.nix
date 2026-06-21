@@ -65,6 +65,7 @@ in rec {
       openssl = crossPkgs.openssl;
       jsonc = crossPkgs.json_c;
       libxcrypt = crossPkgs.libxcrypt;
+      geoip = crossPkgs.geoip;
     };
   in crossPkgs.symlinkJoin {
     name = "merlin-web-ui";
