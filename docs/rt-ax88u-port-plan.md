@@ -2,6 +2,43 @@
 
 ## License: CC0 — do whatever you want with this plan.
 
+## Golden Rule: RT-AX88U Only, Then Extend
+
+**Implement only what is needed for the RT-AX88U router.** After it works perfectly
+(All hardware features verified, stable in production), extend support to other
+models.
+
+### Rationale
+
+- RT-AX88U (BCM4908) is the target hardware — everything else is speculation
+- Multi-model support adds complexity, abstraction layers, and untested code paths
+- Merlin firmware has subtle model-specific differences in:
+  - GPIO pin assignments (LEDs, buttons, USB power)
+  - NAND flash partition layout
+  - Switch configuration (BCM53134 vs others)
+  - Wi-Fi radio calibration data (board-specific)
+  - Prebuilt blob compatibility (some are model-specific)
+  - Web UI strings and defaults
+- Each model needs hardware testing — cannot be done blind
+
+### What This Means for Implementation
+
+- **`CONFIG_*` flags, DTS files, kernel configs**: RT-AX88U values only
+- **Prebuilt blobs**: only those for RT-AX88U (`hnd_extra/prebuilt/`) with correct arch
+- **httpd/web UI**: only the files needed for the RT-AX88U's feature set
+- **NixOS module options**: no generic router abstraction — RT-AX88U specifics
+- **If a feature requires a change that is RT-AX88U-specific, make it so**
+  Don't add abstraction for future models until the second model is being ported
+
+### When to Extend
+
+1. RT-AX88U boots NixOS with all hardware working
+2. Wi-Fi (both bands), Ethernet, switch, USB, LEDs, buttons verified
+3. Router has been stable in production for 30+ days
+4. A second RT-AX88U (or another BCM4908 router) is available for testing
+
+Only then should model-generic abstractions be introduced.
+
 ---
 
 **Target:** ASUS RT-AX88U — Broadcom BCM49408 (quad Cortex-A53 @ 1.8 GHz), 1 GiB RAM,
