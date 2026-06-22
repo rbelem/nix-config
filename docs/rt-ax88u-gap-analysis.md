@@ -1,8 +1,9 @@
 # RT-AX88U NixOS Port — Gap Analysis
 
 **Generated:** 2026-06-22  
+**Updated:** 2026-06-22 (firmware analysis)  
 **Based on:** codebase audit + session handoff `/tmp/rt-ax88u-session-2026-06-22.md`  
-**Companion:** `docs/rt-ax88u-port-plan.md`
+**Companion:** `docs/rt-ax88u-port-plan.md`, `docs/rt-ax88u-stock-firmware-analysis.md`
 
 ---
 
@@ -28,9 +29,9 @@
 | libwebapi (REST API library) | `pkgs/merlin-web-ui/libwebapi/default.nix` | ✅ |
 | httpd (web server, 61 stubs) | `pkgs/merlin-web-ui/httpd/default.nix` | ✅ |
 | www static files | `pkgs/merlin-web-ui/www/default.nix` | ✅ |
-| bcm4908lzma (CFE LZMA compressor) | `pkgs/bcm4908lzma/default.nix` | ✅ |
-| addtrx (TRX V1 header prepender) | `pkgs/addtrx/default.nix` | ✅ |
-| TRX firmware image package | `pkgs/rt-ax88u-firmware/default.nix` | ✅ |
+| bcm4908lzma (CFE LZMA compressor) | `pkgs/bcm4908lzma/default.nix` | 🟡 **format wrong** (TRX) |
+| addtrx (TRX V1 header prepender) | `pkgs/addtrx/default.nix` | 🟡 **format wrong** (TRX) |
+| TRX firmware image package | `pkgs/rt-ax88u-firmware/default.nix` | 🟡 **format wrong** (should be UBI) |
 | Validation pipeline (kernel ELF + config, web UI file check) | `pkgs/rt-ax88u-validation/default.nix` | ✅ |
 | `nix flake check` passes | `flake.nix` | ✅ |
 | NixOS host config (evaluates) | `nixos/hosts/rt-ax88u/` | ✅ |
@@ -45,19 +46,36 @@
 
 ## 2. Critical Gaps (Boot Blockers)
 
-### 2.1 ❌ No initramfs — firmware is kernel-only, cannot boot
+### 2.1 ❌ Wrong image format — CFE expects UBI, we build TRX
 
-The firmware builds `kernel/Image → LZMA → TRX`. No initramfs cpio is appended.
-Without it, the kernel panics at `VFS: Unable to mount root fs`.
+Our pipeline: `kernel/Image → bcm4908lzma → addtrx` produces a TRX image.
+Stock and Merlin firmwares both use **UBI `.w`** format containing a UBIFS
+volume (`BcmFs-ubifs`). CFE mounts UBIFS and reads `vmlinux.lz` from it.
 
-**Needed:** `pkgs/rt-ax88u-initramfs/` with busybox + mount + switch_root,
-appended to kernel Image before LZMA compression.
+Our TRX approach won't boot — CFE expects a UBI image on NAND, not a raw
+compressed kernel at a fixed offset.
 
-**Reference:** Port plan Phase 2.2a (lines 969-1037) has a complete stub.
+**Needed:** Replace `bcm4908lzma` + `addtrx` pipeline with UBI image generation:
+- Build `vmlinux.lz` (LZMA kernel, optionally with embedded initramfs)
+- Create UBI image with `BcmFs-ubifs` volume containing kernel + initramfs
+- Prepend the Broadcom CFE header (0x85 0x19 tags from stock firmware)
+
+**Reference:** `docs/rt-ax88u-stock-firmware-analysis.md` layout sections.
 
 ---
 
-### 2.2 ❌ No systemd v252 override — systemd 259+ refuses kernel 4.1
+### 2.2 ❌ No initramfs — firmware is kernel-only, cannot boot
+
+The firmware builds `kernel/Image → LZMA → TRX`. No initramfs cpio is appended.
+Even after fixing the UBI format, the kernel inside `vmlinux.lz` needs an
+initramfs or rootfs to boot.
+
+**Needed:** `pkgs/rt-ax88u-initramfs/` with busybox + mount + switch_root,
+embedded into the kernel before LZMA compression.
+
+---
+
+### 2.3 ❌ No systemd v252 override — systemd 259+ refuses kernel 4.1
 
 Current nixpkgs ships systemd ≥259 which requires kernel ≥5.10.
 BSP kernel is 4.1.51. No override exists anywhere.
@@ -71,7 +89,18 @@ BSP kernel is 4.1.51. No override exists anywhere.
 
 ---
 
-### 2.3 ❌ Contradictory root filesystem config
+### 2.4 ❌ No initramfs — firmware is kernel-only, cannot boot
+
+The current TRX pipeline compresses raw kernel/Image. No initramfs cpio is
+appended. Even after switching to UBI format, the kernel in `vmlinux.lz`
+needs an initramfs or rootfs to reach NixOS stage 1.
+
+**Needed:** `pkgs/rt-ax88u-initramfs/` with busybox + mount + switch_root,
+embedded into kernel Image before LZMA compression.
+
+---
+
+### 2.5 ❌ Contradictory root filesystem config
 
 `hardware-configuration.nix` sets `root=/dev/mtdblock9 rootfstype=squashfs`
 (pointing at Merlin's firmware partition). Port plan recommends USB boot
@@ -83,9 +112,9 @@ boot flow. Remove mtdblock9/squashfs references.
 
 ---
 
-### 2.4 ❌ `boot.loader = extlinux` — wrong for CFE bootloader
+### 2.6 ❌ `boot.loader = extlinux` — wrong for CFE bootloader
 
-CFE loads kernel directly from firmware NAND partition. extlinux is for U-Boot.
+CFE loads kernel from UBIFS volume on NAND. extlinux is for U-Boot.
 Dead config option on this hardware.
 
 **Needed:** Remove `boot.loader.generic-extlinux-compatible.enable = true`.
@@ -93,16 +122,39 @@ The bootloader is CFE, not configurable from userspace.
 
 ---
 
-### 2.5 ❌ No DTB generation — using reference board DTS
+### 2.7 ❌ No DTB generation — using reference board DTS
 
 `passthru.buildDTBs = false` and `hardware.deviceTree.enable = false`.
 Kernel uses Merlin's 94908REF reference DTS (not RT-AX88U specific).
 GPIO/LED/button/switch pin assignments are speculative.
 
 **Needed:** RT-AX88U-specific DTS with proper BCM53134 switch binding,
-LED/button GPIOs, USB power control.
+LED/button GPIOs, USB power control. Note: CFE patches the DTB at boot
+(time memory from 128 MB → 1 GB, board-specific GPIOs). Our DTS is a
+fallback — the active DTB comes from CFE.
 
-**Reference:** Port plan Phase 0.6 (lines 614-637).
+**Reference:** Port plan Phase 0.6 (lines 614-637), stock firmware analysis
+section 4.
+
+---
+
+### 2.8 ❌ Secure boot — CFE authenticates kernel via vmlinux.sig
+
+Stock and Merlin firmware both include `vmlinux.sig` (RSA signature) alongside
+`vmlinux.lz` in the UBIFS volume. CFE verifies the signature before decompression:
+
+```
+Authenticating vmlinux.lz ...
+Image vmlinux.lz cannot be authenticated. Stoppping
+```
+
+Our custom kernel will not have a valid signature.
+
+**Needed:** Determine if CFE on RT-AX88U hardware enforces signature
+verification. If yes, we need:
+- A CFE that skips auth (recovery mode? serial interrupt?)
+- Or to sign with ASUS's key (impossible without private key)
+- Or a CFE exploit to bypass the check
 
 ---
 
@@ -132,10 +184,10 @@ Current checks only:
 
 **Missing:**
 - Blob symbol presence (`bcm_enet_init`, `wl_init`, `pktrunner_init`, `bdmf_init`)
-- TRX header magic + CRC validation
+- UBI image structure validation (EC headers, volume table)
 - Kernel version string check (`Linux version 4.1`)
 - QEMU smoke boot test
-- Merlin reference cross-check (symbol table diff)
+- Stock firmware cross-check (DTB comparison, symbol table diff)
 
 **Reference:** Port plan Validation Strategy (lines 1307-1579) has all layers
 defined. Implement Layers 2a-2g.
@@ -204,13 +256,14 @@ enabled in the final `.config`.
 ## 5. Summary by Priority
 
 | Priority | Gap | Depends on | Effort |
-|---|---|---|---|
-| **P0** | Initramfs | — | 1-2d |
+|---|---|---|---|---|
+| **P0** | UBI image format (replace TRX) | — | 2-3d |
+| **P0** | Secure boot investigation | — | 2d |
 | **P0** | systemd v252 override | — | 1d |
-| **P0** | Fix root config + bootloader | — | 1h |
-| **P1** | Initramfs boot path (USB mount, switch_root) | P0 initramfs | 2-3d |
+| **P1** | Initramfs | P0 UBI format | 1-2d |
+| **P1** | Fix root config + bootloader | — | 1h |
 | **P1** | Kernel modules build reliability | — | 1d |
-| **P1** | DTB generation (real device tree) | — | 1d |
+| **P1** | DTB + CFE patching understanding | — | 1d |
 | **P1** | Validation pipeline expansion | — | 1d |
 | **P2** | notify_rc → simple IPC | — | 1-2d |
 | **P2** | nvram persistence infrastructure | — | 1d |
@@ -231,36 +284,33 @@ enabled in the final `.config`.
                     │ (done)       │
                     └──────┬───────┘
                            │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-     ┌────────────┐ ┌──────────┐ ┌──────────┐
-     │ Initramfs  │ │ systemd  │ │ DTB      │
-     │ (P0)       │ │ override │ │ (P1)     │
-     └─────┬──────┘ │ (P0)     │ └──────────┘
-           │        └────┬─────┘
-           ▼             ▼
-     ┌─────────────────────────┐
-     │  Boot path integration  │
-     │  (initramfs → systemd)  │
-     └────────────┬────────────┘
-                  │
-                  ▼
-     ┌─────────────────────────┐
-     │  Kernel modules + USB   │
-     │  storage verification   │
-     └────────────┬────────────┘
-                  │
-                  ▼
-     ┌─────────────────────────┐
-     │  notify_rc + nvram      │
-     │  (web UI goes live)     │
-     └────────────┬────────────┘
-                  │
-                  ▼
-     ┌─────────────────────────┐
-     │  Networking hardening   │
-     │  + CI + docs            │
-     └─────────────────────────┘
+              ┌────────────┼────────────────┐
+              ▼            ▼                ▼
+     ┌────────────┐ ┌──────────┐  ┌──────────────┐
+     │ UBI format │ │ Secure   │  │ systemd      │
+     │ (P0)       │ │ boot     │  │ override(P0) │
+     └─────┬──────┘ │ (P0)     │  └──────┬───────┘
+           │        └────┬─────┘         │
+           ▼              │              ▼
+     ┌────────────┐       │     ┌─────────────────┐
+     │ Initramfs  │◄──────┘     │ Boot path       │
+     │ (P1)       │             │ integration     │
+     └─────┬──────┘             └────────┬────────┘
+           │                            │
+           ▼                            ▼
+     ┌────────────────────────────────────────┐
+     │  Kernel modules + USB storage verify   │
+     └────────────────┬───────────────────────┘
+                      │
+                      ▼
+     ┌────────────────────────────────────────┐
+     │  notify_rc + nvram (web UI goes live)  │
+     └────────────────┬───────────────────────┘
+                      │
+                      ▼
+     ┌────────────────────────────────────────┐
+     │  Networking hardening + CI + docs      │
+     └────────────────────────────────────────┘
 ```
 
 ---
@@ -273,3 +323,4 @@ enabled in the final `.config`.
 4. Enable `CONFIG_USB_STORAGE`, `CONFIG_EXT4_FS` in kernel config patch
 5. Add blob symbol checks to validation (uncomment `nm` section)
 6. Add real `kernel.release` to `config` passthru
+7. Read stock firmware DTB directly into kernel params (`coherent_pool=4M ...`)
