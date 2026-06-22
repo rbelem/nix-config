@@ -359,14 +359,33 @@ typedef struct { unsigned char ea[6]; int val; int rssi; } scb_val_t;
 MERLIN_DEFS
     CFLAGS+=" -include $PWD/libasuslog_stub.h -include $PWD/merlin_defs.h"
 
-    # === Comprehensive web-broadcom stub (Broadcom SDK not available) ===
-    # web-broadcom.c requires Broadcom SDK types not in ASUS GPL.
-    # This stub provides all referenced functions as return-0 placeholders.
-    # When the real file can be compiled (full SDK available), remove this block.
-    cat > "$SRC/router/httpd/sysdeps/web-broadcom.c" << 'STUB_WB'
-/* Stub replacement for ASUS web-broadcom.c (Broadcom SDK types not in GPL).
- * Signatures must match httpd.h extern declarations where they exist.
- * Do NOT include httpd.h — it declares extern prototypes that conflict. */
+    # === Try compiling real web-broadcom.c (ASUS Broadcom wireless web UI) ===
+    # The real file provides ej_wl_* implementations using Broadcom SDK headers.
+    # If headers are unavailable, fall back to generated stubs.
+    WBCM_REAL="$SRC/router/httpd/sysdeps/web-broadcom.c"
+    WBCM_STUB="$SRC/router/httpd/sysdeps/web-broadcom-stub.c"
+    # Strip all force-includes for web-broadcom.c (they shadow real Broadcom SDK headers)
+    # and add the Broadcom wireless component include paths for real headers.
+    WBCM_CFLAGS=""
+    prev_was_include=0
+    for arg in $CFLAGS; do
+        if [ "$arg" = "-include" ]; then
+            prev_was_include=1
+        elif [ "$prev_was_include" = 1 ]; then
+            prev_was_include=0
+        else
+            WBCM_CFLAGS="$WBCM_CFLAGS $arg"
+        fi
+    done
+    WBCM_CFLAGS+=" -I${wlComponents}/wlioctl/include"
+    WBCM_CFLAGS+=" -I${wlComponents}/proto/include"
+    echo "  CC web-broadcom.c (trying real compilation with Broadcom SDK headers)"
+    if $CC $WBCM_CFLAGS -c -o web-broadcom.o "$WBCM_REAL" 2>/dev/null; then
+        echo "  -> compiled with real Broadcom headers"
+    else
+        echo "  [stub] web-broadcom.c (Broadcom SDK headers unavailable)"
+        # Generate comprehensive stub matching httpd.h extern signatures
+        cat > "$WBCM_STUB" << 'STUB_WB'
 #include <stdio.h>
 typedef FILE *webs_t;
 typedef char char_t;
@@ -417,14 +436,15 @@ int ej_wl_status_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
 int ej_wps_info(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
 int ej_wps_info_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
 STUB_WB
+        $CC $CFLAGS -c -o web-broadcom.o "$WBCM_STUB"
+    fi
 
     # === Compile source objects ===
     echo "Compiling source files..."
     for src in \
       httpd.c cgi.c ej.c web.c common.c \
       aspbw.c initial_web_hook.c apps.c \
-      libcaptcha.c \
-      sysdeps/web-broadcom.c; do
+      libcaptcha.c; do
       base=$(basename "$src" .c)
       echo "  CC $src"
       $CC $CFLAGS -c -o "$base.o" "$src"
