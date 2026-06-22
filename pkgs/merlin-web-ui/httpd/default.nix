@@ -16,6 +16,7 @@ let
   prebuiltDir = "${httpdDir}/prebuild/RT-AX88U";
   wlSrc = "${srcBase}/bcmdrivers/broadcom/net/wl/impl51/main/src/include";
   wlShared = "${srcBase}/bcmdrivers/broadcom/net/wl/impl51/main/src/shared";
+  wlComponents = "${srcBase}/bcmdrivers/broadcom/net/wl/impl51/main/components";
 
   toolPrefix = stdenv.cc.targetPrefix;
 
@@ -56,6 +57,8 @@ in stdenv.mkDerivation {
     CFLAGS+=" -I$SRC/router/shared"
     CFLAGS+=" -I${wlSrc}"
     CFLAGS+=" -I${wlShared}/bcmwifi/include"
+    CFLAGS+=" -I${wlComponents}/wlioctl/include"     # real wlioctl_defs.h
+    CFLAGS+=" -I${wlComponents}/proto/include"       # 802.11ax.h, proto/ethernet.h
     # nvram/bcmutils.h — included as <nvram/bcmutils.h> from bcmutils.c.
     # For bcmutils.c compilation, we provide an empty stub because:
     # 1. bcmutils.c DEFINES all the functions that bcmutils.h DECLARES
@@ -155,6 +158,26 @@ typedef struct {
 /* Radio disable flags */
 #define WL_RADIO_SW_DISABLE   0x0001
 #define WL_RADIO_HW_DISABLE   0x0002
+
+/* DFS status (used by web-broadcom.c, from real wlioctl.h) */
+#define WL_DFS_CACSTATE_PREISM_CAC 1
+#define WL_DFS_CACSTATES 7
+typedef struct {
+    uint32 state;
+    uint32 duration;
+    uint16 chanspec;
+    uint16 chanspec_cleared;
+    uint16 pad;
+} wl_dfs_status_t;
+#define WL_DFS_AP_MOVE_VERSION 1
+#endif
+STUB_H
+    # wlscan.h — Broadcom wireless scan structures (not in ASUS GPL)
+    cat > "$PWD/components/wlscan.h" << 'STUB_H'
+#ifndef _wlscan_h_
+#define _wlscan_h_
+/* Stub — scan results structure not available without Broadcom SDK */
+#define WLC_SCAN_RESULT_BUF_LEN 65536
 #endif
 STUB_H
     # openvpn_config.h is included with #include "openvpn_config.h" (quotes)
@@ -336,24 +359,64 @@ typedef struct { unsigned char ea[6]; int val; int rssi; } scb_val_t;
 MERLIN_DEFS
     CFLAGS+=" -include $PWD/libasuslog_stub.h -include $PWD/merlin_defs.h"
 
-    # web-broadcom-am.c requires deep Broadcom SDK types not in Merlin tree.
-    # Replace with stubs for the functions referenced by httpd dispatch table.
-    cat > "$SRC/router/httpd/sysdeps/web-broadcom-am.c" << 'STUB_WEB_BCM'
+    # === Comprehensive web-broadcom stub (Broadcom SDK not available) ===
+    # web-broadcom.c requires Broadcom SDK types not in ASUS GPL.
+    # This stub provides all referenced functions as return-0 placeholders.
+    # When the real file can be compiled (full SDK available), remove this block.
+    cat > "$SRC/router/httpd/sysdeps/web-broadcom.c" << 'STUB_WB'
+/* Stub replacement for ASUS web-broadcom.c (Broadcom SDK types not in GPL).
+ * Signatures must match httpd.h extern declarations where they exist.
+ * Do NOT include httpd.h — it declares extern prototypes that conflict. */
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <httpd.h>
-#include <shared.h>
-#include <bcmnvram.h>
-int ej_wl_status_array(int eid, void *wp, int argc, char **argv) {
-    return websWrite(wp, "\"\",\"\",\"\",\"\",\"\",\"\"");
-}
-int ej_wl_extent_channel(int eid, void *wp, int argc, char **argv) {
-    return websWrite(wp, "\"\"");
-}
+typedef FILE *webs_t;
+typedef char char_t;
+int ej_wl_status_array(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_extent_channel(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
 int wl_control_channel(int unit) { return 0; }
 int wl_format_ssid(char *buf, unsigned char *ssid, int len) { return 0; }
-STUB_WEB_BCM
+int ej_SiteSurvey(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_cap_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_cap_5g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_cap_5g_2(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_cap_6g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_channel_list_5g_2(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_channel_list_6g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_chanspecs_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_chanspecs_5g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_chanspecs_5g_2(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_chanspecs_6g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_chipnum_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_chipnum_5g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_chipnum_5g_2(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_chipnum_6g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_control_channel(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_rate_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_rate_5g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_rate_5g_2(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_rate_6g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_rssi_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_rssi_5g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_rssi_5g_2(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_scan_5g_2(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_sta_list_5g_2(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_stainfo_list_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_stainfo_list_5g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_stainfo_list_5g_2(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_get_wlstainfo_list(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_nat_accel_status(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_auth_list(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_channel_list_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_channel_list_5g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_chanspecs(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_scan_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_scan_5g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_sta_list_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_sta_list_5g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wl_status(int eid, webs_t wp, int argc, char_t **argv, int unit) { return 0; }
+int ej_wl_status_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wps_info(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+int ej_wps_info_2g(int eid, webs_t wp, int argc, char_t **argv) { return 0; }
+STUB_WB
 
     # === Compile source objects ===
     echo "Compiling source files..."
@@ -361,7 +424,7 @@ STUB_WEB_BCM
       httpd.c cgi.c ej.c web.c common.c \
       aspbw.c initial_web_hook.c apps.c \
       libcaptcha.c \
-      sysdeps/web-broadcom-am.c; do
+      sysdeps/web-broadcom.c; do
       base=$(basename "$src" .c)
       echo "  CC $src"
       $CC $CFLAGS -c -o "$base.o" "$src"
@@ -399,11 +462,6 @@ STUB
 int process_web_hook(unsigned int op, void *data) { return 0; }
 STUB
     $CC $CFLAGS -c -o web_hook.o web_hook_stub.c
-    echo "  [stub] web-broadcom.o (not available for RT-AX88U)"
-    cat > web-broadcom_stub.c << 'STUB'
-int web_broadcom_init(void) { return 0; }
-STUB
-    $CC $CFLAGS -c -o web-broadcom.o web-broadcom_stub.c
     # Stub missing symbol implementations for libwebapi dependencies
     cat > libwebapi_stubs.c << 'STUB'
 STUB
@@ -430,6 +488,7 @@ STUB
    differ from headers; we only provide linker symbols. */
 
 /* ── Hardware-dependent / missing-component stubs (return 0/NULL) ── */
+int web_broadcom_init(void) { return 0; }
 char *amvpn_get_policy_rules(int a, char *b, int l, int p) { return NULL; }
 int app_auth(void) { return 0; }
 int asusdebuglog(int level, char *path, int conlog, int showtime, unsigned int filesize, const char *msgfmt, ...) { return 0; }
@@ -441,42 +500,14 @@ int _eval(char *const argv[], char *stdout_path, int timeout, int *out) { return
 void cprintf(const char *f, ...) { }
 int notify_rc(const char *f, ...) { return 0; }
 
-/* ── ej_* stubs — wireless/web UI dispatch handlers (hardware-dependent) ── */
-int ej_SiteSurvey(int eid, void *wp, int argc, char **argv) { return 0; }
+/* ── ej_* stubs — not in web-broadcom.c (need Broadcom SDK or device) ── */
 int ej_bcmbsd_def_policy(int eid, void *wp, int argc, char **argv) { return 0; }
 int ej_cable_diag(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_cap_2g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_cap_5g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_cap_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_cap_6g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_channel_list_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
 int ej_wl_channel_list_5g_20m(int eid, void *wp, int argc, char **argv) { return 0; }
 int ej_wl_channel_list_5g_40m(int eid, void *wp, int argc, char **argv) { return 0; }
 int ej_wl_channel_list_5g_80m(int eid, void *wp, int argc, char **argv) { return 0; }
 int ej_wl_channel_list_60g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_channel_list_6g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_chanspecs_2g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_chanspecs_5g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_chanspecs_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_chanspecs_6g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_chipnum_2g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_chipnum_5g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_chipnum_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_chipnum_6g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_control_channel(int eid, void *wp, int argc, char **argv) { return 0; }
 int ej_wl_edmg_channel(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_rate_2g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_rate_5g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_rate_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_rate_6g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_rssi_2g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_rssi_5g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_rssi_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_scan_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_sta_list_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_stainfo_list_2g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_stainfo_list_5g(int eid, void *wp, int argc, char **argv) { return 0; }
-int ej_wl_stainfo_list_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
 
 /* ── Simple lookups with sensible defaults ── */
 int captcha_on(void) { return 0; }            /* captcha off */
@@ -524,26 +555,12 @@ int do_upload_config_sync_cgi(void) { return 0; }
 int do_upload_config_sync_post(void) { return 0; }
 int do_webdavInfo_asp(void) { return 0; }
 
-/* ── ej_* stubs — web UI content handlers (hardware-dependent) ── */
+/* ── ej_* stubs — web UI content handlers (not in web-broadcom.c) ── */
 int ej_generate_region(int e, void *w, int a, char **v) { return 0; }
 int ej_get_iptvSettings(int e, void *w, int a, char **v) { return 0; }
 int ej_get_stbPortMappings(int e, void *w, int a, char **v) { return 0; }
 int ej_get_support_region_list(int e, void *w, int a, char **v) { return 0; }
 int ej_get_ui_support(int e, void *w, int a, char **v) { return 0; }
-int ej_get_wlstainfo_list(int e, void *w, int a, char **v) { return 0; }
-int ej_nat_accel_status(int e, void *w, int a, char **v) { return 0; }
-int ej_wl_auth_list(int e, void *w, int a, char **v) { return 0; }
-int ej_wl_channel_list_2g(int e, void *w, int a, char **v) { return 0; }
-int ej_wl_channel_list_5g(int e, void *w, int a, char **v) { return 0; }
-int ej_wl_chanspecs(int e, void *w, int a, char **v) { return 0; }
-int ej_wl_scan_2g(int e, void *w, int a, char **v) { return 0; }
-int ej_wl_scan_5g(int e, void *w, int a, char **v) { return 0; }
-int ej_wl_sta_list_2g(int e, void *w, int a, char **v) { return 0; }
-int ej_wl_sta_list_5g(int e, void *w, int a, char **v) { return 0; }
-int ej_wl_status(int e, void *w, int a, char **v) { return 0; }
-int ej_wl_status_2g(int e, void *w, int a, char **v) { return 0; }
-int ej_wps_info(int e, void *w, int a, char **v) { return 0; }
-int ej_wps_info_2g(int e, void *w, int a, char **v) { return 0; }
 int ej_wps_info_5g(int e, void *w, int a, char **v) { return 0; }
 int ej_wps_info_5g_2(int e, void *w, int a, char **v) { return 0; }
 
@@ -674,7 +691,7 @@ STUBEOF
     $CC -o httpd \
       httpd.o cgi.o ej.o web.o common.o \
       aspbw.o initial_web_hook.o apps.o \
-      bcmutils.o geoiplookup.o libcaptcha.o nvram_f.o http.o web-broadcom-am.o \
+      bcmutils.o geoiplookup.o libcaptcha.o nvram_f.o http.o web-broadcom.o \
       -Wl,--allow-shlib-undefined -Wl,--allow-multiple-definition \
       -Wl,--start-group \
       -L${libshared}/lib -lshared \
@@ -688,7 +705,7 @@ STUBEOF
       -L${geoip}/lib -lGeoIP \
       -Wl,--end-group \
       -lm -lpthread -lgcc_s \
-      pwenc.o web_hook.o web-broadcom.o libwebapi_stubs.o httpd_extra_stubs.o libshared_stubs.o
+      pwenc.o web_hook.o libwebapi_stubs.o httpd_extra_stubs.o libshared_stubs.o
   '';
 
   installPhase = ''
