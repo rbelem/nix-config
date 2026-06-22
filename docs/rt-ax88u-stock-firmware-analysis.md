@@ -169,65 +169,67 @@ Image vmlinux.lz cannot be authenticated. Stoppping
 
 ---
 
-## 7. Merlin Firmware Comparison
+## 7. Merlin Cross-Reference (Historical)
 
 **File:** `RT-AX88U_3004_388.11_0_ubi.w` from [asuswrt-merlin.net](https://www.asuswrt-merlin.net)  
 **Version:** 3004.388.11 (Dec 26 2025)  
-**SHA256:** `dce7dc6faa34c1d26ca328d4a6d69a850dd2e2874a4fe630ee65ea2099021e6c`
+**Not primary — kept for historical reference.** All structural findings (format, DTB,
+boot flow, secure boot) are identical to stock firmware at section 1-6 above.
 
-### Compared to Stock Firmware
+| Check | vs Stock |
+|---|---|
+| Format | ✅ Same UBI `.w` layout |
+| FDT #1 / #2 | ✅ Byte-identical (0 diff) |
+| Non-UBI prefix | 4.25 MB (62% byte diff — kernel/rootfs content) |
+| Secure boot | ✅ Same vmlinux.lz + vmlinux.sig |
+| CFE / cferam | ✅ Same components |
+| Product string | `ASUSWRT-Merlin RT-AX88U 3004.388.11_0` |
+| | |
 
-| Aspect | Merlin 3004.388.11 | ASUS 3.0.0.4_388_24385 |
-|---|---|---|
-| **Format** | UBI `.w` (identical layout) | UBI `.w` |
-| **Size** | 75.6 MB | 76.3 MB (655 KB larger) |
-| **Build date** | Dec 26 2025 | Feb 23 2026 |
-| **FDT #1** | ✅ Identical (0 bytes diff) | reference |
-| **FDT #2** | ✅ Identical (0 bytes diff) | reference |
-| **Non-UBI prefix** | 4.25 MB | 4.25 MB |
-| **Prefix content** | 62.3% bytes differ | (kernel/CFE code changes) |
-| **Memory in DTB** | 128 MB (BSP min) | 128 MB (BSP min) |
-| **Secure boot** | vmlinux.lz + vmlinux.sig | vmlinux.lz + vmlinux.sig |
-| **Board variants** | 94908AX88U + broader table | 94908AX88U + similar |
-| **CFE components** | cferam.000 | cferam.000 |
-| **Product string** | `ASUSWRT-Merlin RT-AX88U` | ASUS branding |
-
-### Key Findings
-
-- **Merlin uses the same UBI format** as stock ASUS — identical header structure, DTB offsets, boot flow
-- **FDTs are byte-identical** — both firmwares ship the same reference device tree
-- **CFE, cferam, secure boot infrastructure is the same** — Merlin does NOT disable secure boot in its binary release
-- The non-UBI prefix differs by 62% due to different kernel/CFE code but the same overall layout
-- Merlin's build pipeline produces `.w` files, confirming our GPL source can produce UBI images
+**Only relevant difference:** Merlin confirms our GPL source pipeline produces
+`.w` UBI images, not TRX. No additional structural insights beyond stock.
 
 ---
 
 ## 8. Differences From Our Porting Assumptions
 
-| Aspect | Stock/Merlin Firmware | Our Port Plan | Impact |
+Stock firmware is the reference. Merlin agrees on all structural points.
+
+| Aspect | Stock Firmware (24385) | Our Port Plan | Impact |
 |---|---|---|---|
-| **Image format** | UBI `.w` | TRX `.trx` | 🟡 GPL source may produce TRX; need to verify make.image |
-| **Kernel location** | `vmlinux.lz` inside UBIFS | Image at flash offset | 🔴 Our boot model needs to match CFE expectations |
+| **Image format** | UBI `.w` | TRX `.trx` | 🟡 GPL source (24209) may use TRX; need to verify make.image |
+| **Kernel location** | `vmlinux.lz` inside UBIFS | Image at flash offset | 🔴 Our boot model must match CFE |
 | **RAM size** | 128 MB in DTB (patched to 1 GB by CFE) | 1 GB | 🟢 Matches actual hardware |
-| **Root filesystem** | UBIFS on UBI | SquashFS on MTD (or USB) | 🟡 USB boot remains valid, but UBI may not be required |
+| **Root filesystem** | UBIFS on UBI | SquashFS on MTD (or USB) | 🟡 USB boot remains a valid alternative |
 | **Bootloader** | CFE + UBI + FDT | CFE + fixed offset | 🟡 Kernel must accept FDT from CFE |
-| **Secure boot** | RSA signature (vmlinux.sig) | Not addressed | 🔴 Need test: does CFE enforce sig on our build? |
-| **Board detection** | GPIO strapping, runtime DTB patch | Static per-model | 🟢 Matches Golden Rule |
+| **Secure boot** | RSA signature (vmlinux.sig) | Not addressed | 🔴 Need test on hardware |
+| **Board detection** | GPIO strapping, runtime | Static per-model | 🟢 Matches Golden Rule |
 
 ---
 
 ## 9. Action Items for Our Port
 
-1. **Determine actual RAM** on RT-AX88U hardware (likely 1 GB = 0x40000000). DTB in image reports 128 MB as minimum — CFE patches at runtime.
-2. **Use exact kernel cmdline** from stock DTB: `coherent_pool=4M cpuidle_sysfs_switch pci=pcie_bus_safe rootwait`
-3. **Investigate secure boot** — does CFE enforce vmlinux.sig auth on Merlin builds? Check if web UI upload bypasses it.
-4. **Investigate Merlin build pipeline** — does `make.image` produce `.w` (UBI) or `.trx`? Our GPL may predate UBI switch.
-5. **Add FDT support** — kernel must accept DTB pointer from CFE rather than embedding it at compile time.
-6. **Understand CFE memory patching** — if CFE patches DTB at boot, our embedded DTS `reg` may be a fallback, not the active value.
+Based on stock firmware (Merlin confirms alignment where noted):
+
+1. **Use ACTUAL hardware RAM in DTS** — RT-AX88U has 1 GB (0x40000000). Stock DTB
+   embeds 128 MB as BSP minimum; CFE patches at boot to actual value. Our DTS
+   should match the real hardware.
+2. **Use exact kernel cmdline** from stock DTB:
+   `coherent_pool=4M cpuidle_sysfs_switch pci=pcie_bus_safe rootwait`
+3. **Investigate secure boot** — stock CFE enforces vmlinux.sig auth. Does CFE
+   on our hardware enforce it for custom firmware? (Merlin binary also ships
+   with signature — suggests CFE may require it.)
+4. **Investigate build pipeline** — does `make.image` (from our GPL 24209) produce
+   `.w` (UBI) or `.trx`? The UBI switch may have happened after our GPL snapshot.
+5. **Add FDT support** — kernel must accept DTB pointer from CFE rather than
+   embedding a static DTS at compile time.
+6. **CFE memory patching** — CFE updates FDT at boot (confirmed by "Memory
+   Configuration Changed" string). Our DTS `reg` is a fallback, not the active
+   value after CFE patches it.
 
 ---
 
-## 9. Reference: Raw Strings
+## 10. Reference: Raw Strings
 
 Key identifier strings found in the firmware image:
 
