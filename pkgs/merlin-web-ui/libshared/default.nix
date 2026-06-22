@@ -258,6 +258,8 @@ RTEOC
 
     # Fix broken paren in shared.h (Broadcom typo)
     sed -i 's/__attribute__((unused) \*/__attribute__((unused)) */g' "$SDIR/shared.h"
+    # Fix incompatible-pointer error in shutils.c:2708 (struct maclist* → char*)
+    sed -i 's/char \*buf = maclist/char *buf = (char *) maclist/' "$SDIR/shutils.c"
 
     # Objects: compile sources, skip failures gracefully
     SOURCE_OBJS=""

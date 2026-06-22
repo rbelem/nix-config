@@ -410,40 +410,38 @@ STUB
     $CC $CFLAGS -c -o libwebapi_stubs.o libwebapi_stubs.c
     # More stubs for data_arrays.o, webapi.o, libpasswd, libshared deps
     cat > httpd_extra_stubs.c << 'STUB'
-char *nvram_default_get(const char *name, const char *def) { return NULL; }
-char *get_wan6face(void) { return NULL; }
-char *ipv6_gateway_address(void) { return NULL; }
 char *router_defaults(void) { return NULL; }
-char *nvram_pf_get(const char *name) { return NULL; }
 STUB
     $CC $CFLAGS -c -o httpd_extra_stubs.o httpd_extra_stubs.c
     # Comprehensive shared library stubs for all missing symbols
+    #
+    # Some stubs below have REAL implementations (string utils, simple lookups).
+    # Others remain return-0/NULL stubs because they need hardware access
+    # (wireless ioctl, GPIO, LEDs) or full Merlin runtime components.
     cat > libshared_stubs.c << 'STUBEOF'
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <time.h>
 /* NOTE: Do NOT include httpd.h here — stub signatures intentionally
    differ from headers; we only provide linker symbols. */
+
+/* ── Hardware-dependent / missing-component stubs (return 0/NULL) ── */
 char *amvpn_get_policy_rules(int a, char *b, int l, int p) { return NULL; }
 int app_auth(void) { return 0; }
 int asusdebuglog(int level, char *path, int conlog, int showtime, unsigned int filesize, const char *msgfmt, ...) { return 0; }
 int ATE_FACTORY_MODE_STR(void) { return 0; }
 int auth_check(const char *s) { return 0; }
-void dbg(const char *fmt, ...) { }
 
-
-/* Needed at link time — libshared has these but the static linker
-   may not resolve them from a .so for static .o references. */
+/* ── Linker fallbacks (not in libshared) ── */
 int _eval(char *const argv[], char *stdout_path, int timeout, int *out) { return 0; }
-int _vstrsep(char **ptr, const char *delim, char *buf, size_t bufsz) { return 0; }
 void cprintf(const char *f, ...) { }
-int waitfor(const char *n, int t) { return 0; }
-int doSystem(const char *c, ...) { return 0; }
-int file2str(const char *p, char *b, int l) { return 0; }
-int kill_pidfile_s(void) { return 0; }
-int num_of_wl_if(void) { return 0; }
-int ether_atoe(const char *p, void *e) { return 0; }
 int notify_rc(const char *f, ...) { return 0; }
-/* ej_* stubs for ASUS web.c (Wi-Fi 6E/6GHz handlers) */
+
+/* ── ej_* stubs — wireless/web UI dispatch handlers (hardware-dependent) ── */
 int ej_SiteSurvey(int eid, void *wp, int argc, char **argv) { return 0; }
 int ej_bcmbsd_def_policy(int eid, void *wp, int argc, char **argv) { return 0; }
 int ej_cable_diag(int eid, void *wp, int argc, char **argv) { return 0; }
@@ -479,23 +477,38 @@ int ej_wl_sta_list_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
 int ej_wl_stainfo_list_2g(int eid, void *wp, int argc, char **argv) { return 0; }
 int ej_wl_stainfo_list_5g(int eid, void *wp, int argc, char **argv) { return 0; }
 int ej_wl_stainfo_list_5g_2(int eid, void *wp, int argc, char **argv) { return 0; }
-int captcha_on(void) { return 0; }
+
+/* ── Simple lookups with sensible defaults ── */
+int captcha_on(void) { return 0; }            /* captcha off */
 int change_preferred_lang(void) { return 0; }
-char *char_to_ascii_safe(char *s) { return s; }
+int customized_match(void) { return 0; }
+int delete_logout_from_list(void) { return 0; }
+int get_lang_num(void) { return 1; }           /* English only */
+int is_builtin_profile(void) { return 1; }     /* built-in profile */
+int ipisdomain(void) { return 0; }
+int mime_referers(void) { return 0; }
+int referer_check(void) { return 0; }
+int router_state_defaults(void) { return 0; }
+int syslog_msg_filter(void) { return 0; }
+
+/* ── Security checks (return 0 = pass in stub) ── */
 int check_cmd_injection_blacklist(void) { return 0; }
 int check_cmd_whitelist(void) { return 0; }
 int check_imagefile(const char *s) { return 0; }
 int check_imageheader(const char *s) { return 0; }
-int check_lang_support(const char *s) { return 0; }
+int check_lang_support(const char *s) { return 1; }  /* supported */
 int check_lock_state(void) { return 0; }
 int check_lock_status(void) { return 0; }
 int check_noauth_referrer(void) { return 0; }
 int check_user_agent(void) { return 0; }
 int check_xss_blacklist(void) { return 0; }
 int clean_ban_ip_timeout(void) { return 0; }
+int filter_ban_ip(void) { return 0; }
+int validate_apply_input_value(const char *s) { return 0; }
+int validate_httpd_auth_v2(const char *s) { return 0; }
+
+/* ── Hardware-dependent CGI handlers (return 0) ── */
 int config_iptv_vlan(void) { return 0; }
-int customized_match(void) { return 0; }
-int delete_logout_from_list(void) { return 0; }
 int do_chpass(void) { return 0; }
 int do_dfb_log_file(void) { return 0; }
 int do_feedback_mail_cgi(void) { return 0; }
@@ -510,6 +523,8 @@ int do_upload_blacklist_config_cgi(void) { return 0; }
 int do_upload_config_sync_cgi(void) { return 0; }
 int do_upload_config_sync_post(void) { return 0; }
 int do_webdavInfo_asp(void) { return 0; }
+
+/* ── ej_* stubs — web UI content handlers (hardware-dependent) ── */
 int ej_generate_region(int e, void *w, int a, char **v) { return 0; }
 int ej_get_iptvSettings(int e, void *w, int a, char **v) { return 0; }
 int ej_get_stbPortMappings(int e, void *w, int a, char **v) { return 0; }
@@ -531,58 +546,126 @@ int ej_wps_info(int e, void *w, int a, char **v) { return 0; }
 int ej_wps_info_2g(int e, void *w, int a, char **v) { return 0; }
 int ej_wps_info_5g(int e, void *w, int a, char **v) { return 0; }
 int ej_wps_info_5g_2(int e, void *w, int a, char **v) { return 0; }
-int filter_ban_ip(void) { return 0; }
-char *find_word(char *s, const char *w) { return NULL; }
+
+/* ── String utility functions (REAL implementations) ── */
+
+char *char_to_ascii_safe(char *s) {
+    if (!s) return NULL;
+    for (char *p = s; *p; p++)
+        if (!isascii((unsigned char)*p) || !isprint((unsigned char)*p))
+            *p = '?';
+    return s;
+}
+
+char *find_word(char *s, const char *w) {
+    if (!s || !w) return NULL;
+    size_t len = strlen(w);
+    if (len == 0) return s;
+    char *p = s;
+    while ((p = strstr(p, w)) != NULL) {
+        /* Check word boundaries: preceding char is space/start, following is space/end */
+        if ((p == s || isspace((unsigned char)p[-1])) &&
+            (!p[len] || isspace((unsigned char)p[len])))
+            return p;
+        p++;
+    }
+    return NULL;
+}
+
+char *str_escape_quotes(char *s) {
+    if (!s) return NULL;
+    size_t extra = 0;
+    for (char *p = s; *p; p++)
+        if (*p == '\\' || *p == '\"' || *p == '\''') extra++;
+    if (extra == 0) return s;
+    size_t len = strlen(s);
+    char *out = malloc(len + extra + 1);
+    if (!out) return s;
+    char *wp = out;
+    for (char *rp = s; *rp; rp++) {
+        if (*rp == '\\' || *rp == '\"' || *rp == '\''') *wp++ = '\\';
+        *wp++ = *rp;
+    }
+    *wp = '\0';
+    strcpy(s, out);
+    free(out);
+    return s;
+}
+
+char *toLowerCase(char *s) {
+    if (!s) return NULL;
+    for (char *p = s; *p; p++) *p = tolower((unsigned char)*p);
+    return s;
+}
+
+char *toUpperCase(char *s) {
+    if (!s) return NULL;
+    for (char *p = s; *p; p++) *p = toupper((unsigned char)*p);
+    return s;
+}
+
+char *trim_colon(char *s) {
+    if (!s) return NULL;
+    char *end = s + strlen(s);
+    while (end > s && end[-1] == ':') end--;
+    *end = '\0';
+    return s;
+}
+
+char *trimNL(char *s) {
+    if (!s) return NULL;
+    char *end = s + strlen(s);
+    while (end > s && (end[-1] == '\n' || end[-1] == '\r')) end--;
+    *end = '\0';
+    return s;
+}
+
+/* ── Hardware MAC lookups (return 0 — real impl needs nvram) ── */
+int get_2g_hwaddr(void) { return 0; }
+int get_label_mac(void) { return 0; }
+int get_lan_hwaddr(void) { return 0; }
+
+/* ── Auth / token stubs (hardware/entropy-dependent) ── */
 int gen_asus_token_cookie(void) { return 0; }
 int gen_guestnetwork_pass(void) { return 0; }
-int get_2g_hwaddr(void) { return 0; }
 int get_encrypt_wifi_status(void) { return 0; }
 char *get_file_md5(const char *i) { return NULL; }
-int get_label_mac(void) { return 0; }
-int get_lang_num(void) { return 0; }
-int get_lan_hwaddr(void) { return 0; }
 char *get_ovpn_custom(int t, int u, char *b, int l) { return NULL; }
-char *get_productid(void) { return "RT-AX88U"; }
 int get_radio(void) { return 0; }
 int get_rtinfo(void) { return 0; }
 char *get_string_md5(const char *i) { return NULL; }
 int get_wifi_probe_result(void) { return 0; }
-int handle_nvram_modify_log(const char *n, ...) { return 0; }
-int is_builtin_profile(void) { return 0; }
-int notify_rc_and_wait_2min(void) { return 0; }
-int nvram_get_f(const char *n, ...) { return 0; }
-int nvram_get_list_x(const char *n, ...) { return 0; }
-int nvram_modify_log(void) { return 0; }
-int notify_rc_after_period_wait(const char *f, ...) { return 0; }
 int reg_default_final_token(void) { return 0; }
 int redirect_service_page(void) { return 0; }
 int set_ASUS_NEW_EULA(void) { return 0; }
 int do_set_ASUS_privacy_policy_cgi(void) { return 0; }
 int do_get_ASUS_privacy_policy_cgi(void) { return 0; }
-int syslog_msg_filter(void) { return 0; }
-int ipisdomain(void) { return 0; }
-int mime_referers(void) { return 0; }
-int referer_check(void) { return 0; }
+
+/* ── nvram stubs (need nvram infrastructure) ── */
+int handle_nvram_modify_log(const char *n, ...) { return 0; }
+int nvram_get_f(const char *n, ...) { return 0; }
+int nvram_get_list_x(const char *n, ...) { return 0; }
+int nvram_modify_log(void) { return 0; }
 int nvram_set_f(const char *n, ...) { return 0; }
 
-int router_state_defaults(void) { return 0; }
+/* ── rc/service notification stubs (need rc daemon) ── */
+int notify_rc_and_wait_2min(void) { return 0; }
+int notify_rc_after_period_wait(const char *f, ...) { return 0; }
+
+/* ── Misc hardware-dependent ── */
 int save_iptvSettings_to_file(void) { return 0; }
 int save_ui_support_to_file(void) { return 0; }
-void SECURITY_LOG(const char *f, ...) { }
 int set_ASUS_EULA(void) { return 0; }
+int upgrade_rc(void) { return 0; }
+int useful_redirect_page(char *next_page) { return 0; }
+
+/* ── Log/no-op stubs ── */
+void SECURITY_LOG(const char *f, ...) { }
+void dbg(const char *fmt, ...) { }
 void slowloris_check(void) { }
 void slow_post_read_check(void) { }
 void store_file_var(char *login_url, char *file) { }
-char *str_escape_quotes(char *s) { return s; }
-int useful_redirect_page(char *next_page) { return 0; }
 void system_cmd_test(char *system_cmd, char *SystemCmd, int len) { }
-char *toLowerCase(char *s) { return s; }
-char *toUpperCase(char *s) { return s; }
-char *trim_colon(char *s) { return s; }
-char *trimNL(char *s) { return s; }
-int upgrade_rc(void) { return 0; }
-int validate_apply_input_value(const char *s) { return 0; }
-int validate_httpd_auth_v2(const char *s) { return 0; }
 STUBEOF
     $CC $CFLAGS -c -o libshared_stubs.o libshared_stubs.c
 
@@ -592,7 +675,6 @@ STUBEOF
       httpd.o cgi.o ej.o web.o common.o \
       aspbw.o initial_web_hook.o apps.o \
       bcmutils.o geoiplookup.o libcaptcha.o nvram_f.o http.o web-broadcom-am.o \
-      pwenc.o web_hook.o web-broadcom.o libwebapi_stubs.o httpd_extra_stubs.o libshared_stubs.o \
       -Wl,--allow-shlib-undefined -Wl,--allow-multiple-definition \
       -Wl,--start-group \
       -L${libshared}/lib -lshared \
@@ -605,7 +687,8 @@ STUBEOF
       -L${jsonc}/lib -ljson-c \
       -L${geoip}/lib -lGeoIP \
       -Wl,--end-group \
-      -lm -lpthread -lgcc_s
+      -lm -lpthread -lgcc_s \
+      pwenc.o web_hook.o web-broadcom.o libwebapi_stubs.o httpd_extra_stubs.o libshared_stubs.o
   '';
 
   installPhase = ''
