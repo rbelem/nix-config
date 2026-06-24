@@ -7,6 +7,10 @@
 
     hardware.url = "github:nixos/nixos-hardware";
 
+    # Pinned nixpkgs for systemd v258 (kernel 4.1 compat)
+    # systemd v260+ requires kernel >= 5.10, BSP kernel is 4.1.51
+    nixpkgs-old.url = "github:NixOS/nixpkgs/nixos-25.11";
+
     # ASUS GPL source for RT-AX88U (firmware 3.0.0.4.388_24209)
     # Extracted to local filesystem, tracked as a flake path input
     asus-gpl-rtax88u.url = "path:/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt";
@@ -70,9 +74,12 @@
           specialArgs = { inherit inputs outputs; };
           modules = [
             ./nixos/hosts/rt-ax88u
-            # Apply overlay so pkgs.rt-ax88u-bsp-kernel and pkgs.merlin-web-ui
-            # are available in NixOS modules when cross-evaluated
-            { nixpkgs.overlays = [ outputs.overlays.additions ]; }
+            # overlays: additions first (rt-ax88u-bsp-kernel, merlin-web-ui, etc.),
+            # then systemd-old (v258 from nixos-25.11 — kernel 4.1 compat)
+            { nixpkgs.overlays = [
+              outputs.overlays.additions
+              outputs.overlays.systemd-old
+            ]; }
           ];
         };
       };

@@ -37,6 +37,22 @@ in rec {
   else
     builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
 
+  # Minimal initramfs for NixOS boot (busybox + mount + switch_root)
+  # Embedded in the kernel via CONFIG_INITRAMFS_SOURCE
+  rt-ax88u-initramfs = if crossPkgs != null then
+    crossPkgs.callPackage ./rt-ax88u-initramfs { }
+  else null;
+
+  # BSP kernel with initramfs embedded — for firmware image generation
+  # Used by rt-ax88u-firmware-ubi to produce bootable UBI images
+  rt-ax88u-bsp-kernel-with-initramfs = if crossPkgs != null && rt-ax88u-initramfs != null then
+    crossPkgs.callPackage ./rt-ax88u-bsp-kernel {
+      asus-src = asus-src;
+      initramfs = rt-ax88u-initramfs;
+    }
+  else
+    rt-ax88u-bsp-kernel;
+
   # Merlin web UI — piecemeal source build from ASUS GPL source tree
   # Each component is cross-compiled for aarch64
   # Individual web UI packages (accessed via .merlin-web-ui.<name>)
@@ -78,16 +94,28 @@ in rec {
   # Validation checks for all RT-AX88U packages
   rt-ax88u-validation = if crossPkgs != null then
     crossPkgs.callPackage ./rt-ax88u-validation {
-      inherit rt-ax88u-bsp-kernel merlin-web-ui;
+      inherit rt-ax88u-bsp-kernel merlin-web-ui rt-ax88u-firmware-ubi rt-ax88u-initramfs;
     }
   else
     builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
 
-  # TRX firmware image for RT-AX88U
-  # Links together kernel LZMA compression + TRX header
+  # 🟡 TRX firmware image — DEPRECATED (wrong format for CFE)
+  # CFE expects UBI .w format, not TRX. Kept for reference.
   rt-ax88u-firmware = if crossPkgs != null then
     pkgs.callPackage ./rt-ax88u-firmware {
       inherit rt-ax88u-bsp-kernel bcm4908lzma addtrx;
+    }
+  else
+    builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
+
+  # UBI firmware image for RT-AX88U — replaces TRX pipeline
+  # Builds UBI .w format with BcmFs-ubifs volume containing vmlinux.lz
+  # Uses kernel-with-initramfs so the kernel has embedded initramfs.
+  # CFE expects this format. Stock firmware uses identical layout.
+  rt-ax88u-firmware-ubi = if crossPkgs != null then
+    pkgs.callPackage ./rt-ax88u-firmware-ubi {
+      rt-ax88u-bsp-kernel = rt-ax88u-bsp-kernel-with-initramfs;
+      inherit bcm4908lzma;
     }
   else
     builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";

@@ -8,9 +8,9 @@
     ./merlin-web-ui.nix
   ];
 
-  # Embedded CFE bootloader — no GRUB
+  # Embedded CFE bootloader — no GRUB, no extlinux
   boot.loader.grub.enable = false;
-  boot.loader.generic-extlinux-compatible.enable = true;
+  # CFE loads kernel from UBI volume directly; extlinux is for U-Boot only
 
   # Router-optimized NixOS
   boot.tmp.cleanOnBoot = true;

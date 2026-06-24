@@ -1,5 +1,12 @@
 # Port NixOS to ASUS RT-AX88U — Action Plan
 
+**⚠️ NOTE (Jun 22 2026):** Some sections of this plan predate the
+stock firmware analysis. See `docs/rt-ax88u-stock-firmware-analysis.md`
+for the actual firmware format (UBI `.w`, not TRX), boot flow (CFE reads
+kernel from UBIFS), and secure boot (RSA signature enforcement).
+The gap analysis at `docs/rt-ax88u-gap-analysis.md` has the current
+prioritized work items reflecting these findings.
+
 ## License: CC0 — do whatever you want with this plan.
 
 ## Golden Rule: RT-AX88U Only, Then Extend
@@ -1162,19 +1169,20 @@ No TFTP boot, no CFE recovery mode, no mtd write from shell.
 **The ASUS web UI firmware upload:**
 1. Log into router web admin (http://router.asus.com)
 2. Administration → Firmware Upgrade → Upload
-3. Select `.trx` file and upload
-4. Router validates image, flashes to firmware partition, reboots
+3. Select `.w` file (UBI format) and upload
+4. Router validates image, flashes via UBIFS to NAND, reboots
 
 **What this means for safety:**
 - ⚠️ **Every flash writes to NAND.** There is no "test without flashing" option.
 - ✅ If the image format is rejected, the web UI shows an error — safe, no write
 - ❌ If the image is accepted but the kernel panics on boot — **router is bricked**
   without CFE recovery or UART access
-- The web UI validates: TRX header magic, checksum, and possibly board ID
+- The web UI validates: UBI structure, Broadcom CFE tags, board ID, and
+  possibly kernel signature (vmlinux.sig)
 - If validation passes, the image **will** be written
 
 **The only safety net:** The ASUS web UI accepts firmware that passes its
-validation checks. If your TRX header and checksum are correct, it will flash.
+validation checks. If your UBI image and CFE tags are correct, it will flash.
 If your kernel crashes, there is no recovery path without CFE recovery mode.
 
 **Procedure:**
@@ -1226,59 +1234,51 @@ methods, just delivered differently.**
 
 ### 2.7 — Boot Flow
 
+**⚠️ UPDATED Jun 22 2026:** Stock and Merlin firmware use UBI format with
+UBIFS. CFE reads kernel from within UBIFS, not from a fixed flash offset.
+Two possible paths:
+
+#### Path A: CFE+UBI (stock-compatible, blocked by secure boot)
+
 ```
 Power-on
-  └─ CFE bootloader (read-only, NAND offset 0x0)
-       ├─ Normal: loads firmware from NAND → boot
-       ├─ Recovery (reset held): listens at 192.168.1.1 for TFTP upload
-       └─ TFTP boot (serial interrupt): loads from TFTP server
-            │
-            ▼
-       bcm4908lzma decompression
-            │
-            ▼
-       Linux 4.1.51 BSP kernel
-            ├─ ARM64 SMP (4× Cortex-A53 @ 1.8 GHz)
-            ├─ 77 prebuilt blobs linked in (all hardware working)
-            ├─ systemd configs enabled (CGROUPS, NAMESPACES, SECCOMP...)
-            ├─ DTB: rt-ax88u-bsp.dts (from Merlin's 94908.dts)
-            └─ Initramfs embedded (appended to kernel Image)
-                 │
-                 ▼
-            Initramfs /init
-                 ├─ mount -t proc /proc
-                 ├─ mount -t sysfs /sys
-                 ├─ mount -t devtmpfs /dev
-                 ├─ modprobe wl           ← Wi-Fi driver loads
-                 ├─ modprobe bcm_enet     ← Ethernet driver loads
-                 ├─ modprobe pktrunner    ← HW NAT offload loads
-                 ├─ mount /dev/sda1 /nix  ← Nix store from USB SSD
-                 ├─ mount /dev/sda2 /mnt  ← NixOS root from USB SSD
-                 └─ exec switch_root /mnt /init  ← NixOS stage 2
-                      │
-                      ▼
-                 systemd v252 as PID 1
-                      ├─ systemd-journald
-                      ├─ systemd-logind
-                      ├─ systemd-networkd (or static config)
-                      ├─ systemd-resolved
-                      └─ services.openssh → SSH login
+  └─ CFE bootloader
+       ├─ 1. Initialize NAND, attach UBI
+       ├─ 2. Mount volume "BcmFs-ubifs" (UBIFS)
+       ├─ 3. Read vmlinux.sig + vmlinux.lz from UBIFS
+       ├─ 4. RSA-verify kernel signature → fail without valid sig
+       ├─ 5. Decompress LZMA kernel to DRAM
+       ├─ 6. Patch DTB in memory (RAM, board ID, MACs)
+       └─ 7. Jump to kernel with DTB pointer
 ```
+
+#### Path B: USB/NixOS boot (needs secure boot bypass)
+
+```
+CFE boots minimal signed kernel → initramfs → mount USB → switch_root → NixOS
+```
+
+Initramfs handles root mount from USB SSD or NFS. Secure boot still
+applies — CFE authenticates any kernel it loads, regardless of rootfs.
+
+#### Path C: Serial/TFTP (experimental, no flash write)
+
+Needs UART adapter: `CFE> boot -tftp 192.168.1.1:vmlinux.lz`
 
 ### 2.8 — Flash Safety Rules (Web UI Only)
 
 1. **Every flash writes to NAND.** There is no safe test mode with web UI upload.
-   Static validation (Layer 1-6) must pass with zero failures before any upload.
-2. **The web UI rejects bad TRX format** — if your header/checksum is wrong,
-   the upload fails with an error. This is your only safety check.
-3. **A kernel that passes TRX validation but panics = brick.** No recovery
+   Static validation must pass before any upload.
+2. **The web UI validates UBI structure and Broadcom CFE tags** — a malformed
+   UBI image is rejected with an error. This is your only safety check.
+   (Stock firmware uses `.w` UBI format, not TRX.)
+3. **A kernel that passes UBI validation but panics = brick.** No recovery
    path without CFE recovery mode or UART. **Do not upload until you are
    highly confident the kernel Image is valid.**
 4. **First flash: use a minimal kernel** — just enough to boot to a shell via
-   initramfs (no systemd, no NixOS userspace). If this boots via web UI update,
-   then add systemd in a subsequent flash.
-5. **Keep stock firmware .trx on your dev machine** — if you need to revert,
-   the web UI will accept the stock .trx the same way. You can always go back.
+   initramfs (no systemd, no NixOS userspace).
+5. **Keep stock firmware `.w` on your dev machine** — the web UI accepts the
+   stock UBI image for reversion.
 6. **Never touch the CFE partition.** The web UI only writes to the firmware
    partition — this is safe by design.
 7. **The validation pipeline is your only prevention.** Layers 1-5 must pass:
@@ -2217,12 +2217,12 @@ curl -T result/firmware.trx tftp://192.168.1.1/
 ### Deliverables
 
 | # | Component | Status | Commit |
-|---|---|---|---|
-| 1 | `bcm4908lzma` — LZMA wrapper | ✅ Done | *earlier* |
+|---|---|---|---|---|
+| 1 | `bcm4908lzma` — LZMA wrapper | 🟡 **Format wrong** (needs UBI, not TRX) | *earlier* |
 | 2 | `rt-ax88u-bsp-kernel` — BSP kernel | ✅ **9.4 MB arm64 Image** | `544fa28` |
-| 3 | `merlin-web-ui/*` — 7 packages | ❌ Not yet built | N/A |
-| 4 | `nixos/hosts/rt-ax88u/` — NixOS config | ✅ Written (unused) | `698a7d5` |
-| 5 | TRX firmware image | ❌ Not yet created | N/A |
+| 3 | `merlin-web-ui/*` — 7 packages | ✅ All 7 build + link | Latest |
+| 4 | `nixos/hosts/rt-ax88u/` — NixOS config | ✅ Written (needs root/bootloader fix) | `698a7d5` |
+| 5 | UBI firmware image | ❌ Not yet created (TRX was wrong format) | N/A |
 | 6 | Validation pipeline | ✅ `pkgs/rt-ax88u-validation` | `429f8c5` |
 
 ### Kernel Build — Key Technical Decisions
@@ -2258,9 +2258,11 @@ overridden in Nix).
 
 ### Remaining Work
 
-1. **Build 7 web UI packages** — starts with `libshared` (simplest), ends with `httpd`
-   (largest — 44K-line web.c, prebuilt pwenc + web_hook)
-2. **Create TRX firmware** — `bcm4908lzma` compress Image + add TRX header
+1. **Switch to UBI image format** — stock/Merlin use UBI `.w`, not TRX.
+   Need UBI image generation (ubinize) with BcmFs-ubifs volume.
+   (See `docs/rt-ax88u-stock-firmware-analysis.md` for reference layout.)
+2. **Investigate secure boot** — does CFE enforce vmlinux.sig auth?
+   Test with a signed stock kernel first, then unsigned custom kernel.
 3. **Build NixOS host config** — test that `nixos-rebuild` evaluates
 4. **Validation** — `nix flake check` to run kernel ELF + config checks
 5. **Hardware test** — web UI upload (brick risk, no serial recovery)

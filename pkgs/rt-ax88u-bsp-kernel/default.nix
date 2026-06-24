@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, buildPackages, asus-src, ... }:
+{ lib, stdenv, fetchFromGitHub, buildPackages, asus-src, initramfs ? null, ... }:
 
 # BSP kernel for ASUS RT-AX88U (BCM4908)
 #
@@ -10,6 +10,9 @@
 # the kernel build, following Merlin's platform.mak deployment rules.
 #
 # Cross-compiled for aarch64 from any build platform.
+#
+# Optional: pass initramfs = pkgs.rt-ax88u-initramfs to embed the
+# initramfs cpio archive into the kernel via CONFIG_INITRAMFS_SOURCE.
 
 let
   pname = "linux";
@@ -257,6 +260,20 @@ CONFIG_IKCONFIG_PROC=y
 KCONFIG
     done
 
+    # Embed initramfs if provided
+    ${if initramfs != null then ''
+      echo "--- Embedding initramfs via CONFIG_INITRAMFS_SOURCE ---"
+      echo "  initramfs source: ${initramfs}/initramfs.cpio.gz"
+      for cfg in "$KERNEL_DIR/.config" "$HND_SRC/.config"; do
+        cat >> "$cfg" << KCONFIG2
+CONFIG_INITRAMFS_SOURCE="${initramfs}/initramfs.cpio.gz"
+CONFIG_INITRAMFS_COMPRESSION_GZIP=y
+KCONFIG2
+      done
+    '' else ''
+      echo "--- No initramfs — building kernel without embedded initramfs ---"
+    ''}
+
     # Run kconfig from kernel dir using make -C (does not change PWD)
     make -C "$KERNEL_DIR" \
       HOSTCC="$HOSTCC" HOST_EXTRACFLAGS="$HOST_EXTRACFLAGS" HOSTLDFLAGS="$HOSTLDFLAGS" \
@@ -292,7 +309,9 @@ KCONFIG
     cp "$KERNEL_DIR/.config" "$out/config"
     echo "${version}" > "$out/kernel.release"
 
-    # Try to build modules (may partially fail)
+    # Build kernel modules (BSP config has everything built-in from prebuilt blobs)
+    echo "--- Building kernel modules (if any) ---"
+    set +e
     make -C "$KERNEL_DIR" \
       -j$NIX_BUILD_CORES \
       HOSTCC="$HOSTCC" \
@@ -301,18 +320,26 @@ KCONFIG
       ${merlinMakeArgs} \
       ARCH=$ARCH \
       CROSS_COMPILE=$CROSS_COMPILE \
-      modules 2>&1 || echo "modules build did not fully succeed (expected)"
+      modules 2>&1
+    MODULES_EXIT=$?
+    set -e
 
-    make -C "$KERNEL_DIR" \
-      -j$NIX_BUILD_CORES \
-      HOSTCC="$HOSTCC" \
-      HOST_EXTRACFLAGS="$HOST_EXTRACFLAGS" \
-      HOSTLDFLAGS="$HOSTLDFLAGS" \
-      ${merlinMakeArgs} \
-      ARCH=$ARCH \
-      CROSS_COMPILE=$CROSS_COMPILE \
-      INSTALL_MOD_PATH=$out \
-      modules_install 2>&1 || echo "modules_install did not fully succeed (expected)"
+    KO_COUNT=$(find "$KERNEL_DIR" -name '*.ko' -type f 2>/dev/null | wc -l)
+    if [ "$KO_COUNT" -gt 0 ]; then
+      echo "--- Installing $KO_COUNT kernel modules ---"
+      make -C "$KERNEL_DIR" \
+        -j$NIX_BUILD_CORES \
+        HOSTCC="$HOSTCC" \
+        HOST_EXTRACFLAGS="$HOST_EXTRACFLAGS" \
+        HOSTLDFLAGS="$HOSTLDFLAGS" \
+        ${merlinMakeArgs} \
+        ARCH=$ARCH \
+        CROSS_COMPILE=$CROSS_COMPILE \
+        INSTALL_MOD_PATH=$out \
+        modules_install
+    else
+      echo "--- No loadable kernel modules (all drivers built-in from blobs) ---"
+    fi
 
     echo "=== Build complete ==="
     file "$out/Image"

@@ -3,8 +3,8 @@
     "asus-gpl-rtax88u": {
       "flake": false,
       "locked": {
-        "lastModified": 1727073590,
-        "narHash": "sha256-UnEcfIiRNwvWvGTYDGG4ETa+MzXtln3OGMnkuRDdEj8=",
+        "lastModified": 1782065557,
+        "narHash": "sha256-3o7HShtYE20r3PHkxoNwN24ubGWVospzXGQBqhotCdQ=",
         "path": "/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt",
         "type": "path"
       },
@@ -18,11 +18,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1781622756,
-        "narHash": "sha256-JrPh4M6S7aPsEE9tOENuZrxC6o2szSLlK+t4+nLke9s=",
+        "lastModified": 1782166108,
+        "narHash": "sha256-/EtnQBcKbsaCAGQ5VRcplrHRkR4ryqyLMpBfkVuG9Xw=",
         "owner": "nixos",
         "repo": "nixos-hardware",
-        "rev": "08018c72174a4df5657f8d94178ac69fb9c243e5",
+        "rev": "875776f0252fcb8618bb948640a0d1f7a5b362be",
         "type": "github"
       },
       "original": {
@@ -42,6 +42,22 @@
       "original": {
         "type": "tarball",
         "url": "https://channels.nixos.org/nixos-unstable/nixexprs.tar.xz"
+      }
+    },
+    "nixpkgs-old": {
+      "locked": {
+        "lastModified": 1781509190,
+        "narHash": "sha256-uJZs9Di8I6ciTp6jiojj0HzlNpBkud8ax5aT/O5aJkw=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "d6df3513510aa548c83868fd22bfddd0a8c0a0d4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-25.11",
+        "repo": "nixpkgs",
+        "type": "github"
       }
     },
     "nixpkgs_2": {
@@ -64,7 +80,8 @@
       "inputs": {
         "asus-gpl-rtax88u": "asus-gpl-rtax88u",
         "hardware": "hardware",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_2",
+        "nixpkgs-old": "nixpkgs-old"
       }
     }
   },
