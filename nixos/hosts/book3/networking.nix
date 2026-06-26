@@ -24,6 +24,7 @@
     extraUpFlags = [
       "--advertise-routes=192.168.50.0/24"
       "--accept-dns"
+      "--ssh"                   # Tailscale SSH (auth via tailscale, no password needed)
       "--operator=rodrigo"       # CLI without sudo
     ];
   };
@@ -32,6 +33,14 @@
   systemd.services.tailscaled.serviceConfig.Environment = [
     "TS_DEBUG_FIREWALL_MODE=nftables"
   ];
+
+  # SSH daemon — remote access via tailscale (tailscale0 is trusted) or local network
+  services.openssh = {
+    enable = true;
+    openFirewall = true;
+    settings.PasswordAuthentication = false;
+    settings.KbdInteractiveAuthentication = false;
+  };
 
   # Firewall (nftables)
   # https://wiki.nixos.org/wiki/Tailscale#Native_nftables_Support_(Modern_Setup)
