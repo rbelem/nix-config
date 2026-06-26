@@ -14,8 +14,39 @@
   networking.networkmanager.enable = true;
   networking.networkmanager.wifi.backend = "iwd";
 
-  # Firewall
-  networking.firewall.enable = false;
+  # Tailscale
+  services.tailscale = {
+    enable = true;
+    openFirewall = true;
+    # Subnet router: laptop advertises the local network so the phone can access it
+    # https://wiki.nixos.org/wiki/Tailscale
+    useRoutingFeatures = "both";      # subnet router + accept routes when roaming
+    extraUpFlags = [
+      "--advertise-routes=192.168.50.0/24"
+      "--accept-dns"
+      "--operator=rodrigo"       # CLI without sudo
+    ];
+  };
+  # Force tailscaled to use nftables (avoids iptables conflicts)
+  # https://wiki.nixos.org/wiki/Tailscale#Native_nftables_Support_(Modern_Setup)
+  systemd.services.tailscaled.serviceConfig.Environment = [
+    "TS_DEBUG_FIREWALL_MODE=nftables"
+  ];
+
+  # Firewall (nftables)
+  # https://wiki.nixos.org/wiki/Tailscale#Native_nftables_Support_(Modern_Setup)
+  networking.nftables.enable = true;
+  networking.firewall = {
+    enable = true;
+    trustedInterfaces = [ "tailscale0" ];
+    allowedUDPPorts = [ 41641 ];
+    # Subnet router — WireGuard traffic may have source IP
+    # different from the incoming interface
+    checkReversePath = "loose";
+  };
+  # Faster boot (Tailscale doesn't need to wait for network online)
+  systemd.network.wait-online.enable = false;
+  boot.initrd.systemd.network.wait-online.enable = false;
 
   # Restart NetworkManager after suspend
   systemd.services.nmcli-radio-on = {
