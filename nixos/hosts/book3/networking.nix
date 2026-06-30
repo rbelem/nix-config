@@ -48,6 +48,7 @@
   networking.firewall = {
     enable = true;
     trustedInterfaces = [ "tailscale0" ];
+    allowedTCPPorts = [ 4096 ]; # opencode serve
     allowedUDPPorts = [ 41641 ];
     # Subnet router — WireGuard traffic may have source IP
     # different from the incoming interface
