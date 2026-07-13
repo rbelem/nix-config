@@ -23,6 +23,12 @@ in {
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: rec {
+    # Ghostty from git main — overrides nixpkgs release with latest upstream
+    # See pkgs/ghostty/default.nix for update instructions
+    ghostty = final.callPackage ../pkgs/ghostty {
+      # Pass pre-override ghostty as base to avoid infinite recursion
+      ghostty = prev.ghostty;
+    };
   };
 
   # Override systemd to v258 from pinned nixpkgs-old (nixos-25.11).
