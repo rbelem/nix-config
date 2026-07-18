@@ -2,6 +2,7 @@
   fonts = {
     fontDir.enable = true;
     packages = with pkgs; [
+      cantarell-fonts # GNOME UI font — fixes OnlyOffice Flatpak dialog/button tofu (missing in sandbox)
       caladea
       carlito
       corefonts
