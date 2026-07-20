@@ -35,6 +35,18 @@
 
   hardware.enableAllFirmware = true;
 
+  # Trust the local user so nix accepts restricted settings per-build.
+  # Without this, any flake using `__noChroot = true`,
+  # `nixConfig.sandbox = false`, `--no-sandbox`, etc. is silently
+  # rejected ("ignoring client-specified setting, you are not a trusted
+  # user"). This blocks hermetic-ish builds that need network access
+  # mid-build (e.g. devbox.d/bun building bun from source — rustup
+  # installs the nightly toolchain, fetch-cli downloads vendor tarballs,
+  # cargo pulls crates from the registry).
+  #
+  # Mirror the rt-ax88u host's setting (line 27 of hosts/rt-ax88u/default.nix).
+  nix.settings.trusted-users = [ "root" "rodrigo" ];
+
   # Power management
   services.logind.settings = {
     Login = {
