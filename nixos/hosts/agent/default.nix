@@ -37,7 +37,6 @@
   # User
   users.users.rodrigo = {
     isNormalUser = true;
-    shell = pkgs.bash;
     extraGroups = [ "wheel" ];
     openssh.authorizedKeys.keys = [
       # ssh-ed25519 from Bitwarden assistant/vps-ssh-key (private key stored there)

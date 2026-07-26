@@ -4,39 +4,29 @@ let
   domain = cfg.domain;
 in
 {
-  # Caddy reverse proxy with Porkbun DNS-01 wildcard TLS
-  # Caddy runs on the host and proxies to k8s services via NodePort.
-  # Wildcard cert for *.${domain} obtained via Porkbun DNS challenge.
+  # Caddy reverse proxy for k8s NodePorts.
+  # Wildcard TLS via Porkbun DNS-01 was planned but is disabled for first deploy:
+  #   1. Stock nixpkgs caddy lacks the porkbun DNS plugin (need caddy-with-plugins
+  #      package built with github.com/caddy-dns/porkbun)
+  #   2. sops-nix secrets disabled (no PORKBUN_API_KEY)
+  # Re-enable both together: provision sops age key, encrypt caddy-env.yaml stub,
+  # then uncomment the global extraConfig + `import dns01` per-vhost below AND
+  # switch services.caddy.package to a custom caddy-with-plugins derivation.
   services.caddy = {
     enable = true;
 
-    # Porkbun API credentials for DNS-01 challenge (provisioned via sops-nix, H6)
-    environmentFile = config.sops.secrets.caddy-env.path;
-
-    # Global config: DNS-01 challenge via Porkbun, wildcard cert
-    extraConfig = ''
-      (dns01) {
-        tls {
-          dns porkbun {env.PORKBUN_API_KEY} {env.PORKBUN_SECRET_API_KEY}
-        }
-      }
-    '';
-
     # Hermes — AI agent backend (k8s NodePort 30080)
     virtualHosts."hermes.${domain}".extraConfig = ''
-      import dns01
       reverse_proxy localhost:30080
     '';
 
     # Uptime Kuma — monitoring dashboard (k8s NodePort 30001)
     virtualHosts."status.${domain}".extraConfig = ''
-      import dns01
       reverse_proxy localhost:30001
     '';
 
     # n8n — Tailscale-gated
     virtualHosts."n8n.${domain}".extraConfig = ''
-      import dns01
       @tailscale remote_ip 100.64.0.0/10 100.128.0.0/10
       handle @tailscale {
         reverse_proxy localhost:30002
@@ -48,7 +38,6 @@ in
 
     # Zitadel — Tailscale-gated
     virtualHosts."auth.${domain}".extraConfig = ''
-      import dns01
       @tailscale remote_ip 100.64.0.0/10 100.128.0.0/10
       handle @tailscale {
         reverse_proxy localhost:30003
@@ -59,6 +48,6 @@ in
     '';
   };
 
-  # Allow HTTP/HTTPS
+  # Allow HTTP/HTTPS (no TLS yet — see comment above)
   networking.firewall.allowedTCPPorts = [ 80 443 ];
 }
