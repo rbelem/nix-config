@@ -16,6 +16,12 @@
     asus-gpl-rtax88u.url = "path:/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt";
     asus-gpl-rtax88u.flake = false;
 
+    # sops-nix for secrets management (used by the agent host)
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Shameless plug: looking for a way to nixify your themes and make
     # everything match nicely? Try nix-colors!
     # nix-colors.url = "github:misterio77/nix-colors";
@@ -80,6 +86,16 @@
               outputs.overlays.additions
               outputs.overlays.systemd-old
             ]; }
+          ];
+        };
+
+        # VPS agent — OVH/Hostinger NixOS host running k3s + Caddy + Tailscale
+        agent = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = { inherit inputs outputs; };
+          modules = [
+            ./nixos/hosts/agent
+            inputs.sops-nix.nixosModules.sops
           ];
         };
       };
