@@ -22,6 +22,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # assistant repo — provides .rendered/runtime-config.json (domain, backup S3, etc.)
+    # Regenerate with: scripts/fetch_vault.sh (in the assistant repo)
+    assistant-repo = {
+      url = "path:/home/rodrigo/Workspace/rbelem/assistant";
+      flake = false;
+    };
+
     # Shameless plug: looking for a way to nixify your themes and make
     # everything match nicely? Try nix-colors!
     # nix-colors.url = "github:misterio77/nix-colors";
@@ -89,10 +96,14 @@
           ];
         };
 
-        # VPS agent — OVH/Hostinger NixOS host running k3s + Caddy + Tailscale
-        agent = nixpkgs.lib.nixosSystem {
+        # VPS agent — Hetzner Cloud NixOS host running k3s + Caddy + Tailscale
+        agent = let
+          runtime-config = import ./lib/runtime-config.nix {
+            assistant-repo = inputs.assistant-repo;
+          };
+        in nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = { inherit inputs outputs; };
+          specialArgs = { inherit inputs outputs runtime-config; };
           modules = [
             ./nixos/hosts/agent
             inputs.sops-nix.nixosModules.sops

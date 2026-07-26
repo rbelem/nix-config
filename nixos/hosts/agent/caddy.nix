@@ -1,12 +1,17 @@
-{ pkgs, ... }: {
+{ pkgs, config, runtime-config, ... }:
+let
+  cfg = runtime-config;
+  domain = cfg.domain;
+in
+{
   # Caddy reverse proxy with Porkbun DNS-01 wildcard TLS
   # Caddy runs on the host and proxies to k8s services via NodePort.
-  # Wildcard cert for *.REDACTED-DOMAIN obtained via Porkbun DNS challenge.
+  # Wildcard cert for *.${domain} obtained via Porkbun DNS challenge.
   services.caddy = {
     enable = true;
 
-    # Porkbun API credentials for DNS-01 challenge
-    environmentFile = "/etc/caddy/env";
+    # Porkbun API credentials for DNS-01 challenge (provisioned via sops-nix, H6)
+    environmentFile = config.sops.secrets.caddy-env.path;
 
     # Global config: DNS-01 challenge via Porkbun, wildcard cert
     extraConfig = ''
@@ -18,19 +23,19 @@
     '';
 
     # Hermes — AI agent backend (k8s NodePort 30080)
-    virtualHosts."hermes.REDACTED-DOMAIN".extraConfig = ''
+    virtualHosts."hermes.${domain}".extraConfig = ''
       import dns01
       reverse_proxy localhost:30080
     '';
 
     # Uptime Kuma — monitoring dashboard (k8s NodePort 30001)
-    virtualHosts."status.REDACTED-DOMAIN".extraConfig = ''
+    virtualHosts."status.${domain}".extraConfig = ''
       import dns01
       reverse_proxy localhost:30001
     '';
 
     # n8n — Tailscale-gated
-    virtualHosts."n8n.REDACTED-DOMAIN".extraConfig = ''
+    virtualHosts."n8n.${domain}".extraConfig = ''
       import dns01
       @tailscale remote_ip 100.64.0.0/10 100.128.0.0/10
       handle @tailscale {
@@ -42,7 +47,7 @@
     '';
 
     # Zitadel — Tailscale-gated
-    virtualHosts."auth.REDACTED-DOMAIN".extraConfig = ''
+    virtualHosts."auth.${domain}".extraConfig = ''
       import dns01
       @tailscale remote_ip 100.64.0.0/10 100.128.0.0/10
       handle @tailscale {
@@ -53,14 +58,6 @@
       }
     '';
   };
-
-  # Ensure Caddy environment file exists
-  systemd.services.caddy.serviceConfig.EnvironmentFile = "/etc/caddy/env";
-
-  # Create directory for Caddy env
-  systemd.tmpfiles.rules = [
-    "d /etc/caddy 0700 root root -"
-  ];
 
   # Allow HTTP/HTTPS
   networking.firewall.allowedTCPPorts = [ 80 443 ];

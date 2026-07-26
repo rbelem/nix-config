@@ -14,7 +14,7 @@
     ];
 
     # Allow ICMP (ping)
-    allowedPingTypes = [ "echo-request" ];
+    allowPing = true;
 
     # Trust Tailscale interface — allow all traffic over VPN
     trustedInterfaces = [ "tailscale0" ];
