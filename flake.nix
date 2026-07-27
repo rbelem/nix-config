@@ -16,12 +16,6 @@
     asus-gpl-rtax88u.url = "path:/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt";
     asus-gpl-rtax88u.flake = false;
 
-    # sops-nix for secrets management (used by the agent host)
-    sops-nix = {
-      url = "github:Mic92/sops-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # assistant repo — provides .rendered/runtime-config.json (domain, backup S3, etc.)
     # Regenerate with: scripts/fetch_vault.sh (in the assistant repo)
     assistant-repo = {
@@ -106,7 +100,6 @@
           specialArgs = { inherit inputs outputs runtime-config; };
           modules = [
             ./nixos/hosts/agent
-            inputs.sops-nix.nixosModules.sops
           ];
         };
       };

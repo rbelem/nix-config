@@ -3,6 +3,7 @@
   services.tailscale = {
     enable = true;
     openFirewall = true;
+    authKeyFile = "/etc/tailscale/authkey";
     extraUpFlags = [
       "--hostname=agent"
       "--accept-routes"

@@ -6,7 +6,6 @@
     ./firewall.nix
     ./tailscale.nix
     ./backup.nix
-    ./secrets.nix
 
     ../../common
     ../../users/rodrigo

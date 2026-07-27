@@ -2,52 +2,71 @@
 let
   cfg = runtime-config;
   domain = cfg.domain;
+
+  # Caddy with Porkbun DNS-01 plugin for wildcard TLS certificates.
+  # Plugin version pinned to latest available (v0.3.1 as of 2026-07); hash must
+  # match the actual build output. To regenerate: replace hash with
+  # lib.fakeHash, run `nix build .#nixosConfigurations.agent.config.services.caddy.package`
+  # and paste the "got:" hash from the error message.
+  caddy-with-plugins = pkgs.caddy.withPlugins {
+    plugins = [ "github.com/caddy-dns/porkbun@v0.3.1" ];
+    hash = "sha256-CjL8dMdnsiawaPiQGRvL3he4Ydd3nIbQs6tBWMwUbaw=";
+  };
 in
 {
-  # Caddy reverse proxy for k8s NodePorts.
-  # Wildcard TLS via Porkbun DNS-01 was planned but is disabled for first deploy:
-  #   1. Stock nixpkgs caddy lacks the porkbun DNS plugin (need caddy-with-plugins
-  #      package built with github.com/caddy-dns/porkbun)
-  #   2. sops-nix secrets disabled (no PORKBUN_API_KEY)
-  # Re-enable both together: provision sops age key, encrypt caddy-env.yaml stub,
-  # then uncomment the global extraConfig + `import dns01` per-vhost below AND
-  # switch services.caddy.package to a custom caddy-with-plugins derivation.
   services.caddy = {
     enable = true;
+    package = caddy-with-plugins;
 
-    # Hermes — AI agent backend (k8s NodePort 30080)
-    virtualHosts."hermes.${domain}".extraConfig = ''
-      reverse_proxy localhost:30080
-    '';
+    # Secrets sourced from /etc/caddy/env (written by ansible/secrets.yml
+    # from Bitwarden vault item "Porkbun API Key"). PORKBUN_API_KEY and
+    # PORKBUN_SECRET_API_KEY are injected into the caddy systemd unit.
+    environmentFile = "/etc/caddy/env";
 
-    # Uptime Kuma — monitoring dashboard (k8s NodePort 30001)
-    virtualHosts."status.${domain}".extraConfig = ''
-      reverse_proxy localhost:30001
-    '';
-
-    # n8n — Tailscale-gated
-    virtualHosts."n8n.${domain}".extraConfig = ''
-      @tailscale remote_ip 100.64.0.0/10 100.128.0.0/10
-      handle @tailscale {
-        reverse_proxy localhost:30002
-      }
-      handle {
-        respond "Access denied" 403
+    # Global ACME config — DNS-01 via Porkbun for wildcard cert.
+    # {$VAR} syntax is Caddy's env interpolation; Nix `${VAR}` is escaped
+    # because `{$` is not `${`.
+    globalConfig = ''
+      acme_dns porkbun {
+        api_key {$PORKBUN_API_KEY}
+        secret_api_key {$PORKBUN_SECRET_API_KEY}
       }
     '';
 
-    # Zitadel — Tailscale-gated
-    virtualHosts."auth.${domain}".extraConfig = ''
-      @tailscale remote_ip 100.64.0.0/10 100.128.0.0/10
-      handle @tailscale {
-        reverse_proxy localhost:30003
-      }
-      handle {
-        respond "Access denied" 403
-      }
-    '';
+    virtualHosts = {
+      # Hermes — AI agent (k3s NodePort 30080)
+      "hermes.${domain}".extraConfig = ''
+        reverse_proxy localhost:30080
+      '';
+
+      # Uptime Kuma — monitoring (k3s NodePort 30001)
+      "status.${domain}".extraConfig = ''
+        reverse_proxy localhost:30001
+      '';
+
+      # n8n — Tailscale-gated (k3s NodePort 30002)
+      "n8n.${domain}".extraConfig = ''
+        @tailscale remote_ip 100.64.0.0/10 100.128.0.0/10
+        handle @tailscale {
+          reverse_proxy localhost:30002
+        }
+        handle {
+          respond "Access denied" 403
+        }
+      '';
+
+      # Zitadel — Tailscale-gated (k3s NodePort 30003)
+      "auth.${domain}".extraConfig = ''
+        @tailscale remote_ip 100.64.0.0/10 100.128.0.0/10
+        handle @tailscale {
+          reverse_proxy localhost:30003
+        }
+        handle {
+          respond "Access denied" 403
+        }
+      '';
+    };
   };
 
-  # Allow HTTP/HTTPS (no TLS yet — see comment above)
   networking.firewall.allowedTCPPorts = [ 80 443 ];
 }
