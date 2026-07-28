@@ -3,8 +3,8 @@
     "assistant-repo": {
       "flake": false,
       "locked": {
-        "lastModified": 1785056073,
-        "narHash": "sha256-Uq3M86skhRB7LEtyFxbT0/KnXb3ORfO7iutvwPjTJiI=",
+        "lastModified": 1785202059,
+        "narHash": "sha256-ph6zm+gwtAMzJ3e5FXzDuTBLZKlwNOTG7vdF/Ct2GJg=",
         "path": "/home/rodrigo/Workspace/rbelem/assistant",
         "type": "path"
       },

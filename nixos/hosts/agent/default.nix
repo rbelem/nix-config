@@ -6,6 +6,7 @@
     ./firewall.nix
     ./tailscale.nix
     ./backup.nix
+    ./state-snapshot.nix
 
     ../../common
     ../../users/rodrigo
