@@ -63,6 +63,33 @@
     LC_TIME = "pt_BR.UTF-8";
   };
 
+  # Targeted sudo NOPASSWD for rodrigo — single-operator VPS, defense-in-depth
+  # via command allowlist. Anything not listed still prompts for the password.
+  # Commands needing automation: nixos-rebuild, systemctl, tailscale, k3s.
+  security.sudo.extraRules = [
+    {
+      users = [ "rodrigo" ];
+      commands = [
+        {
+          command = "/run/current-system/sw/bin/nixos-rebuild";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/systemctl";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/tailscale";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/k3s";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
+
   # State version
   system.stateVersion = "24.11";
 }
