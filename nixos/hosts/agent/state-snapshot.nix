@@ -1,43 +1,35 @@
 { config, pkgs, lib, ... }:
-let
-  snapshotScript = "/home/rodrigo/Workspace/rbelem/assistant/scripts/snapshot-state.sh";
-  bwSessionFile = "/root/.bw_session_token";
-in
 {
   systemd.services.state-snapshot = {
     description = "Snapshot OpenTofu state to Bitwarden";
-    
-    # Run as root so we can read /root/.bw_session_token
+
     serviceConfig = {
       Type = "oneshot";
       User = "root";
-      
-      # Snapshot script reads BW_SESSION from the file at runtime
-      EnvironmentFile = bwSessionFile;
-      
-      ExecStart = snapshotScript;
-      
-      # Don't spam journald on success
+
+      # ansible writes BW_SESSION=<token> here at deploy time
+      EnvironmentFile = "/etc/agent/bw_session.env";
+
+      # Proper concurrency lock — flock wraps ExecStart
+      ExecStart = "${pkgs.flock}/bin/flock /var/lock/state-snapshot.lock /opt/assistant/scripts/snapshot-state.sh";
+
       StandardOutput = "journal";
       StandardError = "journal";
-      
-      # Hard timeout: if BW is locked / network down, fail fast
+
+      # Fail fast if BW is locked or network is down
       TimeoutStartSec = "5min";
-      
-      # Locking: prevent concurrent snapshots
-      ExecStartPre = "-${pkgs.coreutils}/bin/sh -c '${pkgs.flock}/bin/flock -n /var/lock/state-snapshot.lock echo locked || exit 0'";
     };
-    
-    # Required by systemd-timer below
-    wantedBy = [ "multi-user.target" ];
+
+    # No wantedBy here — the timer triggers it. Adding wantedBy would cause
+    # an extra run at boot, which we don't want.
   };
 
   systemd.timers.state-snapshot = {
     description = "Periodic OpenTofu state snapshot to Bitwarden";
     wantedBy = [ "timers.target" ];
-    
+
     timerConfig = {
-      # Hourly is conservative; user can tune
+      # Hourly is conservative; tighten later if BW API rate limits bite.
       OnCalendar = "hourly";
       # Run if missed (e.g., system was off)
       Persistent = true;
