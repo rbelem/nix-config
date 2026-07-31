@@ -129,7 +129,9 @@ in rec {
   addtrx = pkgs.callPackage ./addtrx { };
 
   # bitw — rbelem Bitwarden CLI fork (item-key decrypt, edit, get --json)
-  # Used by the VPS agent host for fetch_vault / snapshot-state / rotate-secrets
-  # flows. Replaces the deprecated `bw` (npm @bitwarden/cli).
+  # Used on the operator workstation for fetch_vault / populate-vault /
+  # restore-state / rotate-secrets flows. Replaces the deprecated `bw`
+  # (npm @bitwarden/cli). Intentionally NOT installed on the VPS (agent
+  # host) — see nixos/hosts/agent/default.nix for the rationale.
   bitw = pkgs.callPackage ./bitw { };
 }

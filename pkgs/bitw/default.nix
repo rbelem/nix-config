@@ -7,9 +7,11 @@
 #   - `bitw create --type 1|2|5` (login, secure-note, ssh-key)
 #   - libsecret auto-unlock + client_credentials auth (BW_CLIENTID/BW_CLIENTSECRET)
 #
-# Used by the assistant repo's fetch_vault.sh / snapshot-state.sh / populate-vault.sh
-# / restore-state.sh / rotate-secrets.sh on the VPS (via /etc/agent/bw_master_pw
-# as the PASSWORD env for the state-snapshot systemd timer).
+# Used by the assistant repo's fetch_vault.sh / populate-vault.sh /
+# restore-state.sh / rotate-secrets.sh on the operator workstation.
+# Intentionally NOT installed on the VPS (agent host) — the master password
+# never touches the VPS; vault decryption happens on the workstation and
+# rendered secrets are pushed via ansible.
 
 { pkgs ? (import ../../nixpkgs.nix) { }, ... }:
 

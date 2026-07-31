@@ -6,7 +6,6 @@
     ./firewall.nix
     ./tailscale.nix
     ./backup.nix
-    ./state-snapshot.nix
 
     ../../common
     ../../users/rodrigo
@@ -49,10 +48,11 @@
   # Allow running unpatched binaries
   programs.nix-ld.enable = true;
 
-  # bitw — Bitwarden CLI (rbelem fork). Replaces npm @bitwarden/cli which
-  # is deprecated upstream. Used by snapshot-state.sh (systemd timer, see
-  # ./state-snapshot.nix) and ansible secrets.yml on the VPS.
-  environment.systemPackages = [ pkgs.bitw ];
+  # Note: bitw is intentionally NOT installed on the VPS. Vault decryption
+  # happens on the operator workstation (see AGENTS.md in the assistant repo);
+  # the VPS only receives rendered k8s Secrets / config files via ansible.
+  # The master password never touches the VPS. If you need bitw on a host
+  # other than agent, import pkgs/bitw in that host's configuration.
 
   # Locale
   i18n.defaultLocale = "en_GB.UTF-8";
