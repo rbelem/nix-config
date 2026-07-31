@@ -7,8 +7,10 @@
       Type = "oneshot";
       User = "root";
 
-      # ansible writes BW_SESSION=<token> here at deploy time
-      EnvironmentFile = "/etc/agent/bw_session.env";
+      # ansible writes PASSWORD=<bitwarden master password> here at deploy time.
+      # bitw reads PASSWORD env natively to derive the vault key (replaces the
+      # old BW_SESSION token model — bitw auto-refreshes tokens via data.json).
+      EnvironmentFile = "/etc/agent/bw_master_pw";
 
       # Proper concurrency lock — flock wraps ExecStart
       ExecStart = "${pkgs.flock}/bin/flock /var/lock/state-snapshot.lock /opt/assistant/scripts/snapshot-state.sh";

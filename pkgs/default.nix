@@ -127,4 +127,9 @@ in rec {
 
   # addtrx — TRX V1 header prepender
   addtrx = pkgs.callPackage ./addtrx { };
+
+  # bitw — rbelem Bitwarden CLI fork (item-key decrypt, edit, get --json)
+  # Used by the VPS agent host for fetch_vault / snapshot-state / rotate-secrets
+  # flows. Replaces the deprecated `bw` (npm @bitwarden/cli).
+  bitw = pkgs.callPackage ./bitw { };
 }

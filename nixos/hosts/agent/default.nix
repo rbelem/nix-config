@@ -49,6 +49,11 @@
   # Allow running unpatched binaries
   programs.nix-ld.enable = true;
 
+  # bitw — Bitwarden CLI (rbelem fork). Replaces npm @bitwarden/cli which
+  # is deprecated upstream. Used by snapshot-state.sh (systemd timer, see
+  # ./state-snapshot.nix) and ansible secrets.yml on the VPS.
+  environment.systemPackages = [ pkgs.bitw ];
+
   # Locale
   i18n.defaultLocale = "en_GB.UTF-8";
   i18n.extraLocaleSettings = {
