@@ -38,10 +38,12 @@
     isNormalUser = true;
     extraGroups = [ "wheel" ];
     openssh.authorizedKeys.keys = [
-      # ssh-ed25519 from Bitwarden assistant/vps-ssh-key (private key stored there)
-      # Verified: matches ssh-keygen -y of bw private key. github.com/rbelem.keys empty
-      # (no cross-verification possible). Used as sole VPS SSH auth.
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINg0Z6Pj23jHaM4B2cXPJ2ETD2EP4/L3ZL9qwmn0Qvw0"
+      # ssh-ed25519 from Bitwarden assistant/vps-ssh-key (private key stored there).
+      # Rotated 2026-07-31 together with a VM reprovision — old key (Ng0Z6Pj2) was
+      # authorized on the previous VPS but its private half only survived in a stale
+      # .rendered/ file; the vault item had been rotated without updating this list.
+      # Verify with: ssh-keygen -y -f <(bitw get --json assistant/vps-ssh-key | jq -r .sshKey.privateKey)
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICAa+66tokO+iGCEAIFzy0juOh20T+jaz8gaM76qE/eW assistant-vps-2026-07-31"
     ];
   };
 
