@@ -11,7 +11,8 @@
   };
 
   # Make kubectl/helm/helmfile available (assistant deploy runs helmfile sync VPS-side)
-  environment.systemPackages = [ pkgs.kubectl pkgs.kubernetes-helm pkgs.helmfile ];
+  # python3 is required by ansible (bootstrap/secrets-apply/deploy/update playbooks).
+  environment.systemPackages = [ pkgs.kubectl pkgs.kubernetes-helm pkgs.helmfile pkgs.python3 ];
 
   # Allow k3s API access
   networking.firewall.allowedTCPPorts = [ 6443 ];
