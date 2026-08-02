@@ -24,12 +24,12 @@ in
     environmentFile = "/etc/caddy/env";
 
     # Global ACME config — DNS-01 via Porkbun for wildcard cert.
-    # {$VAR} syntax is Caddy's env interpolation; Nix `${VAR}` is escaped
-    # because `{$` is not `${`.
+    # {env.VAR} is Caddy's runtime env placeholder (subdirective names per
+    # caddy-dns/porkbun README: api_key + api_secret_key).
     globalConfig = ''
       acme_dns porkbun {
-        api_key {$PORKBUN_API_KEY}
-        secret_api_key {$PORKBUN_SECRET_API_KEY}
+        api_key {env.PORKBUN_API_KEY}
+        api_secret_key {env.PORKBUN_SECRET_API_KEY}
       }
     '';
 
