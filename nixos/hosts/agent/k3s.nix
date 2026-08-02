@@ -10,8 +10,8 @@
     ];
   };
 
-  # Make kubectl available
-  environment.systemPackages = [ pkgs.kubectl ];
+  # Make kubectl/helm/helmfile available (assistant deploy runs helmfile sync VPS-side)
+  environment.systemPackages = [ pkgs.kubectl pkgs.kubernetes-helm pkgs.helmfile ];
 
   # Allow k3s API access
   networking.firewall.allowedTCPPorts = [ 6443 ];
