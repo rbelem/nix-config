@@ -20,4 +20,7 @@
 
   # Allow k3s API access
   networking.firewall.allowedTCPPorts = [ 6443 ];
+
+  # Deploy phases (deploy.sh helmfile/kubectl) rsync into /opt/k8s as rodrigo.
+  systemd.tmpfiles.rules = [ "d /opt/k8s 0755 rodrigo users -" ];
 }
