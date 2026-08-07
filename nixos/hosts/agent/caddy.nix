@@ -2,41 +2,38 @@
 let
   cfg = runtime-config;
   domain = cfg.domain;
-
-  # Caddy with Porkbun DNS-01 plugin for wildcard TLS certificates.
-  # Plugin version pinned to latest available (v0.3.1 as of 2026-07); hash must
-  # match the actual build output. To regenerate: replace hash with
-  # lib.fakeHash, run `nix build .#nixosConfigurations.agent.config.services.caddy.package`
-  # and paste the "got:" hash from the error message.
-  caddy-with-plugins = pkgs.caddy.withPlugins {
-    plugins = [ "github.com/caddy-dns/porkbun@v0.3.1" ];
-    hash = "sha256-CjL8dMdnsiawaPiQGRvL3he4Ydd3nIbQs6tBWMwUbaw=";
-  };
 in
 {
   services.caddy = {
     enable = true;
-    package = caddy-with-plugins;
+    # No third-party plugins — use default caddy with HTTP-01 challenge
+    # (port 80 is open). DNS A records are managed by OpenTofu (tofu/dns.tf,
+    # Cloudflare provider). The legacy Porkbun acme_dns block was removed
+    # because the domain nameservers are Cloudflare, not Porkbun.
+    package = pkgs.caddy;
 
-    # Secrets sourced from /etc/caddy/env (written by ansible/secrets.yml
-    # from Bitwarden vault item "Porkbun API Key"). PORKBUN_API_KEY and
-    # PORKBUN_SECRET_API_KEY are injected into the caddy systemd unit.
+    # Secrets environment file kept for forward compatibility.
     environmentFile = "/etc/caddy/env";
 
-    # Global ACME config — DNS-01 via Porkbun for wildcard cert.
-    # {env.VAR} is Caddy's runtime env placeholder (subdirective names per
-    # caddy-dns/porkbun README: api_key + api_secret_key).
+    # Global options — log level only. ACME uses Caddy's default HTTP-01
+    # challenge (port 80 is open; A records managed by Tofu).
     globalConfig = ''
-      acme_dns porkbun {
-        api_key {env.PORKBUN_API_KEY}
-        api_secret_key {env.PORKBUN_SECRET_API_KEY}
+      log {
+        level ERROR
       }
     '';
 
     virtualHosts = {
-      # Hermes — AI agent (k3s NodePort 30080)
+      # Hermes — AI agent (k3s NodePorts 30080 API / 30090 dashboard)
       "hermes.${domain}".extraConfig = ''
-        reverse_proxy localhost:30080
+        # OpenAI-compatible API server (port 8642 via NodePort 30080)
+        handle /v1/* {
+          reverse_proxy localhost:30080
+        }
+        # Web dashboard (port 9119 via NodePort 30090)
+        handle {
+          reverse_proxy localhost:30090
+        }
       '';
 
       # Uptime Kuma — monitoring (k3s NodePort 30001)

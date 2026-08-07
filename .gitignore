@@ -4,3 +4,10 @@ result-*
 *.swp
 *.swo
 *~
+# Dev tooling artifacts (not for VCS)
+.codegraph/
+.opencode/
+.venv/
+graphify-out/
+docs/
+research/

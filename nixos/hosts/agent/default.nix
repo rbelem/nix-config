@@ -99,4 +99,20 @@
 
   # State version
   system.stateVersion = "24.11";
+
+  # /var/log must not be group-writable: logrotate refuses btmp/wtmp rotation
+  # ("parent directory has insecure permissions") when /var/log is 775 root:syslog.
+  # 'd' only sets mode at creation; 'z' fixes the existing dir (nixos-infect left
+  # an Ubuntu-userland 775 root:syslog /var/log behind).
+  systemd.tmpfiles.rules = [
+    "d /var/log 0755 root root -"
+    "z /var/log 0755 root root -"
+  ];
+
+  # nixos-infect leftover: Ubuntu's /usr/lib/tmpfiles.d/00rsyslog.conf sets
+  # `z /var/log 0775 root syslog`, which overrides our /etc rule (tmpfiles.d
+  # precedence: /usr/lib beats /etc) and breaks logrotate-checkconf. Remove it.
+  system.activationScripts.removeUbuntuRsyslogTmpfiles = ''
+    rm -f /usr/lib/tmpfiles.d/00rsyslog.conf
+  '';
 }
