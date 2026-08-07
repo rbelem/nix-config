@@ -15,13 +15,8 @@ in
     # Secrets environment file kept for forward compatibility.
     environmentFile = "/etc/caddy/env";
 
-    # Global options — log level only. ACME uses Caddy's default HTTP-01
-    # challenge (port 80 is open; A records managed by Tofu).
-    globalConfig = ''
-      log {
-        level ERROR
-      }
-    '';
+    # ACME uses Caddy's default HTTP-01 challenge (port 80 is open; A records
+    # managed by Tofu). Log level is the module default (logFormat = "level ERROR").
 
     virtualHosts = {
       # Hermes — AI agent (k3s NodePorts 30080 API / 30090 dashboard)
