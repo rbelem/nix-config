@@ -11,6 +11,7 @@
     ./bluetooth.nix
     ./bootloader.nix
     ./display.nix
+    ./forticlient.nix
     ./id.nix
     ./keyboard.nix
     ./networking.nix

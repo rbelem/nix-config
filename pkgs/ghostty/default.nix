@@ -15,7 +15,7 @@
 { lib, fetchFromGitHub, callPackage, ghostty }:
 
 let
-  versionDate = "2025-06-30";
+  versionDate = "2026-07-15";
 
   # Must be valid semver — ghostty's Config.zig parses -Dversion-string
   # with std.SemanticVersion.parse().  The pre-release suffix (after -)
@@ -25,8 +25,8 @@ let
   src = fetchFromGitHub {
     owner = "ghostty-org";
     repo = "ghostty";
-    rev = "0a5061743d608a1b0349a3305a4136ff67600921";
-    hash = "sha256-PsdKDDhau2fa+Iqu07GlXmB4nDR5nZfp0hbb/a0pADc=";
+    rev = "b0947378349eff70f7030dda0e6d022fae1e6fbd";
+    hash = "sha256-CAzTy0H5b3HvPq54obHdTgtmM+71z+KlCMcXacZOPy4=";
   };
 in
 ghostty.overrideAttrs (old: {
