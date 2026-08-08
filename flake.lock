@@ -1,18 +1,5 @@
 {
   "nodes": {
-    "assistant-repo": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1786066323,
-        "narHash": "sha256-+FTeX9ojQavWx6jS0oju8d77FwB3rdu6Ex4muTlMzvc=",
-        "path": "/home/rodrigo/Workspace/rbelem/assistant",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/rodrigo/Workspace/rbelem/assistant",
-        "type": "path"
-      }
-    },
     "asus-gpl-rtax88u": {
       "flake": false,
       "locked": {
@@ -91,11 +78,24 @@
     },
     "root": {
       "inputs": {
-        "assistant-repo": "assistant-repo",
         "asus-gpl-rtax88u": "asus-gpl-rtax88u",
         "hardware": "hardware",
         "nixpkgs": "nixpkgs_2",
-        "nixpkgs-old": "nixpkgs-old"
+        "nixpkgs-old": "nixpkgs-old",
+        "zet-repo": "zet-repo"
+      }
+    },
+    "zet-repo": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786213629,
+        "narHash": "sha256-FCY5AfZvyGMRBMjxSDC4otDSRFIplWw3xirfnr50TB4=",
+        "path": "/home/rodrigo/Workspace/github.com/rbelem/zet",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/rodrigo/Workspace/github.com/rbelem/zet",
+        "type": "path"
       }
     }
   },

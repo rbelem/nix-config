@@ -16,6 +16,10 @@
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
       auto-optimise-store = true;
+      # rodrigo must be able to nix-copy-closure for `nixos-rebuild --target-host`
+      # from the workstation (deploy.sh). Without this, the remote daemon
+      # (require-sigs = true) rejects unsigned closure copies as a non-trusted user.
+      trusted-users = [ "root" "rodrigo" ];
     };
     gc = {
       automatic = true;
