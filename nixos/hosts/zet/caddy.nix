@@ -19,7 +19,7 @@ in
     # managed by Tofu). Log level is the module default (logFormat = "level ERROR").
 
     virtualHosts = {
-      # Hermes — AI agent (k3s NodePorts 30080 API / 30090 dashboard)
+      # Zet — AI agent (k3s NodePorts 30080 API / 30090 dashboard)
       "hermes.${domain}".extraConfig = ''
         # OpenAI-compatible API server (port 8642 via NodePort 30080)
         handle /v1/* {

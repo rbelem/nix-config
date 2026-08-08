@@ -10,7 +10,7 @@
     ];
   };
 
-  # Make kubectl/helm/helmfile available (assistant deploy runs helmfile sync VPS-side)
+  # Make kubectl/helm/helmfile available (the zet repo's deploy runs helmfile sync VPS-side)
   # python3 (with kubernetes lib) is required by ansible: bootstrap/secrets-apply/
   # deploy/update playbooks + kubernetes.core.k8s module.
   environment.systemPackages = [

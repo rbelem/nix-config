@@ -131,7 +131,7 @@ in rec {
   # bitw — rbelem Bitwarden CLI fork (item-key decrypt, edit, get --json)
   # Used on the operator workstation for fetch_vault / populate-vault /
   # restore-state / rotate-secrets flows. Replaces the deprecated `bw`
-  # (npm @bitwarden/cli). Intentionally NOT installed on the VPS (agent
-  # host) — see nixos/hosts/agent/default.nix for the rationale.
+  # (npm @bitwarden/cli). Intentionally NOT installed on the VPS (zet
+  # host) — see nixos/hosts/zet/default.nix for the rationale.
   bitw = pkgs.callPackage ./bitw { };
 }

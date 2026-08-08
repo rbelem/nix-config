@@ -5,7 +5,7 @@
     openFirewall = true;
     authKeyFile = "/etc/tailscale/authkey";
     extraUpFlags = [
-      "--hostname=agent"
+      "--hostname=zet"
       "--accept-routes"
     ];
   };
@@ -27,7 +27,7 @@
         # Wait for tailscale to be connected
         for i in $(seq 1 30); do
           if ${pkgs.tailscale}/bin/tailscale status --json | ${pkgs.jq}/bin/jq -e '.Self.Online' 2>/dev/null; then
-            ${pkgs.tailscale}/bin/tailscale set --advertise-tags=tag:agent
+            ${pkgs.tailscale}/bin/tailscale set --advertise-tags=tag:zet
             exit 0
           fi
           sleep 2

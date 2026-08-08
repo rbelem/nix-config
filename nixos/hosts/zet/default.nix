@@ -38,12 +38,12 @@
     isNormalUser = true;
     extraGroups = [ "wheel" ];
     openssh.authorizedKeys.keys = [
-      # ssh-ed25519 from Bitwarden assistant/vps-ssh-key (private key stored there).
+      # ssh-ed25519 from Bitwarden zet/vps-ssh-key (private key stored there).
       # Rotated 2026-07-31 together with a VM reprovision — old key (Ng0Z6Pj2) was
       # authorized on the previous VPS but its private half only survived in a stale
       # .rendered/ file; the vault item had been rotated without updating this list.
-      # Verify with: ssh-keygen -y -f <(bitw get --json assistant/vps-ssh-key | jq -r .sshKey.privateKey)
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICAa+66tokO+iGCEAIFzy0juOh20T+jaz8gaM76qE/eW assistant-vps-2026-07-31"
+      # Verify with: ssh-keygen -y -f <(bitw get --json zet/vps-ssh-key | jq -r .sshKey.privateKey)
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICAa+66tokO+iGCEAIFzy0juOh20T+jaz8gaM76qE/eW zet-vps-2026-07-31"
     ];
   };
 
@@ -51,10 +51,10 @@
   programs.nix-ld.enable = true;
 
   # Note: bitw is intentionally NOT installed on the VPS. Vault decryption
-  # happens on the operator workstation (see AGENTS.md in the assistant repo);
+  # happens on the operator workstation (see AGENTS.md in the zet repo);
   # the VPS only receives rendered k8s Secrets / config files via ansible.
   # The master password never touches the VPS. If you need bitw on a host
-  # other than agent, import pkgs/bitw in that host's configuration.
+  # other than zet, import pkgs/bitw in that host's configuration.
 
   # Locale
   i18n.defaultLocale = "en_GB.UTF-8";

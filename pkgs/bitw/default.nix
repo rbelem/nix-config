@@ -7,9 +7,9 @@
 #   - `bitw create --type 1|2|5` (login, secure-note, ssh-key)
 #   - libsecret auto-unlock + client_credentials auth (BW_CLIENTID/BW_CLIENTSECRET)
 #
-# Used by the assistant repo's fetch_vault.sh / populate-vault.sh /
+# Used by the zet repo's fetch_vault.sh / populate-vault.sh /
 # restore-state.sh / rotate-secrets.sh on the operator workstation.
-# Intentionally NOT installed on the VPS (agent host) — the master password
+# Intentionally NOT installed on the VPS (zet host) — the master password
 # never touches the VPS; vault decryption happens on the workstation and
 # rendered secrets are pushed via ansible.
 

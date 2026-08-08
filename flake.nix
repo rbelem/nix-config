@@ -16,10 +16,10 @@
     asus-gpl-rtax88u.url = "path:/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt";
     asus-gpl-rtax88u.flake = false;
 
-    # assistant repo — provides .rendered/runtime-config.json (domain, backup S3, etc.)
-    # Regenerate with: scripts/fetch_vault.sh (in the assistant repo)
-    assistant-repo = {
-      url = "path:/home/rodrigo/Workspace/rbelem/assistant";
+    # zet repo — provides .rendered/runtime-config.json (domain, backup S3, etc.)
+    # Regenerate with: scripts/fetch_vault.sh (in the zet repo)
+    zet-repo = {
+      url = "path:/home/rodrigo/Workspace/github.com/rbelem/zet";
       flake = false;
     };
 
@@ -90,16 +90,16 @@
           ];
         };
 
-        # VPS agent — Hetzner Cloud NixOS host running k3s + Caddy + Tailscale
-        agent = let
+        # VPS zet — Hetzner Cloud NixOS host running k3s + Caddy + Tailscale
+        zet = let
           runtime-config = import ./lib/runtime-config.nix {
-            assistant-repo = inputs.assistant-repo;
+            zet-repo = inputs.zet-repo;
           };
         in nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = { inherit inputs outputs runtime-config; };
           modules = [
-            ./nixos/hosts/agent
+            ./nixos/hosts/zet
           ];
         };
       };
