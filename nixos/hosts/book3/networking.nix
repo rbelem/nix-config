@@ -30,14 +30,6 @@
       "--operator=rodrigo"       # CLI without sudo
     ];
   };
-
-  # zet VPS services are Tailscale-gated (Caddy remote_ip 100.64.0.0/10):
-  # MagicDNS only resolves *.ts.net, so hermes.zet.rclb.dev would fall to public
-  # DNS → public IP → Caddy 403. Pin the hostnames to the VPS tailnet IP so the
-  # browser goes through tailscale0 and the gate passes.
-  networking.hosts = {
-    "100.125.99.80" = [ "hermes.zet.rclb.dev" "n8n.zet.rclb.dev" "auth.zet.rclb.dev" ];
-  };
   # Force tailscaled to use nftables (avoids iptables conflicts)
   # https://wiki.nixos.org/wiki/Tailscale#Native_nftables_Support_(Modern_Setup)
   systemd.services.tailscaled.serviceConfig.Environment = [
