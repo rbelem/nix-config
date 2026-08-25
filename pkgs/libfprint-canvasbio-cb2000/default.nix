@@ -27,16 +27,15 @@ libfprint.overrideAttrs (oldAttrs: {
     # Register driver in libfprint/meson.build (driver_sources dict)
     substituteInPlace libfprint/meson.build \
       --replace-fail \
-        "'drivers/focaltech_moc/focaltech_moc.c' ]," \
-        "'drivers/focaltech_moc/focaltech_moc.c' ],
-    'canvasbio_cb2000' :
-        [ 'drivers/canvasbio_cb2000/canvasbio_cb2000.c' ],"
+        "'focaltech_moc' : files('drivers/focaltech_moc/focaltech_moc.c')," \
+        "'focaltech_moc' : files('drivers/focaltech_moc/focaltech_moc.c'),
+    'canvasbio_cb2000' : files('drivers/canvasbio_cb2000/canvasbio_cb2000.c'),"
 
-    # Register driver in meson.build (default_drivers + endian_independent_drivers)
+    # Register driver in meson.build (drivers_info dict — feeds default_drivers)
     substituteInPlace meson.build \
-      --replace \
-        "'focaltech_moc'," \
-        "'focaltech_moc',
-    'canvasbio_cb2000',"
+      --replace-fail \
+        "'focaltech_moc': {}," \
+        "'focaltech_moc': {},
+    'canvasbio_cb2000': {},"
   '';
 })
