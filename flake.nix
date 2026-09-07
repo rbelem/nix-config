@@ -23,6 +23,13 @@
       flake = false;
     };
 
+    # OpenLogi — local-first Logitech HID++ peripheral manager (Rust/GPUI).
+    # Provides packages.openlogi + nixosModules.default (programs.openlogi).
+    openlogi = {
+      url = "github:AprilNEA/OpenLogi";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Shameless plug: looking for a way to nixify your themes and make
     # everything match nicely? Try nix-colors!
     # nix-colors.url = "github:misterio77/nix-colors";

@@ -5,7 +5,6 @@
     inputs.hardware.nixosModules.common-cpu-intel-cpu-only
     inputs.hardware.nixosModules.common-pc-laptop-ssd
 
-
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ./bluetooth.nix
@@ -28,6 +27,7 @@
     ../../desktop/fonts.nix
     ../../desktop/kde.nix
     ../../desktop/monitor-brightness.nix
+    ../../desktop/openlogi.nix
     ../../desktop/virtual-webcam.nix
     ../../desktop/waydroid.nix
   ];
