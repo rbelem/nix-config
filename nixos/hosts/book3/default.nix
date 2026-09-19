@@ -7,6 +7,7 @@
 
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./attic.nix
     ./bluetooth.nix
     ./bootloader.nix
     ./display.nix
@@ -33,6 +34,15 @@
   ];
 
   boot.tmp.cleanOnBoot = true;
+
+  # Cap the journal (was 1.9G unbounded on a 96G / partition).
+  services.journald.settings.Journal.SystemMaxUse = "500M";
+
+  # Cap coredump storage (262M of Aug dumps linger; vacuum only triggers at dump time).
+  systemd.coredump.settings.Coredump = {
+    MaxUse = "1G";
+    ProcessSizeMax = "256M";
+  };
 
   hardware.enableAllFirmware = true;
 

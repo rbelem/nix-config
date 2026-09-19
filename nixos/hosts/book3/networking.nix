@@ -50,7 +50,7 @@
   networking.firewall = {
     enable = true;
     trustedInterfaces = [ "tailscale0" ];
-    allowedTCPPorts = [ 4096 ]; # opencode serve
+    allowedTCPPorts = [ 4096 9119 ]; # opencode serve + hermes dashboard
     allowedUDPPorts = [ 41641 ];
     # Subnet router — WireGuard traffic may have source IP
     # different from the incoming interface

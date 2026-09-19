@@ -1,4 +1,4 @@
-{ inputs, outputs, ... }: {
+{ inputs, outputs, lib, ... }: {
   nix = {
     settings = {
       max-jobs = "auto";
@@ -11,7 +11,8 @@
     gc = {
       automatic = true;
       dates = "weekly";
-      options = "--delete-older-than 30d";
+        # mkDefault: hosts/zet overrides with its own 30d (VPS, big disk).
+      options = lib.mkDefault "--delete-older-than 7d";
     };
   };
 
