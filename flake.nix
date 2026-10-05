@@ -13,8 +13,8 @@
 
     # ASUS GPL source for RT-AX88U (firmware 3.0.0.4.388_24209)
     # Extracted to local filesystem, tracked as a flake path input
-    asus-gpl-rtax88u.url = "path:/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt";
-    asus-gpl-rtax88u.flake = false;
+    #asus-gpl-rtax88u.url = "path:/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt";
+    #asus-gpl-rtax88u.flake = false;
 
     # zet repo — provides .rendered/runtime-config.json (domain, backup S3, etc.)
     # Regenerate with: scripts/fetch_vault.sh (in the zet repo)

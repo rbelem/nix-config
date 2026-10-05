@@ -55,6 +55,11 @@
     # Subnet router — WireGuard traffic may have source IP
     # different from the incoming interface
     checkReversePath = "loose";
+    # Deskflow (KVM server) — accept client connections from the LAN only
+    # (default port 24800/tcp; nftables syntax, see networking.nftables.enable)
+    extraInputRules = ''
+      ip saddr 192.168.50.0/24 tcp dport 24800 accept comment "deskflow"
+    '';
   };
   # Faster boot (Tailscale doesn't need to wait for network online)
   systemd.network.wait-online.enable = false;

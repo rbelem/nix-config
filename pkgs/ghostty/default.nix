@@ -15,7 +15,7 @@
 { lib, fetchFromGitHub, callPackage, ghostty, zig }:
 
 let
-  versionDate = "2026-09-18";
+  versionDate = "2026-10-04";
 
   # Must be valid semver — ghostty's Config.zig parses -Dversion-string
   # with std.SemanticVersion.parse().  The pre-release suffix (after -)
@@ -25,8 +25,8 @@ let
   src = fetchFromGitHub {
     owner = "ghostty-org";
     repo = "ghostty";
-    rev = "b32f20f3e8d25bb925ec545c54498e93518e7ced";
-    hash = "sha256-fII7pzryYOeyikpQy+NDfzASzzO1RaOYJ6hjnPN+ZoQ=";
+    rev = "5dc28bb8eebaf57a6c793a406bfea8c632d4fa94";
+    hash = "sha256-/Fwbt4rjG557E3vwEnOcPQEPWC/8gefKTYxv5nPPPbs=";
   };
 in
 # Ghostty main requires zig >= 0.16; nixpkgs' ghostty pins zig_0_15 for its

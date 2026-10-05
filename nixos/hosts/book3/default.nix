@@ -17,6 +17,7 @@
     ./networking.nix
     ./nvme.nix
     ./sensors.nix
+    ./shuttle-pod-tools.nix
     ./sound.nix
     ./touch.nix
 
@@ -28,7 +29,7 @@
     ../../desktop/fonts.nix
     ../../desktop/kde.nix
     ../../desktop/monitor-brightness.nix
-    ../../desktop/openlogi.nix
+    #../../desktop/openlogi.nix
     ../../desktop/virtual-webcam.nix
     ../../desktop/waydroid.nix
   ];

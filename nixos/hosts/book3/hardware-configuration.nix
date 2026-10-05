@@ -95,8 +95,8 @@
   swapDevices = [{
     device = "/swap/swapfile";
     # 8G: zram (7.7G) handles most pressure; RAM+2G (18G) wasted SSD since 2023.
-  # Shrinking is applied by mkswap-...service at next boot (rm + btrfs mkswapfile).
-  size = 1024 * 8; # zram covers bursts; 18G file was only ever 4-5G used
+    # Shrinking is applied by mkswap-...service at next boot (rm + btrfs mkswapfile).
+    size = 1024 * 16; # zram covers bursts; 18G file was only ever 4-5G used
   }];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking

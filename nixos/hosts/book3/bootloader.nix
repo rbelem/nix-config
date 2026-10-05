@@ -41,7 +41,7 @@
       "mem_sleep_default=s2idle"
     ];
     kernel.sysctl = {
-      "vm.swappiness" = 100;
+      "vm.swappiness" = 1;
       # Kernel hardening
       "kernel.kptr_restrict" = 2;
       "kernel.dmesg_restrict" = 1;
@@ -58,7 +58,7 @@
     };
   };
 
-  zramSwap.enable = true;
+  #zramSwap.enable = true;
 
   # Dynamic power profiles (integrates with KDE Power Management)
   services.power-profiles-daemon.enable = true;

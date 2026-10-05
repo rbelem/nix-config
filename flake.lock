@@ -1,28 +1,15 @@
 {
   "nodes": {
-    "asus-gpl-rtax88u": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1782065557,
-        "narHash": "sha256-3o7HShtYE20r3PHkxoNwN24ubGWVospzXGQBqhotCdQ=",
-        "path": "/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt",
-        "type": "path"
-      }
-    },
     "hardware": {
       "inputs": {
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1789752250,
-        "narHash": "sha256-q0J27mJDfd4BM9a7KcMVbcRmqyU+goQwudbMIu66qsg=",
+        "lastModified": 1791128201,
+        "narHash": "sha256-rlsYY/Dg/LhbIj51Aa6TLvRpZeb3KZgUTd7llQ5XcJE=",
         "owner": "nixos",
         "repo": "nixos-hardware",
-        "rev": "b2d7d02644f0002535a3bb51a73780945cdc7ba4",
+        "rev": "31cc5f4d9b9ba601071e8b8504601b9b176e2756",
         "type": "github"
       },
       "original": {
@@ -62,11 +49,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1789684949,
-        "narHash": "sha256-ZKhUe/2IJUq1JhKxKMu8rbkgSGmPP2ZCqlIPn40aGCM=",
+        "lastModified": 1791048980,
+        "narHash": "sha256-KgItSKML8Xvte0B7/uGnBDsYzSnnKHcOaiUbgWBXLXw=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "e554fab72f81915600f3f449b786fd9af40439a5",
+        "rev": "a7868a727837f3c09cee2ce0ca671c76b1589fed",
         "type": "github"
       },
       "original": {
@@ -84,11 +71,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1789818370,
-        "narHash": "sha256-rrZfeAp6GPxy3en+VgM+/lG8KvsPC0Zhnn3hpWG64nA=",
+        "lastModified": 1790942082,
+        "narHash": "sha256-i9rD1ZuMww8RbXaCgOzfv+4jM2lKemL4fPUUrqzgbyY=",
         "owner": "AprilNEA",
         "repo": "OpenLogi",
-        "rev": "9920b5e32e3074895989c13dddcff1fc6e3577a1",
+        "rev": "4863a45e256d80404b95232b513793cbccb5d6d6",
         "type": "github"
       },
       "original": {
@@ -99,7 +86,6 @@
     },
     "root": {
       "inputs": {
-        "asus-gpl-rtax88u": "asus-gpl-rtax88u",
         "hardware": "hardware",
         "nixpkgs": "nixpkgs_2",
         "nixpkgs-old": "nixpkgs-old",
@@ -115,11 +101,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787246814,
-        "narHash": "sha256-pEd4/iPY3Zm/EhhHmeB1QnIWXJSLx7gJzD/05mm2MCo=",
+        "lastModified": 1790756160,
+        "narHash": "sha256-NPs4nNLxCpho3Ctj8O7t/bzmX0zR8r0zndKghAFEz5U=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "c84e121aaede7ef8c7bd9fb5154ccc1599e07816",
+        "rev": "ed3a19fd0439ed618ec5fe1e12f0ba69a8be38b5",
         "type": "github"
       },
       "original": {
@@ -131,8 +117,8 @@
     "zet-repo": {
       "flake": false,
       "locked": {
-        "lastModified": 1789811149,
-        "narHash": "sha256-f7YJjpUQBM1/siaT6acsrH+kpV/osKt80gDSdWcilus=",
+        "lastModified": 1791106893,
+        "narHash": "sha256-L5mZcR5LyIvXKvr2SH8Ylo3+21tM9MHKCvX+mhtCzOY=",
         "path": "/home/rodrigo/Workspace/github.com/rbelem/zet",
         "type": "path"
       },
