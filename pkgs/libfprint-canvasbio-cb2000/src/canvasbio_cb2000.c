@@ -107,28 +107,35 @@
 /* Validation thresholds */
 #define CB2000_POLL_DEBOUNCE_COUNT       1
 #define CB2000_POLL_STALE_TIMEOUT_MS 12000  /* ~12s max wait for finger */
+#define CB2000_STALE_FAILURES_BEFORE_HARD_RESET 3   /* stale failures before hard reset */
 #define CB2000_EARLY_PLACEMENT_POLLS    0   /* disabled (Windows parity) */
 #define CB2000_EARLY_PLACEMENT_DELAY_MS 400
 #define CB2000_REMOVAL_STABLE_OFF_COUNT  2
 #define CB2000_REMOVAL_STALE_TIMEOUT_MS 10000 /* ~10s max wait for removal */
-#define CB2000_MIN_IMAGE_VARIANCE     3000.0
-/* Background capture/quality heuristics */
-#define CB2000_BG_CAPTURE_MAX_VARIANCE 1800.0
+#define CB2000_MIN_IMAGE_VARIANCE     1500.0 /* field-tuned: real presses 1600-2700, blanks ~240 */
+/* Background capture/quality heuristics. BG ceiling must stay BELOW
+ * MIN_IMAGE_VARIANCE or a real press (var 1500-1800) is swallowed as
+ * background and destroyed by the subtraction (council find). */
+#define CB2000_BG_CAPTURE_MAX_VARIANCE 1400.0
 #define CB2000_BLOCK_SIZE              8
 #define CB2000_LOW_VAR_THRESHOLD       2000.0
-/* Area thresholds per action (fixed profile for deterministic tests). */
+/* Area thresholds per action. Field-tuned: the metric is computed on the
+ * per-frame min-max-stretched image, so it is not a stable physical
+ * quantity — keep enroll and verify close so probe and gallery domains
+ * match (council: coverage asymmetry starved the matcher). */
 #define CB2000_AREA_MIN_CAPTURE_PCT    85
-#define CB2000_AREA_MIN_ENROLL_PCT     55
-#define CB2000_AREA_MIN_VERIFY_PCT     55
-/* Focus (Laplacian variance) threshold to avoid very blurry frames */
-#define CB2000_MIN_FOCUS_VARIANCE      500.0
+#define CB2000_AREA_MIN_ENROLL_PCT     30
+#define CB2000_AREA_MIN_VERIFY_PCT     25   /* light touches: real 16-39, slivers 5-14 */
+/* Focus (Laplacian variance) threshold to avoid very blurry frames.
+ * Field-tuned: junk slivers measure 119-378, real light presses 465-813. */
+#define CB2000_MIN_FOCUS_VARIANCE      430.0
 /* Foreground threshold used for RE-style area/overlap heuristics. */
 #define CB2000_FOREGROUND_THRESHOLD    32
 /* Some PCAPs show an alternate detect value for reg 0x51. */
 #define CB2000_USE_ALT_DETECT_51       0
 
 /* Enrollment diversity correlation helper (masked normalized correlation). */
-#define CB2000_NR_ENROLL_STAGES             15
+#define CB2000_NR_ENROLL_STAGES             8   /* 15 was too slow for press-type sensor UX */
 #define CB2000_NCC_MAX_SHIFT_DEFAULT        3
 #define CB2000_NCC_MASK_THRESHOLD_DEFAULT   24
 #define CB2000_NCC_MIN_SAMPLES_DEFAULT      700
@@ -138,12 +145,12 @@
 #define CB2000_SIGFM_ENABLE_DEFAULT             1
 #define CB2000_SIGFM_SUPPORT_SCORE_DEFAULT      0.14
 #define CB2000_SIGFM_MIN_MATCHES_DEFAULT        3
-#define CB2000_SIGFM_RATIO_DEFAULT              0.75  /* upstream default: match.cpp line 5 */
-#define CB2000_SIGFM_LENGTH_MATCH_DEFAULT       0.15  /* relaxed from 0.05: recover angle pairs on 80x64 */
-#define CB2000_SIGFM_ANGLE_MATCH_DEFAULT        0.05  /* upstream default: match.cpp line 7 */
-#define CB2000_SIGFM_MIN_PEAK_DEFAULT           18.0
+#define CB2000_SIGFM_RATIO_DEFAULT              0.85  /* field-tuned: 0.75 starved raw matches on light touches */
+#define CB2000_SIGFM_LENGTH_MATCH_DEFAULT       0.25  /* field-tuned from 0.15: recover angle pairs on partial presses */
+#define CB2000_SIGFM_ANGLE_MATCH_DEFAULT        0.12  /* field-tuned from 0.05: binding constraint on the vote */
+#define CB2000_SIGFM_MIN_PEAK_DEFAULT           12.0  /* field-tuned from 18.0: more keypoints on light presses */
 #define CB2000_SIGFM_SIGMA_DEFAULT              0.75
-#define CB2000_SIGFM_MAX_KEYPOINTS_DEFAULT      40
+#define CB2000_SIGFM_MAX_KEYPOINTS_DEFAULT      64    /* array bound; 40 starved partial frames */
 #define CB2000_SIGFM_PEAK_MIN_DEFAULT           0.30
 #define CB2000_SIGFM_PEAK_CONS_MIN_DEFAULT      3
 #define CB2000_SIGFM_PEAK_INLIER_MIN_DEFAULT    0.45
@@ -431,6 +438,8 @@ struct _FpiDeviceCanvasbioCb2000 {
     guint         early_timeout_id;
     guint         deactivation_timeout_id;
     gboolean      force_recovery;
+    gboolean      stale_cycle_pending;  /* last failure was a stale poll */
+    guint         stale_failures;       /* consecutive stale cycle failures */
     gboolean      initial_activation_done;
     Cb2000RuntimeConfig runtime_cfg;
 
@@ -502,6 +511,11 @@ struct _FpiDeviceCanvasbioCb2000 {
     gsize         verify_pre_capture_status_len;
     guint8        verify_pre_capture_status[4];
 
+    /* Match result computed but not yet reported. Today the match ends
+     * the cycle synchronously (no error can follow it), so on the error
+     * path this arm is insurance for a future post-match wait; the live
+     * error-path arm is verify_retry_pending. Reported in cycle_complete. */
+    gboolean      verify_result_ready;
     /* Deferred verify retry report (consumed in cycle_complete). */
     gboolean      verify_retry_pending;
     FpDeviceRetry verify_retry_error;
@@ -1189,13 +1203,16 @@ cb2000_action_label(FpiDeviceAction action)
 /*
  * Persist last frame per action for fast offline inspection even when the
  * higher-level example does not emit a PGM (e.g. verify ending in retry).
- * Files are written to $HOME by default.
+ * Files are written to $HOME by default. Off by default: fprintd runs on
+ * read-only roots (e.g. NixOS) and the unconditional dump spams
+ * "Read-only file system" warnings. Export CB2000_SAVE_PGM (any value)
+ * to re-enable.
  */
 static gboolean
 cb2000_should_save_debug_pgm(FpiDeviceAction action)
 {
     (void) action;
-    return TRUE;
+    return g_getenv("CB2000_SAVE_PGM") != NULL;
 }
 
 static const gchar *
@@ -1414,7 +1431,7 @@ cb2000_retry_scan_with_cause(FpDevice           *dev,
             retry_msg = "Adjust finger placement and try again.";
         }
 
-        fp_info("[ RETRY ] action=%s cause=%s total=%u cause_count=%u retry_hint=%s status=0x%02x result=0x%02x msg=\"%s\" %s",
+        fp_warn("[ RETRY ] action=%s cause=%s total=%u cause_count=%u retry_hint=%s status=0x%02x result=0x%02x msg=\"%s\" %s",
                 cb2000_action_label(action),
                 cb2000_retry_cause_label(cause),
                 self->retry_total,
@@ -1436,7 +1453,7 @@ cb2000_retry_scan_with_cause(FpDevice           *dev,
             retry_msg = "Move finger slightly and try again.";
         }
 
-        fp_info("[ RETRY ] action=%s cause=%s total=%u cause_count=%u retry_hint=%s msg=\"%s\" %s",
+        fp_warn("[ RETRY ] action=%s cause=%s total=%u cause_count=%u retry_hint=%s msg=\"%s\" %s",
                 cb2000_action_label(action),
                 cb2000_retry_cause_label(cause),
                 self->retry_total,
@@ -2158,7 +2175,7 @@ cb2000_verify_finalize_ack_gate(FpDevice *dev,
     gboolean ack_mismatch = FALSE;
 
     if (self->finalize_ack1_len < 4 || self->finalize_ack2_len < 4) {
-        fp_info("[ VERIFY_GATE ] ack incomplete (ack1_len=%zu ack2_len=%zu) -> allow matcher",
+        fp_warn("[ VERIFY_GATE ] ack incomplete (ack1_len=%zu ack2_len=%zu) -> allow matcher",
                 self->finalize_ack1_len, self->finalize_ack2_len);
         self->verify_ack_decision_last = CB2000_VERIFY_ACK_UNKNOWN;
         self->verify_ack_status_last = 0x00;
@@ -2201,7 +2218,7 @@ cb2000_verify_finalize_ack_gate(FpDevice *dev,
     if (ack_mismatch)
         self->verify_ack_mismatch_total++;
 
-    fp_info("[ VERIFY_GATE ] ack1=%02x:%02x:%02x:%02x ack2=%02x:%02x:%02x:%02x decision=%s result_class=%s status=0x%02x result=0x%02x mismatch=%d",
+    fp_warn("[ VERIFY_GATE ] ack1=%02x:%02x:%02x:%02x ack2=%02x:%02x:%02x:%02x decision=%s result_class=%s status=0x%02x result=0x%02x mismatch=%d",
             self->finalize_ack1[0], self->finalize_ack1[1],
             self->finalize_ack1[2], self->finalize_ack1[3],
             self->finalize_ack2[0], self->finalize_ack2[1],
@@ -2218,7 +2235,7 @@ cb2000_verify_finalize_ack_gate(FpDevice *dev,
         return TRUE;
     }
 
-    fp_info("[ VERIFY_GATE ] non-retry decision -> allow matcher/device-assisted flow");
+    fp_warn("[ VERIFY_GATE ] non-retry decision -> allow matcher/device-assisted flow");
     return FALSE;
 }
 
@@ -2524,6 +2541,7 @@ poll_finger_result_cb(FpiUsbTransfer *transfer,
         (gint64)CB2000_POLL_STALE_TIMEOUT_MS * 1000) {
         fp_warn("WAIT_FINGER stale (>%dms) - triggering recovery",
                 CB2000_POLL_STALE_TIMEOUT_MS);
+        self->stale_cycle_pending = TRUE;
         fpi_ssm_mark_failed(transfer->ssm,
             fpi_device_error_new_msg(FP_DEVICE_ERROR_PROTO,
                                      "Finger polling stale"));
@@ -3653,7 +3671,7 @@ cb2000_run_ridge_telemetry_from_verify(FpiDeviceCanvasbioCb2000 *self,
         valid_gallery++;
 
         if (cb2000_log_ridge_enabled()) {
-            fp_info("[ RIDGE_TELEMETRY ] gallery_%d count=%u spread=%.3f peak=%.1f score=%.3f",
+            fp_warn("[ RIDGE_TELEMETRY ] gallery_%d count=%u spread=%.3f peak=%.1f score=%.3f",
                     i,
                     gallery_stats.count,
                     gallery_stats.spread,
@@ -3668,7 +3686,7 @@ done:
     self->verify_ridge_telemetry_total++;
 
     if (cb2000_log_ridge_enabled()) {
-        fp_info("[ RIDGE_TELEMETRY ] probe count=%u spread=%.3f peak=%.1f top1=%.3f valid_gallery=%u",
+        fp_warn("[ RIDGE_TELEMETRY ] probe count=%u spread=%.3f peak=%.1f top1=%.3f valid_gallery=%u",
                 probe_stats.count,
                 probe_stats.spread,
                 probe_stats.mean_peak,
@@ -3871,7 +3889,7 @@ pack_enrollment_data(FpiDeviceCanvasbioCb2000 *self, FpPrint *print)
             g_object_set(print, "fpi-data", data, NULL);
             g_free(all_images);
             g_free(mosaic_kp);
-            fp_info("[ MOSAIC ] Packed v2: %d images + %d mosaic keypoints",
+            fp_warn("[ MOSAIC ] Packed v2: %d images + %d mosaic keypoints",
                     CB2000_NR_ENROLL_STAGES, n_mosaic);
             return;
         }
@@ -3892,7 +3910,7 @@ pack_enrollment_data(FpiDeviceCanvasbioCb2000 *self, FpPrint *print)
 
     g_free(all_images);
 
-    fp_info("[ MOSAIC ] Packed v1 fallback: %d enrollment images (%zu bytes)",
+    fp_warn("[ MOSAIC ] Packed v1 fallback: %d enrollment images (%zu bytes)",
             CB2000_NR_ENROLL_STAGES, total_size);
 }
 
@@ -4140,7 +4158,7 @@ gallery_loop:
         if (sig_tel.original_match)
             tel->sigfm_original_match_count++;
 
-        if (sig_score > tel->best_sigfm) {
+        if (sig_score >= tel->best_sigfm) {
             tel->second_sigfm = tel->best_sigfm;
             tel->best_sigfm = sig_score;
             tel->sigfm_probe_keypoints = sig_tel.probe_keypoints;
@@ -4232,7 +4250,7 @@ gallery_loop:
     if (tel->best_sigfm < 0.0)
         tel->best_sigfm = 0.0;
 
-    fp_info("[ SIGFM ] top1=%.4f top2=%.4f mean3=%.4f support=%u/%u score>=%.3f kp=%u/%u raw=%u cons=%u inlier=%.3f shift=(%.2f,%.2f) orig_matches=%u",
+    fp_warn("[ SIGFM ] top1=%.4f top2=%.4f mean3=%.4f support=%u/%u score>=%.3f kp=%u/%u raw=%u cons=%u inlier=%.3f shift=(%.2f,%.2f) orig_matches=%u",
             tel->best_sigfm,
             tel->second_sigfm,
             tel->mean_top3_sigfm,
@@ -4396,7 +4414,11 @@ cycle_run_state(FpiSsm *ssm, FpDevice *dev)
     case CYCLE_WAIT_FINGER:
         fp_dbg("Cycle: WAIT_FINGER (polling sub-SSM, interval=%dms)",
                CB2000_POLL_INTERVAL);
-        /* Reset counters for a new detection window. */
+        /* Reset counters for a new detection window. A retry verdict from
+         * the previous window is stale here: either the user re-placed and
+         * a fresh capture reports its own result, or recovery handles the
+         * wait. Clear it so it cannot shadow a fresh match. */
+        self->verify_retry_pending = FALSE;
         self->poll_stable_hits = 0;
         self->no_finger_streak = 0;
         self->poll_total_count = 0;
@@ -4822,7 +4844,7 @@ cycle_run_state(FpiSsm *ssm, FpDevice *dev)
             int quality_score = calculate_quality_score(variance_norm,
                                                         focus_var,
                                                         area_ratio_norm);
-            fp_info("[ IMAGE ] quality = %d, area = %d, overlap = %d",
+            fp_warn("[ IMAGE ] quality = %d, area = %d, overlap = %d",
                     quality_score, area_pct, overlap_pct);
 
             gint effective_min_area = area_min_pct;
@@ -4844,7 +4866,7 @@ cycle_run_state(FpiSsm *ssm, FpDevice *dev)
             if (fail_variance || fail_area || fail_focus) {
                 fp_warn("Reject! Image quality too bad. var=%.1f area=%d focus=%.1f overlap=%d",
                         variance_norm, area_pct, focus_var, overlap_pct);
-                fp_info("[ GATE ] action=%s min_var=%.1f min_area=%d min_focus=%.1f fail_var=%d fail_area=%d fail_focus=%d",
+                fp_warn("[ GATE ] action=%s min_var=%.1f min_area=%d min_focus=%.1f fail_var=%d fail_area=%d fail_focus=%d",
                         cb2000_action_label(action),
                         effective_min_variance,
                         effective_min_area,
@@ -5244,7 +5266,7 @@ cycle_run_state(FpiSsm *ssm, FpDevice *dev)
                                              ((guint) diversity_pairs >= success_min_pairs) &&
                                              (diversity_success_ratio < success_ratio_min);
 
-                        fp_info("[ ENROLL_DIVERSITY ] stage=%d mode=%s dims=%dx%d overlap=%d best=%.4f mean=%.4f pairs=%d "
+                        fp_warn("[ ENROLL_DIVERSITY ] stage=%d mode=%s dims=%dx%d overlap=%d best=%.4f mean=%.4f pairs=%d "
                                 "ovl_pairs=%u ovl_seen=%d..%d ovl_mean=%.1f ovl_high=%u/%u "
                                 "ovl=%u..%u link=%.3f..%.3f strict_low=%u success=%u/%d (%.3f >= %.3f, min_pairs=%u) mask=%u samples=%u shift=%d",
                                 stage_index + 1,
@@ -5355,7 +5377,7 @@ cycle_run_state(FpiSsm *ssm, FpDevice *dev)
                     }
 
                     if (cb2000_log_ridge_enabled()) {
-                        fp_info("[ RIDGE_TELEMETRY ] enroll_stage=%d count=%u spread=%.3f peak=%.1f",
+                        fp_warn("[ RIDGE_TELEMETRY ] enroll_stage=%d count=%u spread=%.3f peak=%.1f",
                                 stage_index + 1,
                                 enroll_ridge.count,
                                 enroll_ridge.spread,
@@ -5436,7 +5458,7 @@ cycle_run_state(FpiSsm *ssm, FpDevice *dev)
                             self->verify_result = FPI_MATCH_ERROR;
                         }
 
-                        fp_info("[SIGFM_MATCH] action=verify decision=%s orig_matches=%u top1=%.4f cons=%u -> result=%s",
+                        fp_warn("[SIGFM_MATCH] action=verify decision=%s orig_matches=%u top1=%.4f cons=%u -> result=%s",
                                 decision_label,
                                 sigfm_tel.sigfm_original_match_count,
                                 sigfm_tel.best_sigfm,
@@ -5454,7 +5476,7 @@ cycle_run_state(FpiSsm *ssm, FpDevice *dev)
                             self->verify_retry_pending = TRUE;
                             self->verify_retry_error   = FP_DEVICE_RETRY_CENTER_FINGER;
                             self->verify_retry_message[0] = '\0';
-                            fp_info("[SIGFM_MATCH] blank probe — auto-retry %d (CENTER_FINGER)",
+                            fp_warn("[SIGFM_MATCH] blank probe — auto-retry %d (CENTER_FINGER)",
                                     self->verify_auto_retry_count);
                         }
                     } else {
@@ -5482,7 +5504,7 @@ cycle_run_state(FpiSsm *ssm, FpDevice *dev)
                                 if (sigfm_tel.sigfm_original_match_count > 0) {
                                     self->identify_match = g_object_ref(candidate);
                                     self->verify_result = FPI_MATCH_SUCCESS;
-                                    fp_info("[SIGFM_MATCH] action=identify candidate=%d decision=MATCH orig_matches=%u top1=%.4f cons=%u -> result=MATCH",
+                                    fp_warn("[SIGFM_MATCH] action=identify candidate=%d decision=MATCH orig_matches=%u top1=%.4f cons=%u -> result=MATCH",
                                             i,
                                             sigfm_tel.sigfm_original_match_count,
                                             sigfm_tel.best_sigfm,
@@ -5507,12 +5529,13 @@ cycle_run_state(FpiSsm *ssm, FpDevice *dev)
                                 self->verify_result = FPI_MATCH_ERROR;
                         }
 
-                        fp_info("[SIGFM_MATCH] action=identify compared=%u -> result=%s",
+                        fp_warn("[SIGFM_MATCH] action=identify compared=%u -> result=%s",
                                 compared_templates,
                                 self->verify_result == FPI_MATCH_SUCCESS ? "MATCH" :
                                 self->verify_result == FPI_MATCH_FAIL ? "NO MATCH" : "ERROR");
                     }
 
+                    self->verify_result_ready = TRUE;
                     fpi_ssm_mark_completed(ssm);
                     return;
 
@@ -5556,6 +5579,84 @@ cycle_run_state(FpiSsm *ssm, FpDevice *dev)
 }
 
 /*
+ * Recovery policy for a failed cycle. WAIT_FINGER stale failures
+ * (abandoned fingerprint prompt, sensor idle) get up to
+ * CB2000_STALE_FAILURES_BEFORE_HARD_RESET - 1 soft recoveries — polling
+ * rearm without USB reset — before escalating to a hard reset, so one
+ * abandoned prompt cannot become a permanent USB reset loop. Removal
+ * stale, and any non-stale failure, clears the streak and always hard
+ * resets (post-capture sensor state needs re-init).
+ * Returns TRUE when the next cycle must hard reset + re-init.
+ */
+static gboolean
+cb2000_cycle_failure_needs_hard_reset(FpiDeviceCanvasbioCb2000 *self)
+{
+    if (!self->stale_cycle_pending) {
+        self->stale_failures = 0;
+        return TRUE;
+    }
+
+    self->stale_failures++;
+    if (self->stale_failures < CB2000_STALE_FAILURES_BEFORE_HARD_RESET)
+        return FALSE;
+
+    fp_warn("Escalating to hard reset after %u consecutive stale failures",
+            self->stale_failures);
+    self->stale_failures = 0;
+    return TRUE;
+}
+
+/*
+ * TRUE when a failed cycle must not be treated as a recovery case because
+ * a verify/identify result was already computed (or a retry is pending):
+ * the action-specific completion in cycle_complete must report it instead.
+ */
+static gboolean
+cb2000_cycle_failure_reportable(FpiDeviceCanvasbioCb2000 *self, FpDevice *dev)
+{
+    return cb2000_is_verify_phase_action(fpi_device_get_current_action(dev)) &&
+           (self->verify_result_ready || self->verify_retry_pending);
+}
+
+/*
+ * Handle a failed cycle. Returns TRUE when the failure was fully handled
+ * (recovery started) and cycle_complete must return. Returns FALSE when
+ * the action-specific completion must run: either there was no error, or
+ * a computed verify/identify result is pending — *error_ptr is cleared in
+ * the reportable case so the result gets reported instead of discarded.
+ */
+static gboolean
+cb2000_cycle_failure_handle(FpiDeviceCanvasbioCb2000 *self,
+                            FpDevice                 *dev,
+                            GError                  **error_ptr)
+{
+    GError *error = *error_ptr;
+    gboolean hard_reset;
+
+    if (error && cb2000_cycle_failure_reportable(self, dev)) {
+        /* A cycle failure must not discard a pending verdict: report the
+         * computed result (or pending retry) and finish the action. */
+        fp_info("Cycle failed (%s, code %d) - reporting pending %s",
+                error->message, error->code,
+                self->verify_retry_pending ? "retry" : "match result");
+        g_clear_error(error_ptr);
+        return FALSE;
+    }
+    if (!error)
+        return FALSE;
+
+    hard_reset = cb2000_cycle_failure_needs_hard_reset(self);
+    fp_warn("Cycle failed: %s - starting new cycle (%s)",
+            error->message,
+            hard_reset ? "hard reset + re-init" : "soft recovery");
+    g_error_free(error);
+    *error_ptr = NULL;
+    self->force_recovery = hard_reset;
+    start_new_cycle(dev);
+    return TRUE;
+}
+
+/*
  * Cycle completion handler. Cancels any pending timers, handles recovery,
  * and starts the next cycle unless deactivation is in progress.
  */
@@ -5593,14 +5694,11 @@ cycle_complete(FpiSsm *ssm, FpDevice *dev, GError *error)
         return;
     }
 
-    if (error) {
-        fp_warn("Cycle failed: %s - starting new cycle (recovery)",
-                error->message);
-        g_error_free(error);
-        self->force_recovery = TRUE;
-        start_new_cycle(dev);
+    if (cb2000_cycle_failure_handle(self, dev, &error))
         return;
-    }
+
+    self->stale_failures = 0;
+    self->stale_cycle_pending = FALSE;
 
     fp_dbg("[ STATS ] accepted=%u retry_total=%u bg=%u area=%u quality=%u precheck=%u enroll_div=%u dev_status=%u "
            "submit_cap=%u submit_enroll=%u submit_verify=%u submit_identify=%u "
@@ -5783,6 +5881,9 @@ start_new_cycle(FpDevice *dev)
 {
     FpiDeviceCanvasbioCb2000 *self = FPI_DEVICE_CANVASBIO_CB2000(dev);
 
+    self->stale_cycle_pending = FALSE;
+    self->verify_result_ready = FALSE;
+
     if (self->deactivating)
         return;
 
@@ -5850,6 +5951,8 @@ dev_open(FpDevice *device)
     self->removal_timeout_id = 0;
     self->early_timeout_id = 0;
     self->force_recovery = FALSE;
+    self->stale_cycle_pending = FALSE;
+    self->stale_failures = 0;
     self->retry_total = 0;
     self->accepted_total = 0;
     memset(self->retry_cause_count, 0, sizeof(self->retry_cause_count));
@@ -5901,6 +6004,7 @@ dev_open(FpDevice *device)
     self->verify_pre_capture_status_total = 0;
     self->verify_pre_capture_status_len = 0;
     memset(self->verify_pre_capture_status, 0, sizeof(self->verify_pre_capture_status));
+    self->verify_result_ready = FALSE;
     self->verify_retry_pending = FALSE;
     self->verify_retry_error = FP_DEVICE_RETRY_GENERAL;
     self->verify_retry_status_code = 0x00;
@@ -5991,6 +6095,8 @@ dev_action_common_init(FpiDeviceCanvasbioCb2000 *self,
     self->deactivation_in_progress = FALSE;
     self->initial_activation_done = FALSE;
     self->force_recovery = FALSE;
+    self->stale_cycle_pending = FALSE;
+    self->stale_failures = 0;
     self->previous_norm_valid = FALSE;
     self->retry_total = 0;
     self->accepted_total = 0;
@@ -6043,6 +6149,7 @@ dev_action_common_init(FpiDeviceCanvasbioCb2000 *self,
     self->verify_pre_capture_status_total = 0;
     self->verify_pre_capture_status_len = 0;
     memset(self->verify_pre_capture_status, 0, sizeof(self->verify_pre_capture_status));
+    self->verify_result_ready = FALSE;
     self->verify_retry_pending = FALSE;
     self->verify_retry_error = FP_DEVICE_RETRY_GENERAL;
     self->verify_retry_status_code = 0x00;

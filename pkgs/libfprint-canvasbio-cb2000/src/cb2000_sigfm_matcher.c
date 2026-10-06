@@ -84,8 +84,11 @@ cb2000_sigfm_cv_init_once(void)
 
     cb2000_sigfm_cv_init_done = TRUE;
     cb2000_sigfm_cv_handle = dlopen(CB2000_SIGFM_OPENCV_HELPER_SONAME, RTLD_NOW | RTLD_LOCAL);
-    if (!cb2000_sigfm_cv_handle)
+    if (!cb2000_sigfm_cv_handle) {
+        fp_warn("OpenCV helper '%s' unavailable (%s) - using pure-C fallback matcher",
+                CB2000_SIGFM_OPENCV_HELPER_SONAME, dlerror());
         return;
+    }
 
     cb2000_sigfm_cv_match = (Cb2000SigfmCvMatchFn) dlsym(cb2000_sigfm_cv_handle,
                                                          "cb2000_sigfm_opencv_pair_match");
