@@ -7,6 +7,12 @@
       carlito
       corefonts
       dejavu_fonts
+      # Replaces the hand-linked ~/.local/share/fonts farm whose nix store
+      # target was garbage-collected (fontconfig served dead paths -> dialog tofu)
+      noto-fonts
+      noto-fonts-cjk-sans
+      noto-fonts-color-emoji
+      unifont
       open-sans
       overpass
       roboto
