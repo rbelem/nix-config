@@ -3,10 +3,11 @@
   services = {
     displayManager = {
       defaultSession = "plasma";
-      sddm = {
-        enable = true;
-        wayland.enable = true;
-      };
+      # Plasma Login Manager (SDDM fork with a Plasma greeter). The
+      # plasmalogin PAM service substacks login, so kwallet unlock comes
+      # from the plasma6 module's login.kwallet and pam_fprintd comes from
+      # the fprintAuth default (pinned in hosts/book3/id.nix).
+      plasma-login-manager.enable = true;
     };
     desktopManager.plasma6.enable = true;
   };
@@ -22,6 +23,5 @@
     xdgOpenUsePortal = true;
   };
 
-  security.pam.services.sddm.enableKwallet = true;
   security.pam.services.kdewallet.enableKwallet = true;
 }
