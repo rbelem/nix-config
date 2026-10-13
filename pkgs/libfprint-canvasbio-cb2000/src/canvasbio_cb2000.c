@@ -44,7 +44,7 @@
  */
 
 #define FP_COMPONENT "canvasbio_cb2000"
-#define CB2000_DRIVER_VERSION_TAG "B1-R1.2"
+#define CB2000_DRIVER_VERSION_TAG "B1-R1.3"
 
 #include "drivers_api.h"
 #include "cb2000_sigfm_matcher.h"
@@ -438,6 +438,7 @@ struct _FpiDeviceCanvasbioCb2000 {
     guint         early_timeout_id;
     guint         deactivation_timeout_id;
     gboolean      force_recovery;
+    gboolean      cancel_requested;     /* dev_cancel seen; abort at next safe point */
     gboolean      stale_cycle_pending;  /* last failure was a stale poll */
     guint         stale_failures;       /* consecutive stale cycle failures */
     gboolean      initial_activation_done;
@@ -947,6 +948,8 @@ static void cb2000_load_runtime_config(FpiDeviceCanvasbioCb2000 *self,
 static void complete_deactivation(FpDevice *dev);
 static gboolean deactivation_force_cb(gpointer user_data);
 static void start_new_cycle(FpDevice *dev);
+
+static GError *cb2000_cancel_error(void);
 
 /* Invert grayscale image in-place (sensor outputs inverted polarity). */
 static void G_GNUC_UNUSED
@@ -2498,6 +2501,10 @@ poll_finger_delay_cb(gpointer user_data)
     if (self->deactivating || self->deactivation_in_progress) {
         return G_SOURCE_REMOVE;
     }
+    if (self->cancel_requested) {
+        fpi_ssm_mark_failed(ssm, cb2000_cancel_error());
+        return G_SOURCE_REMOVE;
+    }
 
     fpi_ssm_next_state(ssm);
     return G_SOURCE_REMOVE;
@@ -2518,6 +2525,10 @@ poll_finger_result_cb(FpiUsbTransfer *transfer,
     gint64 now_us = g_get_monotonic_time();
 
     if (self->deactivating || self->deactivation_in_progress) {
+        return;
+    }
+    if (self->cancel_requested) {
+        fpi_ssm_mark_failed(transfer->ssm, cb2000_cancel_error());
         return;
     }
     if (error) {
@@ -2621,6 +2632,10 @@ poll_removal_delay_cb(gpointer user_data)
     if (self->deactivating || self->deactivation_in_progress) {
         return G_SOURCE_REMOVE;
     }
+    if (self->cancel_requested) {
+        fpi_ssm_mark_failed(ssm, cb2000_cancel_error());
+        return G_SOURCE_REMOVE;
+    }
 
     fpi_ssm_next_state(ssm);
     return G_SOURCE_REMOVE;
@@ -2640,6 +2655,10 @@ poll_removal_result_cb(FpiUsbTransfer *transfer,
     gint64 now_us = g_get_monotonic_time();
 
     if (self->deactivating || self->deactivation_in_progress) {
+        return;
+    }
+    if (self->cancel_requested) {
+        fpi_ssm_mark_failed(transfer->ssm, cb2000_cancel_error());
         return;
     }
     if (error) {
@@ -4299,6 +4318,10 @@ settle_delay_cb(gpointer user_data)
         fpi_ssm_mark_completed(ssm);
         return G_SOURCE_REMOVE;
     }
+    if (self->cancel_requested) {
+        fpi_ssm_mark_failed(ssm, cb2000_cancel_error());
+        return G_SOURCE_REMOVE;
+    }
 
     fpi_ssm_next_state(ssm);
     return G_SOURCE_REMOVE;
@@ -5657,6 +5680,49 @@ cb2000_cycle_failure_handle(FpiDeviceCanvasbioCb2000 *self,
 }
 
 /*
+ * Error for a cancelled action. When the cancellation came from the caller
+ * (fprintd), the libfprint core returns G_IO_ERROR_CANCELLED to it regardless
+ * of the specific error contents.
+ */
+static GError *
+cb2000_cancel_error(void)
+{
+    return g_error_new_literal(G_IO_ERROR, G_IO_ERROR_CANCELLED,
+                               "Operation cancelled");
+}
+
+/*
+ * Complete the current action after a cancellation. Each fpi_device_*_complete
+ * asserts on the matching current action; NONE means the action already ended
+ * and there is nothing to complete.
+ */
+static void
+complete_action_cancelled(FpiDeviceCanvasbioCb2000 *self, FpDevice *dev)
+{
+    FpiDeviceAction action = fpi_device_get_current_action(dev);
+
+    fp_info("Completing action %d as cancelled", action);
+
+    switch (action) {
+    case FPI_DEVICE_ACTION_ENROLL:
+        fpi_device_enroll_complete(dev, NULL, cb2000_cancel_error());
+        break;
+    case FPI_DEVICE_ACTION_VERIFY:
+        fpi_device_verify_complete(dev, cb2000_cancel_error());
+        break;
+    case FPI_DEVICE_ACTION_IDENTIFY:
+        g_clear_object(&self->identify_match);
+        fpi_device_identify_complete(dev, cb2000_cancel_error());
+        break;
+    case FPI_DEVICE_ACTION_CAPTURE:
+        fpi_device_capture_complete(dev, NULL, cb2000_cancel_error());
+        break;
+    default:
+        break;
+    }
+}
+
+/*
  * Cycle completion handler. Cancels any pending timers, handles recovery,
  * and starts the next cycle unless deactivation is in progress.
  */
@@ -5691,6 +5757,15 @@ cycle_complete(FpiSsm *ssm, FpDevice *dev, GError *error)
     if (self->deactivating) {
         g_clear_error(&error);
         complete_deactivation(dev);
+        return;
+    }
+
+    /* A computed verdict (match/no-match/retry) outranks a cancellation:
+     * if the finger was scanned just as the client cancelled, report the
+     * verdict instead of discarding it. */
+    if (self->cancel_requested && !cb2000_cycle_failure_reportable(self, dev)) {
+        g_clear_error(&error);
+        complete_action_cancelled(self, dev);
         return;
     }
 
@@ -6095,6 +6170,7 @@ dev_action_common_init(FpiDeviceCanvasbioCb2000 *self,
     self->deactivation_in_progress = FALSE;
     self->initial_activation_done = FALSE;
     self->force_recovery = FALSE;
+    self->cancel_requested = FALSE;
     self->stale_cycle_pending = FALSE;
     self->stale_failures = 0;
     self->previous_norm_valid = FALSE;
@@ -6238,6 +6314,27 @@ dev_capture(FpDevice *device)
 }
 
 /*
+ * Cancellation entry point. The libfprint core calls this when the client
+ * (fprintd, on behalf of PAM) cancels the operation: SDDM cancels the
+ * fingerprint request as soon as the user submits a password, and fprintd
+ * cancels before releasing the device.
+ *
+ * This only sets a flag. The running cycle aborts at the next safe point
+ * (poll tick, settle/timeout callback or transfer completion) — never while
+ * a USB transfer is in flight, because transfer callbacks hold plain
+ * transfer->ssm pointers. WAIT_FINGER polls run on a 16 ms tick, so the
+ * common cancel path lands within one poll interval.
+ */
+static void
+dev_cancel(FpDevice *dev)
+{
+    FpiDeviceCanvasbioCb2000 *self = FPI_DEVICE_CANVASBIO_CB2000(dev);
+
+    fp_info("Cancel requested - aborting cycle at next safe point");
+    self->cancel_requested = TRUE;
+}
+
+/*
  * Deactivation control request completion.
  * In FpDevice mode, this is just a cleanup callback - no deactivate_complete needed.
  */
@@ -6341,6 +6438,7 @@ fpi_device_canvasbio_cb2000_class_init(FpiDeviceCanvasbioCb2000Class *klass)
 
     dev_class->open    = dev_open;
     dev_class->close   = dev_close;
+    dev_class->cancel  = dev_cancel;
     dev_class->enroll  = dev_enroll;
     dev_class->verify  = dev_verify;
     dev_class->identify = dev_identify;

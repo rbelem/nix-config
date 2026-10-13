@@ -10,7 +10,7 @@ libfprint.overrideAttrs (oldAttrs: {
     runHook postInstallCheck
   '';
 
-  # CanvasBio CB2000 driver (B1-R1.2) from kpagnussat/canvasbio-cb2000
+  # CanvasBio CB2000 driver (B1-R1.3) from kpagnussat/canvasbio-cb2000
   # https://github.com/kpagnussat/canvasbio-cb2000
   #
   # SigFM matcher uses SIFT keypoints with geometric consensus voting
