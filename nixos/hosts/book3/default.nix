@@ -30,9 +30,14 @@
     ../../desktop/kde.nix
     ../../desktop/monitor-brightness.nix
     #../../desktop/openlogi.nix
+    ../../desktop/omarchy
     ../../desktop/virtual-webcam.nix
     ../../desktop/waydroid.nix
   ];
+
+  # The Omarchy desktop, running on niri instead of Hyprland. Set this to
+  # false to go back to Plasma; nixos/desktop/kde.nix follows the same switch.
+  programs.omarchy.enable = true;
 
   boot.tmp.cleanOnBoot = true;
 
