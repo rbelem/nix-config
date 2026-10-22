@@ -29,6 +29,10 @@ let
 in rec {
   libfprint-canvasbio-cb2000 = pkgs.callPackage ./libfprint-canvasbio-cb2000 { };
 
+  # niri with the GlobalShortcuts portal, which upstream niri does not
+  # implement. The compositor for the Omarchy desktop.
+  niri-global-shortcuts = pkgs.callPackage ./niri-global-shortcuts { };
+
   # === RT-AX88U packages ===
 
   # BSP kernel — cross-compiled with Broadcom blobs

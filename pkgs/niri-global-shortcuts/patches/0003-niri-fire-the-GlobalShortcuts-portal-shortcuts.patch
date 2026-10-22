@@ -1,0 +1,182 @@
+From 119ebf4f98aca73f91548d1119bf810baca841d5 Mon Sep 17 00:00:00 2001
+From: Rodrigo Belem <rodrigo.belem@gmail.com>
+Date: Thu, 22 Oct 2026 02:06:25 -0400
+Subject: [PATCH 3/4] niri: fire the GlobalShortcuts portal shortcuts
+
+When a key combination that a portal session has bound is pressed, send the
+Activated signal and keep the key press away from the focused client: a
+global shortcut is global. Send the Deactivated signal when the key is
+released.
+
+Also add the portal backend file, the D-Bus activation file and the
+portals.conf entry that make xdg-desktop-portal prefer this backend.
+---
+ Cargo.toml                                    |  4 ++
+ resources/niri-portals.conf                   |  1 +
+ resources/niri.portal                         |  4 ++
+ ...eedesktop.impl.portal.desktop.niri.service |  8 +++
+ src/dbus/global_shortcuts.rs                  | 59 +++++++++++++++++++
+ src/input/mod.rs                              | 16 +++++
+ 6 files changed, 92 insertions(+)
+ create mode 100644 resources/niri.portal
+ create mode 100644 resources/org.freedesktop.impl.portal.desktop.niri.service
+
+diff --git a/Cargo.toml b/Cargo.toml
+index fa7164e..648d68f 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -171,6 +171,8 @@ assets = [
+     { source = "resources/niri-session", dest = "/usr/bin/", mode = "755" },
+     { source = "resources/niri.desktop", dest = "/usr/share/wayland-sessions/", mode = "644" },
+     { source = "resources/niri-portals.conf", dest = "/usr/share/xdg-desktop-portal/", mode = "644" },
++    { source = "resources/niri.portal", dest = "/usr/share/xdg-desktop-portal/portals/", mode = "644" },
++    { source = "resources/org.freedesktop.impl.portal.desktop.niri.service", dest = "/usr/share/dbus-1/services/", mode = "644" },
+     { source = "resources/niri.service", dest = "/usr/lib/systemd/user/", mode = "644" },
+     { source = "resources/niri-shutdown.target", dest = "/usr/lib/systemd/user/", mode = "644" },
+ ]
+@@ -185,6 +187,8 @@ assets = [
+     ["resources/niri-session", "usr/bin/", "755"],
+     ["resources/niri.desktop", "/usr/share/wayland-sessions/", "644"],
+     ["resources/niri-portals.conf", "/usr/share/xdg-desktop-portal/", "644"],
++    ["resources/niri.portal", "/usr/share/xdg-desktop-portal/portals/", "644"],
++    ["resources/org.freedesktop.impl.portal.desktop.niri.service", "/usr/share/dbus-1/services/", "644"],
+     ["resources/niri.service", "/usr/lib/systemd/user/", "644"],
+     ["resources/niri-shutdown.target", "/usr/lib/systemd/user/", "644"],
+ ]
+diff --git a/resources/niri-portals.conf b/resources/niri-portals.conf
+index 3f13d66..888f24a 100644
+--- a/resources/niri-portals.conf
++++ b/resources/niri-portals.conf
+@@ -3,3 +3,4 @@ default=gnome;gtk;
+ org.freedesktop.impl.portal.Access=gtk;
+ org.freedesktop.impl.portal.Notification=gtk;
+ org.freedesktop.impl.portal.Secret=gnome-keyring;
++org.freedesktop.impl.portal.GlobalShortcuts=niri;
+diff --git a/resources/niri.portal b/resources/niri.portal
+new file mode 100644
+index 0000000..97579bf
+--- /dev/null
++++ b/resources/niri.portal
+@@ -0,0 +1,4 @@
++[portal]
++DBusName=org.freedesktop.impl.portal.desktop.niri
++Interfaces=org.freedesktop.impl.portal.GlobalShortcuts;
++UseIn=niri;
+diff --git a/resources/org.freedesktop.impl.portal.desktop.niri.service b/resources/org.freedesktop.impl.portal.desktop.niri.service
+new file mode 100644
+index 0000000..19056d1
+--- /dev/null
++++ b/resources/org.freedesktop.impl.portal.desktop.niri.service
+@@ -0,0 +1,8 @@
++# The compositor owns org.freedesktop.impl.portal.desktop.niri while it runs, so
++# this file only matters when the name is requested before niri has claimed it.
++# Starting a second compositor would be wrong, so the command fails right away
++# instead of launching niri. The command is looked up in PATH because the
++# compositor binary has no fixed path.
++[D-BUS Session Bus]
++Name=org.freedesktop.impl.portal.desktop.niri
++Exec=false
+diff --git a/src/dbus/global_shortcuts.rs b/src/dbus/global_shortcuts.rs
+index d416654..5c107ad 100644
+--- a/src/dbus/global_shortcuts.rs
++++ b/src/dbus/global_shortcuts.rs
+@@ -319,6 +319,17 @@ impl GlobalShortcuts {
+     }
+ }
+ 
++/// Returns the current time in milliseconds since the Unix epoch.
++///
++/// The portal protocol expects the timestamp of a shortcut activation to have
++/// millisecond granularity.
++pub fn now_ms() -> u64 {
++    std::time::SystemTime::now()
++        .duration_since(std::time::UNIX_EPOCH)
++        .map(|duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX))
++        .unwrap_or(0)
++}
++
+ /// Returns the description and the key combination of a requested shortcut.
+ ///
+ /// Returns `None` when the application did not provide a usable trigger.
+@@ -779,6 +790,54 @@ mod tests {
+     }
+ 
+     /// A private D-Bus daemon for the test.
++    #[test]
++    fn shortcut_activation() {
++        let mut state = GlobalShortcuts::default();
++        let session = object_path("/org/freedesktop/portal/desktop/session/3");
++        state.create_session(session.clone(), "org.example.App".to_owned());
++        state.bind_shortcuts(
++            &session,
++            &[(
++                "shortcut".to_owned(),
++                shortcut_options("Do the thing", "CTRL+ALT+T"),
++            )],
++            &[],
++            ModKey::Super,
++        );
++
++        let key_code = Keycode::new(30);
++
++        // The press of the key activates the shortcut.
++        assert!(state.handle_key(
++            key_code,
++            Some(Keysym::t),
++            Modifiers::CTRL | Modifiers::ALT,
++            true,
++            0,
++        ));
++
++        // The release of the key deactivates it, but doesn't activate anything.
++        assert!(!state.handle_key(
++            key_code,
++            Some(Keysym::t),
++            Modifiers::CTRL | Modifiers::ALT,
++            false,
++            0,
++        ));
++
++        // Another key does nothing.
++        assert!(!state.handle_key(
++            Keycode::new(31),
++            Some(Keysym::a),
++            Modifiers::CTRL | Modifiers::ALT,
++            true,
++            0,
++        ));
++
++        // The same key with other modifiers does nothing.
++        assert!(!state.handle_key(Keycode::new(32), Some(Keysym::t), Modifiers::CTRL, true, 0,));
++    }
++
+     struct TestBus {
+         address: String,
+         pid: u32,
+diff --git a/src/input/mod.rs b/src/input/mod.rs
+index f1ad493..aec383b 100644
+--- a/src/input/mod.rs
++++ b/src/input/mod.rs
+@@ -479,6 +479,22 @@ impl State {
+                     return FilterResult::Intercept(None);
+                 }
+ 
++                // A portal global shortcut is global, so the key press must not
++                // reach the focused client. The portal binds never conflict
++                // with the configured binds, so at most one of them fires.
++                #[cfg(feature = "dbus")]
++                if this.niri.global_shortcuts.handle_key(
++                    key_code,
++                    raw,
++                    modifiers
++                        & (Modifiers::CTRL | Modifiers::SHIFT | Modifiers::ALT | Modifiers::SUPER),
++                    pressed,
++                    crate::dbus::global_shortcuts::now_ms(),
++                ) {
++                    this.niri.suppressed_keys.insert(key_code);
++                    return FilterResult::Intercept(None);
++                }
++
+                 // Check if all modifiers were released while the MRU UI was open. If so, close the
+                 // UI (which will also transfer the focus to the current MRU UI selection).
+                 if this.niri.window_mru_ui.is_open() && !pressed && modifiers.is_empty() {
