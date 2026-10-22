@@ -175,3 +175,6 @@ ghostty each read the rendered theme.
 It is built on its own rather than through `nix flake check`, because that
 command also builds the RT-AX88U packages, whose GPL source input is not
 available in this checkout.
+
+The decisions behind this work, and the evidence for each one, are in
+`.audit/omarchy-niri.tsv` at the root of the repository.
