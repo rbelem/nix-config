@@ -25,6 +25,7 @@ Two things had to change to get there:
 | `launcher.nix` | The menu, as a fuzzel launcher. |
 | `terminal-theme.nix` | Renders the theme for foot, alacritty, kitty and ghostty. |
 | `check-terminal-themes.sh` | Asks each terminal to read the rendered theme back. |
+| `sddm-theme/` | Omarchy's SDDM greeter theme, vendored from upstream. |
 | `themes/` | Omarchy's colour palettes, vendored from upstream. |
 
 ## Enabling it
@@ -42,8 +43,18 @@ The session shows up in the greeter as **Omarchy**. It is a separate package
 from niri itself, because it points niri at `/etc/omarchy/niri.kdl` instead of
 the user's own `~/.config/niri/config.kdl`.
 
+Three services niri does not start are started by the module itself
+(`session.nix`): hyprpolkitagent for authentication prompts, mako for
+notifications, and swayidle to lock the screen after five idle minutes and
+blank it after ten.
+
 Local overrides go in `~/.config/niri/overrides.kdl`. The generated file
 includes it last, so it wins.
+
+To try it without touching the machine, `nixos-rebuild build-vm --flake
+.#book3` builds a VM whose greeter is Omarchy's own SDDM theme. The VM-only
+password is `nixos` for the `rodrigo` user; the real machine keeps no
+password in the repo.
 
 ## The GlobalShortcuts portal
 

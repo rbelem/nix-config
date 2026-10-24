@@ -39,6 +39,26 @@
   # false to go back to Plasma; nixos/desktop/kde.nix follows the same switch.
   programs.omarchy.enable = true;
 
+  # VM-only login for `nixos-rebuild build-vm`. The real machine keeps no
+  # password in the repo; the VM gets a throwaway one so the Omarchy greeter
+  # accepts a login. vmVariant applies only to the `build-vm` output, never
+  # to `switch` or `boot`. No autologin: the point is to see the greeter.
+  # mutableUsers is off and the hash is declarative, so the password is
+  # enforced on every boot even when the qcow2 is reused across rebuilds
+  # (initialPassword only applies when the account is created).
+  virtualisation.vmVariant = {
+    users.mutableUsers = false;
+    users.users.rodrigo.hashedPassword = "$6$2401spiphaYxh0Ah$JquQmmlbhz7xUJyWX4o1xYhm3NBsFV6DyAD197kzqy/r6lv1G9zYMBmldMB8IvqfHBHrp29Ytri8Gprj34Bem/";
+
+    # 3D acceleration for the VM. The default QEMU VGA has no GPU, and niri
+    # needs GL to start its renderer. virtio-gpu through virgl gives it one.
+    # Host-only: the guest already has Mesa and hardware.graphics enabled.
+    virtualisation.qemu.options = [
+      "-device virtio-vga-gl"
+      "-display gtk,gl=on"
+    ];
+  };
+
   boot.tmp.cleanOnBoot = true;
 
   # Cap the journal (was 1.9G unbounded on a 96G / partition).

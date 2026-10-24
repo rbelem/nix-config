@@ -25,6 +25,19 @@ let
 
   theme = builtins.fromTOML (builtins.readFile ./themes/${cfg.theme}/colors.toml);
 
+  # The two settings the GTK half of the theme takes from the palette rather
+  # than from the terminal colours: colors.toml names the colour mode, and
+  # icons.theme names the icon theme. A theme may omit icons.theme, as
+  # upstream's default does, and upstream then falls back to Yaru-blue.
+  mode = theme.mode or "dark";
+
+  iconThemeFile = ./themes/${cfg.theme}/icons.theme;
+
+  iconTheme =
+    if builtins.pathExists iconThemeFile
+    then lib.removeSuffix "\n" (builtins.readFile iconThemeFile)
+    else "Yaru-blue";
+
   terminals = [ "foot" "alacritty" "kitty" "ghostty" ];
 
   # Where each terminal expects its colours, and where it expects the main
@@ -43,6 +56,20 @@ let
   # Nix has no TOML writer, and the theme is a flat map of strings.
   toToml = attrs:
     lib.concatStringsSep "\n" (lib.mapAttrsToList (key: value: "${key} = \"${value}\"") attrs);
+
+  # The greeter theme, vendored from upstream's default/sddm/omarchy.
+  sddmTheme = pkgs.runCommand "omarchy-sddm-theme" { } ''
+    mkdir -p $out/share/sddm/themes/omarchy
+    cp ${./sddm-theme/omarchy/Main.qml} $out/share/sddm/themes/omarchy/Main.qml
+    cp ${./sddm-theme/omarchy/metadata.desktop} $out/share/sddm/themes/omarchy/metadata.desktop
+    cp ${./sddm-theme/omarchy/theme.conf} $out/share/sddm/themes/omarchy/theme.conf
+    cp ${./sddm-theme/omarchy/logo.png} $out/share/sddm/themes/omarchy/logo.png
+    cp ${./sddm-theme/omarchy/lock.png} $out/share/sddm/themes/omarchy/lock.png
+    cp ${./sddm-theme/omarchy/lock-failed.png} $out/share/sddm/themes/omarchy/lock-failed.png
+    cp ${./sddm-theme/omarchy/entry.png} $out/share/sddm/themes/omarchy/entry.png
+    cp ${./sddm-theme/omarchy/entry-failed.png} $out/share/sddm/themes/omarchy/entry-failed.png
+    cp ${./sddm-theme/omarchy/bullet.png} $out/share/sddm/themes/omarchy/bullet.png
+  '';
 
   enabledApps = lib.filterAttrs (_: app: app.enable) cfg.apps;
 
@@ -220,75 +247,94 @@ in
     };
   };
 
-  config = mkIf cfg.enable {
-    programs.niri = {
-      enable = true;
-      package = cfg.package;
-    };
+  config = mkIf cfg.enable (lib.mkMerge [
+    # The GTK, icon and cursor half of the theme, applied with gsettings.
+    (import ./gtk.nix {
+      inherit lib pkgs mode iconTheme;
+      theme = cfg.theme;
+    })
 
-    environment.systemPackages =
-      map (app: app.package) (lib.attrValues enabledApps)
-      ++ [ launcher cfg.terminal cfg.browser cfg.editor cfg.fileManager ];
+    # The wallpaper. Upstream's bar draws it; there is no bar here, so swaybg
+    # sets it on the layer shell instead.
+    (import ./wallpaper.nix { inherit lib pkgs; theme = cfg.theme; })
 
-    services.displayManager.sessionPackages = [ sessionPackage ];
+    (import ./session.nix {
+      inherit lib pkgs;
+      swaylock = "${cfg.swaylock}/bin/swaylock";
+    })
 
-    # The greeter. Plasma's login manager lives in nixos/desktop/kde.nix and
-    # is off while the Omarchy desktop is on, so the session needs one.
-    services.displayManager = {
-      sddm.enable = true;
-      defaultSession = "omarchy";
-    };
+    {
+      programs.niri = {
+        enable = true;
+        package = cfg.package;
+      };
 
-    # The GlobalShortcuts portal backend lives in the niri fork. Naming it
-    # here is what makes xdg-desktop-portal route
-    # org.freedesktop.impl.portal.GlobalShortcuts to niri instead of the
-    # GNOME backend.
-    xdg.portal.config.niri = {
-      default = [ "gnome" "gtk" ];
-      "org.freedesktop.impl.portal.Access" = "gtk";
-      "org.freedesktop.impl.portal.Notification" = "gtk";
-      "org.freedesktop.impl.portal.Secret" = "gnome-keyring";
-      "org.freedesktop.impl.portal.GlobalShortcuts" = "niri";
-    };
+      environment.systemPackages =
+        map (app: app.package) (lib.attrValues enabledApps)
+        ++ [ launcher cfg.terminal cfg.browser cfg.editor cfg.fileManager ];
 
-    # The theme is a set of per-application colour files. They are copied into
-    # the user's config directory when the session starts, the way Omarchy's
-    # omarchy-theme-set does. A main configuration is only written when the
-    # user has none, so an existing configuration is never overwritten.
-    systemd.user.services.omarchy-theme = {
-      description = "Apply the Omarchy theme";
-      wantedBy = [ "graphical-session.target" ];
-      serviceConfig.Type = "oneshot";
-      serviceConfig.RemainAfterExit = true;
-      script = ''
-        set -eu
-        config_home="''${XDG_CONFIG_HOME:-$HOME/.config}"
-        mkdir -p "$config_home"
-        ${lib.concatMapStrings (terminal: ''
-          install -D -m644 /etc/omarchy/theme/${terminal} "$config_home/${themeTargets.${terminal}.theme}"
-          if [ ! -e "$config_home/${themeTargets.${terminal}.config}" ]; then
-            install -D -m644 /etc/omarchy/config/${terminal} "$config_home/${themeTargets.${terminal}.config}"
-          fi
-        '') terminals}
-      '';
-    };
+      services.displayManager.sessionPackages = [ sessionPackage ];
 
-    environment.etc =
-      {
-        "omarchy/niri.kdl".source = niriConfig;
-        "omarchy/theme/colors.toml".text = toToml theme;
-      }
-      // lib.listToAttrs (map
-        (terminal: {
-          name = "omarchy/theme/${terminal}";
-          value = { text = renderedThemes.${terminal}.theme; };
-        })
-        terminals)
-      // lib.listToAttrs (map
-        (terminal: {
-          name = "omarchy/config/${terminal}";
-          value = { text = renderedThemes.${terminal}.config; };
-        })
-        terminals);
-  };
+      # The greeter. Plasma's login manager lives in nixos/desktop/kde.nix and
+      # is off while the Omarchy desktop is on, so the session needs one.
+      # The theme is Omarchy's own SDDM theme, vendored from upstream.
+      services.displayManager = {
+        sddm.enable = true;
+        sddm.theme = "${sddmTheme}/share/sddm/themes/omarchy";
+        defaultSession = "omarchy";
+      };
+
+      # The GlobalShortcuts portal backend lives in the niri fork. Naming it
+      # here is what makes xdg-desktop-portal route
+      # org.freedesktop.impl.portal.GlobalShortcuts to niri instead of the
+      # GNOME backend.
+      xdg.portal.config.niri = {
+        default = [ "gnome" "gtk" ];
+        "org.freedesktop.impl.portal.Access" = "gtk";
+        "org.freedesktop.impl.portal.Notification" = "gtk";
+        "org.freedesktop.impl.portal.Secret" = "gnome-keyring";
+        "org.freedesktop.impl.portal.GlobalShortcuts" = "niri";
+      };
+
+      # The theme is a set of per-application colour files. They are copied into
+      # the user's config directory when the session starts, the way Omarchy's
+      # omarchy-theme-set does. A main configuration is only written when the
+      # user has none, so an existing configuration is never overwritten.
+      systemd.user.services.omarchy-theme = {
+        description = "Apply the Omarchy theme";
+        wantedBy = [ "graphical-session.target" ];
+        serviceConfig.Type = "oneshot";
+        serviceConfig.RemainAfterExit = true;
+        script = ''
+          set -eu
+          config_home="''${XDG_CONFIG_HOME:-$HOME/.config}"
+          mkdir -p "$config_home"
+          ${lib.concatMapStrings (terminal: ''
+            install -D -m644 /etc/omarchy/theme/${terminal} "$config_home/${themeTargets.${terminal}.theme}"
+            if [ ! -e "$config_home/${themeTargets.${terminal}.config}" ]; then
+              install -D -m644 /etc/omarchy/config/${terminal} "$config_home/${themeTargets.${terminal}.config}"
+            fi
+          '') terminals}
+        '';
+      };
+
+      environment.etc =
+        {
+          "omarchy/niri.kdl".source = niriConfig;
+          "omarchy/theme/colors.toml".text = toToml theme;
+        }
+        // lib.listToAttrs (map
+          (terminal: {
+            name = "omarchy/theme/${terminal}";
+            value = { text = renderedThemes.${terminal}.theme; };
+          })
+          terminals)
+        // lib.listToAttrs (map
+          (terminal: {
+            name = "omarchy/config/${terminal}";
+            value = { text = renderedThemes.${terminal}.config; };
+          })
+          terminals);
+    }
+  ]);
 }

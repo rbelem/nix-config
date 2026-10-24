@@ -18,12 +18,13 @@
       gelasio
       merriweather
       source-sans-pro
+      nerd-fonts.jetbrains-mono # Omarchy's terminal font, and the monospace default
     ];
     fontconfig = {
       defaultFonts = {
         serif = [ "DejaVu Serif" ];
         sansSerif = [ "DejaVu Sans" ];
-        monospace = [ "Roboto Mono" ];
+        monospace = [ "JetBrainsMono Nerd Font" ];
       };
       hinting.enable = true;
       hinting.style = "slight";
