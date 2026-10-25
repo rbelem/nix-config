@@ -6,10 +6,11 @@
 # is nixpkgs' Hyprland with general:layout = scrolling, the niri-style tape of
 # columns that niri itself is known for.
 #
-# What this module does not bring is Omarchy's QuickShell bar and menu. That
-# shell is its own AUR tree on top of Hyprland's Lua API and IPC socket, so
-# here the menu becomes a fuzzel launcher (launcher.nix) and the bar is
-# Hyprland's scrolling layout plus its own workspace switching.
+# What this module does not bring is Omarchy's pacman/update/AUR stack: the
+# tree ships it, but there is no pacman on NixOS, so it stays
+# vendored-but-unreachable (see README.md). The bar, dock, menu, OSD and lock
+# screen are upstream's QuickShell shell (pkgs/omarchy-shell), started with
+# the session from the generated Lua configuration.
 { config, lib, pkgs, ... }:
 
 let
@@ -74,62 +75,21 @@ let
   # The command an application is launched with.
   commandOf = pkg: "${pkg}/bin/${pkg.meta.mainProgram or pkg.pname}";
 
-  # Command line programs belong in a terminal. How a terminal is told to run
-  # a command differs, so the form is picked per terminal.
-  runInTerminal = command:
-    {
-      alacritty = "${commandOf cfg.terminal} -e ${command}";
-      ghostty = "${commandOf cfg.terminal} -e ${command}";
-    }.${cfg.terminal.pname} or "${commandOf cfg.terminal} ${command}";
-
-  launcher = pkgs.writeShellApplication {
-    name = "omarchy-launch";
-    runtimeInputs = [ pkgs.fuzzel pkgs.coreutils ];
-    text = import ./launcher.nix {
-      inherit lib;
-      menuEntries = [
-        { label = "Applications"; command = "omarchy-launch apps"; }
-        { label = "System"; command = "omarchy-launch system"; }
-        { label = "Keybindings"; command = "omarchy-launch keybindings"; }
-        { label = "Omarchy manual"; command = "xdg-open https://omarchy.org/manual/"; }
-        { label = "Hyprland wiki"; command = "xdg-open https://wiki.hypr.land"; }
-      ];
-      systemEntries = [
-        { label = "Lock"; command = "${cfg.swaylock}/bin/swaylock"; }
-        { label = "Suspend"; command = "systemctl suspend"; }
-        { label = "Log out"; command = "hyprctl dispatch exit"; }
-        { label = "Reboot"; command = "systemctl reboot"; }
-        { label = "Shutdown"; command = "systemctl poweroff"; }
-      ];
-      appEntries = lib.filter (entry: entry.command != "")
-        (lib.sort (a: b: a.category < b.category)
-          (lib.mapAttrsToList
-            (name: app: {
-              inherit (app) label category;
-              command =
-                if app.category == "Languages" then ""
-                else if app.category == "Agents" then runInTerminal (commandOf app.package)
-                else commandOf app.package;
-            })
-            enabledApps));
-      keybindingEntries = map
-        (bind: { label = bind.key; command = bind.title or bind.action; })
-        bindings;
-    };
-  };
-
-  # The launcher is referenced by name rather than by store path: the launcher
-  # script also lists the keybindings, so a store path here would be circular.
+  # The menu commands below name the shell's own commands: the generated Lua
+  # configuration runs with the session PATH, where the shell package links
+  # its bin/ (see shell.nix). The verbs mirror upstream
+  # default/hypr/bindings/utilities.lua; the apps route keeps this module's
+  # old fuzzel list as a shell menu route.
   bindings = import ./bindings.nix {
     inherit lib;
     terminal = commandOf cfg.terminal;
     browser = commandOf cfg.browser;
     editor = commandOf cfg.editor;
     fileManager = commandOf cfg.fileManager;
-    menu = "omarchy-launch menu";
-    appsMenu = "omarchy-launch apps";
-    systemMenu = "omarchy-launch system";
-    keybindings = "omarchy-launch keybindings";
+    menu = "omarchy-menu toggle root";
+    appsMenu = "omarchy-menu toggle apps";
+    systemMenu = "omarchy-menu toggle system";
+    keybindings = "omarchy-menu-keybindings";
     swaylock = "${cfg.swaylock}/bin/swaylock";
     wpctl = "${cfg.wireplumber}/bin/wpctl";
     playerctl = "${cfg.playerctl}/bin/playerctl";
@@ -137,7 +97,7 @@ let
     hyprpicker = "${cfg.hyprpicker}/bin/hyprpicker";
   };
 
-  hyprlandConfig = pkgs.writeText "hyprland.conf" (import ./hyprland-config.nix {
+  hyprlandConfig = pkgs.writeText "hyprland.lua" (import ./hyprland-config.nix {
     inherit lib bindings theme;
   });
 
@@ -151,7 +111,7 @@ let
         [Desktop Entry]
         Name=Omarchy
         Comment=Omarchy desktop on Hyprland
-        Exec=${cfg.package}/bin/start-hyprland -- --config /etc/omarchy/hyprland.conf
+        Exec=${cfg.package}/bin/start-hyprland -- --config /etc/omarchy/hyprland.lua
         Type=Application
         DesktopNames=Hyprland
       '')
@@ -262,6 +222,10 @@ in
       swaylock = "${cfg.swaylock}/bin/swaylock";
     })
 
+    # The QuickShell shell: OMARCHY_PATH, its bin/ on PATH, and what it
+    # spawns by bare name.
+    (import ./shell.nix { inherit lib pkgs; })
+
     {
       programs.hyprland = {
         enable = true;
@@ -270,7 +234,7 @@ in
 
       environment.systemPackages =
         map (app: app.package) (lib.attrValues enabledApps)
-        ++ [ launcher cfg.terminal cfg.browser cfg.editor cfg.fileManager ];
+        ++ [ cfg.terminal cfg.browser cfg.editor cfg.fileManager ];
 
       services.displayManager.sessionPackages = [ sessionPackage ];
 
@@ -302,6 +266,12 @@ in
       # the user's config directory when the session starts, the way Omarchy's
       # omarchy-theme-set does. A main configuration is only written when the
       # user has none, so an existing configuration is never overwritten.
+      #
+      # The packaged theme is also staged where the shell reads it: the shell
+      # treats a symlinked theme as user-owned and writes into it, and the
+      # store is read-only, so the tree is copied (never linked) with
+      # --no-preserve=mode, plus the theme.name file omarchy-theme-current
+      # reads. Re-running converges: the previous staging is removed first.
       systemd.user.services.omarchy-theme = {
         description = "Apply the Omarchy theme";
         wantedBy = [ "graphical-session.target" ];
@@ -317,12 +287,17 @@ in
               install -D -m644 /etc/omarchy/config/${terminal} "$config_home/${themeTargets.${terminal}.config}"
             fi
           '') terminals}
+          state_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/current"
+          mkdir -p "$state_dir"
+          rm -rf "$state_dir/theme"
+          cp --no-preserve=mode -r ${pkgs.omarchy-shell}/share/omarchy/themes/${cfg.theme} "$state_dir/theme"
+          printf '%s\n' ${lib.escapeShellArg cfg.theme} > "$state_dir/theme.name"
         '';
       };
 
       environment.etc =
         {
-          "omarchy/hyprland.conf".source = hyprlandConfig;
+          "omarchy/hyprland.lua".source = hyprlandConfig;
           "omarchy/theme/colors.toml".text = toToml theme;
         }
         // lib.listToAttrs (map
