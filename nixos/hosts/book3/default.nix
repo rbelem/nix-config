@@ -31,6 +31,7 @@
     ../../desktop/monitor-brightness.nix
     #../../desktop/openlogi.nix
     ../../desktop/omarchy
+    ../../desktop/omarchy/flatpaks.nix
     ../../desktop/virtual-webcam.nix
     ../../desktop/waydroid.nix
   ];
