@@ -15,7 +15,9 @@
     wantedBy = [ "graphical-session.target" ];
     partOf = [ "graphical-session.target" ];
     serviceConfig = {
-      ExecStart = "${pkgs.hyprpolkitagent}/bin/hyprpolkitagent";
+      # Upstream installs the agent to libexec, not bin: it is D-Bus
+      # activated rather than run from PATH.
+      ExecStart = "${pkgs.hyprpolkitagent}/libexec/hyprpolkitagent";
       Restart = "on-failure";
     };
   };

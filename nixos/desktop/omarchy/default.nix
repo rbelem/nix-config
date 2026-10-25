@@ -188,7 +188,7 @@ in
 
     terminal = mkOption {
       type = types.package;
-      default = pkgs.ghostty;
+      default = pkgs.foot;
       description = "The terminal application. Its main program is what the keybindings launch.";
     };
 

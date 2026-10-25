@@ -58,10 +58,12 @@ in
       kb_layout = us
   }
 
-  # Hyprland does not start the target, and the session services the module
-  # defines are started by it. UWSM does this too, and this module does not
-  # use UWSM.
-  exec-once = systemctl --user start graphical-session.target
+  # Start the session services directly. Starting graphical-session.target
+  # is not enough: the target stays active across SDDM logouts on a machine
+  # that never rebooted, and starting an active target starts nothing, so
+  # the wallpaper, theme, polkit, notification and idle services would never
+  # run. Starting each unit is idempotent in both cases.
+  exec-once = systemctl --user start omarchy-wallpaper.service omarchy-theme.service omarchy-gtk.service omarchy-polkit-agent.service omarchy-notifications.service omarchy-idle.service
 
   ${lib.concatMapStrings bindLine bindings}
 ''

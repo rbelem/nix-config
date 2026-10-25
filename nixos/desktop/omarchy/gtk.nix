@@ -59,6 +59,9 @@ in
     wantedBy = [ "graphical-session.target" ];
     # gsettings ships with glib, which a user service does not inherit.
     path = [ pkgs.glib ];
+    # The schemas live in gsettings-desktop-schemas, not in glib, and user
+    # units do not see them without an explicit schema dir.
+    serviceConfig.Environment = "GSETTINGS_SCHEMA_DIR=${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}/glib-2.0/schemas";
     serviceConfig.Type = "oneshot";
     serviceConfig.RemainAfterExit = true;
     script = ''
