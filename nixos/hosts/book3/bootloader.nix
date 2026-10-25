@@ -51,6 +51,10 @@
 
     consoleLogLevel = 0;
     plymouth.enable = true;
+    # Omarchy's splash, packaged in nixos/desktop/omarchy/login.nix. Revert to
+    # the NixOS default with `plymouth.theme = "bgrt"`: the initrd copies only
+    # the named theme, so the packaged one then costs no boot time.
+    plymouth.theme = "omarchy";
     initrd = {
       verbose = false;
       # Show the plymouth login screen to unlock luks

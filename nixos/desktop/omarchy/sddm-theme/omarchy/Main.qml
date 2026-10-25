@@ -21,6 +21,19 @@ Rectangle {
     return sessionModel.lastIndex
   }
 
+  // SDDM resolves the avatar itself, from FacesDir or the home directory, and
+  // hands it over as the icon role: UserRole + 4, after name, realName and
+  // homeDir. The role is set even when no file exists, so a missing avatar
+  // arrives as a failed decode rather than an empty source.
+  property string faceSource: {
+    for (var i = 0; i < userModel.rowCount(); i++) {
+      var index = userModel.index(i, 0)
+      if ((userModel.data(index, Qt.UserRole + 1) || "") === root.currentUser)
+        return userModel.data(index, Qt.UserRole + 4) || ""
+    }
+    return ""
+  }
+
   Connections {
     target: sddm
     function onLoginFailed() {
@@ -44,6 +57,24 @@ Rectangle {
       height: sourceSize.width > 0 ? Math.round(width * sourceSize.height / sourceSize.width) : 0
       fillMode: Image.PreserveAspectFit
       anchors.horizontalCenter: parent.horizontalCenter
+    }
+
+    Item {
+      // The face is the theme's logo.png, so the slot takes the logo's shape
+      // and reserves that space before the avatar loads. A missing face then
+      // leaves an empty slot, not a moved password row.
+      width: Math.round(Math.min(root.width * 0.15, 160))
+      height: logo.sourceSize.width > 0 ? Math.round(width * logo.sourceSize.height / logo.sourceSize.width) : 0
+      anchors.horizontalCenter: parent.horizontalCenter
+
+      Image {
+        source: root.faceSource
+        anchors.fill: parent
+        fillMode: Image.PreserveAspectFit
+        visible: status === Image.Ready
+        asynchronous: true
+        smooth: true
+      }
     }
 
     Row {
