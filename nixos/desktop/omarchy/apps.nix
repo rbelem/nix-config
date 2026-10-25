@@ -1,18 +1,13 @@
 # The apps the Omarchy desktop can install, mapped to nixpkgs.
 #
 # The list follows Omarchy's own Install menu (default/omarchy/omarchy-menu.jsonc
-# upstream), trimmed to the apps that exist in nixpkgs. Omarchy ships its menu
-# as a QuickShell application that talks to Hyprland over its IPC; this port
-# keeps the catalogue declarative instead, so an app is a line of Nix and the
-# launcher reads the same set.
+# upstream), trimmed to the apps that exist in nixpkgs. An app is a line of
+# Nix: enabling it installs its package into the user's PATH, and the shell's
+# own app library finds the desktop entry from there.
 #
 # Per-app fields:
-#   label    Shown in the launcher.
-#   category Groups rows in the launcher, and decides how an app is started:
-#            a command line program in the "Agents" or "Languages" category
-#            runs inside the terminal, everything else runs on its own, and
-#            the "Languages" category is installed but not offered in the
-#            launcher at all.
+#   label    The catalogue name.
+#   category Informational grouping, kept from the upstream Install menu.
 #   package  nixpkgs attribute. Installed into the user's PATH when enabled.
 {
   # ── Browsers ────────────────────────────────────────────────────────────

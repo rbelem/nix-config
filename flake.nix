@@ -30,6 +30,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Omarchy — the upstream desktop tree (bar, dock, menu, OSD, lock screen
+    # as a QuickShell application plus its bin/ commands). Fetched whole and
+    # packaged under pkgs/omarchy-shell; not a flake (no outputs to use).
+    omarchy = {
+      url = "github:omacom/omarchy";
+      flake = false;
+    };
+
     # Shameless plug: looking for a way to nixify your themes and make
     # everything match nicely? Try nix-colors!
     # nix-colors.url = "github:misterio77/nix-colors";
@@ -108,7 +116,7 @@
 
               hyprland=${omarchySmoke.config.programs.hyprland.package}/bin/Hyprland
               portal=${omarchySmoke.config.programs.hyprland.portalPackage}
-              conf=${omarchySmoke.config.environment.etc."omarchy/hyprland.conf".source}
+              conf=${omarchySmoke.config.environment.etc."omarchy/hyprland.lua".source}
 
               echo "the portal ships the GlobalShortcuts backend"
               grep -q "org.freedesktop.impl.portal.GlobalShortcuts" \
@@ -117,12 +125,18 @@
               echo "the generated configuration parses"
               $hyprland --verify-config --config $conf
 
+              echo "the shell package ships its entry point"
+              test -f ${custom.omarchy-shell}/share/omarchy/shell/shell.qml
+
+              echo "the session autostarts the shell"
+              grep -qF 'hl.exec_cmd("omarchy-launch-shell")' $conf
+
               echo "the layout is niri's scrolling one"
-              grep -q "layout = scrolling" $conf
+              grep -qF 'layout = "scrolling"' $conf
 
               echo "the keybindings are Hyprland dispatcher calls"
-              grep -q "^bind = SUPER SHIFT, 1, movetoworkspace,1$" $conf
-              grep -q "^bindl = , XF86AudioRaiseVolume, exec," $conf
+              grep -qF 'hl.bind("SUPER + SHIFT + 1", hl.dsp.window.move({ workspace = "1", follow = true })' $conf
+              grep -F 'hl.bind("XF86AudioRaiseVolume"' $conf | grep -qF 'locked = true'
 
               echo "the session is offered to the greeter"
               found=0

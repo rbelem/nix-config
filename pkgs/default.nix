@@ -134,4 +134,10 @@ in rec {
   # (npm @bitwarden/cli). Intentionally NOT installed on the VPS (zet
   # host) — see nixos/hosts/zet/default.nix for the rationale.
   bitw = pkgs.callPackage ./bitw { };
+
+  # === Desktop ===
+
+  # omarchy-shell — upstream Omarchy's QuickShell shell, packaged whole.
+  # The tree input rides the omarchy flake input; see pkgs/omarchy-shell.
+  omarchy-shell = pkgs.callPackage ./omarchy-shell { omarchy-src = inputs.omarchy; };
 }

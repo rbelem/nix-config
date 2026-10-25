@@ -1,9 +1,9 @@
 # The session daemons Hyprland does not start.
 #
 # Omarchy's Hyprland stack gets these from its own session: an agent to answer
-# polkit prompts, a daemon to draw notifications, and an idle timer that locks
-# the screen. Hyprland starts the compositor and nothing else, so the session
-# starts them.
+# polkit prompts and an idle timer that locks the screen. Notifications need
+# no daemon: the QuickShell shell draws them itself. Hyprland starts the
+# compositor and nothing else, so the session starts them.
 #
 # This returns a configuration fragment rather than a module, for the reason
 # gtk.nix gives: it is imported on a condition that reads `config`.
@@ -22,17 +22,8 @@
     };
   };
 
-  # No configuration file: mako's defaults are grey on a translucent background
-  # with light text, which reads correctly on Adwaita-dark.
-  systemd.user.services.omarchy-notifications = {
-    description = "Notification daemon";
-    wantedBy = [ "graphical-session.target" ];
-    partOf = [ "graphical-session.target" ];
-    serviceConfig = {
-      ExecStart = "${pkgs.mako}/bin/mako";
-      Restart = "on-failure";
-    };
-  };
+  # No notification daemon: upstream's QuickShell shell draws notifications
+  # itself, and a second daemon would draw every one twice.
 
   # The lock runs before the blank, so coming back to the screen needs the
   # password rather than a keypress. before-sleep covers a lid close, which

@@ -1,9 +1,9 @@
 # Sets the wallpaper to the background of the selected Omarchy theme.
 #
-# Upstream draws the background in its QuickShell bar, which this repository
-# does not package, so there is nothing here to hand an image to. swaybg is a
-# layer-shell client instead: it covers every output Hyprland has and exits
-# with the session.
+# Upstream draws the background in its QuickShell background plugin from the
+# staged current/background link, which no theme-set run stages here, so
+# swaybg is a layer-shell client instead: it covers every output Hyprland
+# has and exits with the session.
 #
 # This returns a configuration fragment rather than a module, for the reason
 # gtk.nix gives: the wallpaper is the selected theme's, and a module cannot be

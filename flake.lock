@@ -63,6 +63,22 @@
         "type": "github"
       }
     },
+    "omarchy": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1792895142,
+        "narHash": "sha256-fjZ92m6Q61XtMMS+Rx0PaditimGbWUXSg1x2ZHIoRF0=",
+        "owner": "omacom",
+        "repo": "omarchy",
+        "rev": "ef930018396bb48bfcc72393628375b067ac3188",
+        "type": "github"
+      },
+      "original": {
+        "owner": "omacom",
+        "repo": "omarchy",
+        "type": "github"
+      }
+    },
     "openlogi": {
       "inputs": {
         "nixpkgs": [
@@ -89,6 +105,7 @@
         "hardware": "hardware",
         "nixpkgs": "nixpkgs_2",
         "nixpkgs-old": "nixpkgs-old",
+        "omarchy": "omarchy",
         "openlogi": "openlogi",
         "zet-repo": "zet-repo"
       }
