@@ -91,33 +91,38 @@
         in {
           rt-ax88u-validation = custom.rt-ax88u-validation or null;
 
-          # The Omarchy desktop: the niri fork ships the GlobalShortcuts
-          # portal backend, the configuration the module generates is valid
-          # according to niri's own parser, and the terminals read the theme.
+          # The Omarchy desktop: Hyprland's scrolling layout is the niri-style
+          # one, and xdg-desktop-portal-hyprland ships the GlobalShortcuts
+          # backend, so the compositor needs no patches. The check asserts the
+          # generated configuration parses with Hyprland's own verifier, that
+          # it is the scrolling layout with translated keybindings, that the
+          # session is offered to the greeter, that the portal routes
+          # GlobalShortcuts to Hyprland, and that the terminals read the theme.
           omarchy-desktop = if system == "x86_64-linux" then
-            pkgs.runCommand "omarchy-desktop-check" {
-              nativeBuildInputs = [
-                custom.niri-global-shortcuts
-                pkgs.binutils
-                pkgs.foot
-                pkgs.alacritty
-                pkgs.kitty
-                pkgs.ghostty
-              ];
-            } ''
+            pkgs.runCommand "omarchy-desktop-check" { } ''
               set -eu
 
-              niri=${custom.niri-global-shortcuts}/bin/niri
+              export HOME=$TMPDIR
+              export XDG_RUNTIME_DIR=$TMPDIR/runtime
+              mkdir -p "$XDG_RUNTIME_DIR"
 
-              echo "the fork ships the portal backend"
-              test -f ${custom.niri-global-shortcuts}/share/xdg-desktop-portal/portals/niri.portal
+              hyprland=${omarchySmoke.config.programs.hyprland.package}/bin/Hyprland
+              portal=${omarchySmoke.config.programs.hyprland.portalPackage}
+              conf=${omarchySmoke.config.environment.etc."omarchy/hyprland.conf".source}
 
-              echo "the fork implements the portal interface"
-              strings $niri | grep -q "org.freedesktop.impl.portal.GlobalShortcuts"
-              strings $niri | grep -q "org.freedesktop.impl.portal.desktop.niri"
+              echo "the portal ships the GlobalShortcuts backend"
+              grep -q "org.freedesktop.impl.portal.GlobalShortcuts" \
+                $portal/share/xdg-desktop-portal/portals/hyprland.portal
 
               echo "the generated configuration parses"
-              $niri validate --config ${omarchySmoke.config.environment.etc."omarchy/niri.kdl".source}
+              $hyprland --verify-config --config $conf
+
+              echo "the layout is niri's scrolling one"
+              grep -q "layout = scrolling" $conf
+
+              echo "the keybindings are Hyprland dispatcher calls"
+              grep -q "^bind = SUPER SHIFT, 1, movetoworkspace,1$" $conf
+              grep -q "^bindl = , XF86AudioRaiseVolume, exec," $conf
 
               echo "the session is offered to the greeter"
               found=0
@@ -128,9 +133,17 @@
               done
               [ "$found" -eq 1 ] || { echo "no omarchy wayland session"; exit 1; }
 
-              echo "the portal backend is preferred"
-              grep -q "org.freedesktop.impl.portal.GlobalShortcuts=niri" \
-                ${omarchySmoke.config.environment.etc."xdg/xdg-desktop-portal/niri-portals.conf".source}
+              echo "the portal routes GlobalShortcuts to Hyprland"
+              grep -q "org.freedesktop.impl.portal.GlobalShortcuts=hyprland" \
+                ${omarchySmoke.config.environment.etc."xdg/xdg-desktop-portal/hyprland-portals.conf".source}
+
+              echo "the niri fork is gone"
+              ! grep -q "niri-global-shortcuts" \
+                ${./pkgs/default.nix} \
+                ${./nixos/desktop/omarchy/default.nix} \
+                ${./nixos/desktop/omarchy/hyprland-config.nix} \
+                ${./nixos/desktop/omarchy/bindings.nix} \
+                ${./nixos/desktop/omarchy/session.nix}
 
               echo "the terminals read the theme"
               mkdir -p theme config
@@ -164,8 +177,7 @@
           specialArgs = { inherit inputs outputs; };
           modules = [
             ./nixos/hosts/book3
-            # The additions overlay carries the custom packages, including the
-            # niri fork the Omarchy desktop needs.
+            # The additions overlay carries the custom packages.
             { nixpkgs.overlays = [ outputs.overlays.additions ]; }
           ];
         };
