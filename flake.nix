@@ -179,6 +179,163 @@
               touch $out
             ''
           else null;
+
+          # The shell tree the desktop's features come from: the entry point,
+          # the plugin directories behind the bar, dock, menu, OSD, lock screen
+          # and background, and the bin/ verbs the session autostart and the
+          # generated keybindings call by bare name. Upstream moving one of
+          # those is a blank screen at login with no error on it; here it is a
+          # failed check.
+          omarchy-shell-tree = if system == "x86_64-linux" then
+            pkgs.runCommand "omarchy-shell-tree-check" { } ''
+              set -eu
+              shell=${custom.omarchy-shell}
+
+              echo "the shell package ships its entry point"
+              test -f $shell/share/omarchy/shell/shell.qml
+
+              echo "the plugin directories the desktop is made of are there"
+              for plugin in bar dock menu osd lock background; do
+                if [ ! -d "$shell/share/omarchy/shell/plugins/$plugin" ]; then
+                  echo "  missing plugin directory: $plugin"
+                  exit 1
+                fi
+              done
+
+              echo "the verbs the session and the keybindings call are executable"
+              for verb in omarchy omarchy-launch-shell omarchy-menu omarchy-menu-keybindings; do
+                if [ ! -x "$shell/bin/$verb" ]; then
+                  echo "  missing verb: $verb"
+                  exit 1
+                fi
+              done
+
+              touch $out
+            ''
+          else null;
+
+          # The generated configuration as the session reads it: the autostart
+          # line that starts the shell, and a binding table that still emits.
+          # 74 binds are in it today; the floor is 60, so ordinary keybinding
+          # edits do not trip it and a table that stops emitting does.
+          omarchy-generated-config = if system == "x86_64-linux" then
+            pkgs.runCommand "omarchy-generated-config-check" { } ''
+              set -eu
+              conf=${omarchySmoke.config.environment.etc."omarchy/hyprland.lua".source}
+
+              echo "the session autostarts the shell"
+              grep -qF 'hl.exec_cmd("omarchy-launch-shell")' $conf
+
+              echo "the keybinding table still emits"
+              binds=$(grep -c 'hl.bind(' $conf || true)
+              echo "  $binds binds"
+              [ "$binds" -ge 60 ] || { echo "  the binding table stopped emitting"; exit 1; }
+
+              touch $out
+            ''
+          else null;
+
+          # Every theme the option can name, against the two readers that only
+          # see it once it is selected: wallpaper.nix names the first background
+          # in sort order, and the login oneshot copies the theme out of the
+          # shell package. A directory the shell package does not ship cannot be
+          # switched to, and breaks the login when it is the default. colors.toml
+          # itself is parsed for every theme at eval (theme.nix renders all the
+          # palettes), so this asks only that the file is there.
+          omarchy-themes = if system == "x86_64-linux" then
+            pkgs.runCommand "omarchy-themes-check" { } ''
+              set -eu
+              export LC_ALL=C
+
+              themes=${./nixos/desktop/omarchy/themes}
+              shipped=${custom.omarchy-shell}/share/omarchy/themes
+
+              for dir in "$themes"/*; do
+                theme=$(basename "$dir")
+                echo "theme $theme"
+
+                if [ ! -f "$dir/colors.toml" ]; then
+                  echo "  no colors.toml"
+                  exit 1
+                fi
+
+                background=
+                for candidate in "$dir"/backgrounds/*; do
+                  if [ -f "$candidate" ]; then
+                    background=$(basename "$candidate")
+                    break
+                  fi
+                done
+                if [ -z "$background" ]; then
+                  echo "  no background to stage"
+                  exit 1
+                fi
+                echo "  background $background"
+
+                if [ ! -f "$shipped/$theme/colors.toml" ]; then
+                  echo "  the shell package does not ship this theme"
+                  exit 1
+                fi
+              done
+
+              touch $out
+            ''
+          else null;
+
+          # The install menu's declaration file: Nix that the next rebuild
+          # imports, written by omarchy-apps-toggle and copied into the tree by
+          # omarchy-apps-apply. A file that does not parse breaks the rebuild's
+          # eval, after the command that wrote it has already exited, so the
+          # toggle is run here in both directions against a scratch HOME.
+          # --store dummy:// because a build sandbox has no store to open.
+          omarchy-install-menu = if system == "x86_64-linux" then
+            pkgs.runCommand "omarchy-install-menu-check" {
+              nativeBuildInputs = [ pkgs.nix ] ++ builtins.filter
+                (p: builtins.elem (p.name or "") [ "omarchy-apps-search" "omarchy-apps-toggle" ])
+                omarchySmoke.config.environment.systemPackages;
+            } ''
+              set -eu
+              export HOME=$TMPDIR/home
+              mkdir -p "$HOME"
+
+              declaration=$HOME/.config/omarchy/apps.nix
+
+              # Any catalogue app will do, so take the first one: the check then
+              # says nothing about which apps the catalogue holds.
+              app=$(omarchy-apps-search "" | sed -n '1s/^ *\([^ ]*\).*/\1/p')
+              if [ -z "$app" ]; then
+                echo "the app catalogue is empty"
+                exit 1
+              fi
+
+              echo "the toggle writes a declaration that parses"
+              omarchy-apps-toggle "$app" > /dev/null
+              nix-instantiate --parse --store dummy:// "$declaration" > /dev/null
+              grep -qxF "  programs.omarchy.apps.$app.enable = true;" "$declaration"
+
+              echo "and it still parses with that app switched back off"
+              omarchy-apps-toggle "$app" > /dev/null
+              nix-instantiate --parse --store dummy:// "$declaration" > /dev/null
+              if grep -qxF "  programs.omarchy.apps.$app.enable = true;" "$declaration"; then
+                echo "  the second toggle left it on"
+                exit 1
+              fi
+
+              # apps.local.nix is untracked until omarchy-apps-apply adds it, so
+              # the flake only sees it once that command has run.
+              repository=${if builtins.pathExists ./nixos/desktop/omarchy/apps.local.nix
+                           then "${./nixos/desktop/omarchy/apps.local.nix}"
+                           else ""}
+              if [ -n "$repository" ]; then
+                echo "the declaration this checkout carries parses"
+                nix-instantiate --parse --store dummy:// "$repository" > /dev/null
+              else
+                echo "no apps.local.nix in this checkout; nothing to import yet"
+              fi
+
+              touch $out
+            ''
+          else null;
         }
       );
 
