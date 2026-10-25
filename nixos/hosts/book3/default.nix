@@ -35,7 +35,7 @@
     ../../desktop/waydroid.nix
   ];
 
-  # The Omarchy desktop, running on niri instead of Hyprland. Set this to
+  # The Omarchy desktop, running on Hyprland's scrolling layout. Set this to
   # false to go back to Plasma; nixos/desktop/kde.nix follows the same switch.
   programs.omarchy.enable = true;
 
@@ -50,9 +50,10 @@
     users.mutableUsers = false;
     users.users.rodrigo.hashedPassword = "$6$2401spiphaYxh0Ah$JquQmmlbhz7xUJyWX4o1xYhm3NBsFV6DyAD197kzqy/r6lv1G9zYMBmldMB8IvqfHBHrp29Ytri8Gprj34Bem/";
 
-    # 3D acceleration for the VM. The default QEMU VGA has no GPU, and niri
-    # needs GL to start its renderer. virtio-gpu through virgl gives it one.
-    # Host-only: the guest already has Mesa and hardware.graphics enabled.
+    # 3D acceleration for the VM. The default QEMU VGA has no GPU, and
+    # Hyprland needs GL to start its renderer. virtio-gpu through virgl gives
+    # it one. Host-only: the guest already has Mesa and hardware.graphics
+    # enabled.
     virtualisation.qemu.options = [
       "-device virtio-vga-gl"
       "-display gtk,gl=on"

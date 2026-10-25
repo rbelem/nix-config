@@ -2,7 +2,7 @@
 #
 # Omarchy ships one colors.toml per theme and lets each application read it.
 # This renders the palette into the format the terminal expects, so the same
-# theme drives niri and the terminal.
+# theme drives the compositor and the terminal.
 #
 # Each terminal needs two files: the colours, and a main configuration that
 # loads them. A terminal with no main configuration of its own never shows

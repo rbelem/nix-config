@@ -1,17 +1,15 @@
-# The Omarchy desktop, running on niri.
+# The Omarchy desktop, running on Hyprland's scrolling layout.
 #
 # Omarchy (https://omarchy.org) is an opinionated Arch-based desktop built
 # around Hyprland. This module brings Omarchy's *configuration* to NixOS:
-# its keybindings, its themes, its app catalogue and its menu, while niri
-# replaces Hyprland as the compositor.
+# its keybindings, its themes, its app catalogue and its menu. The compositor
+# is nixpkgs' Hyprland with general:layout = scrolling, the niri-style tape of
+# columns that niri itself is known for.
 #
 # What this module does not bring is Omarchy's QuickShell bar and menu. That
-# shell binds to Hyprland's Lua API and to Hyprland's IPC socket, and there is
-# no niri equivalent of Quickshell.Hyprland, so the menu becomes a fuzzel
-# launcher (launcher.nix) and the bar becomes niri's own workspace overview.
-#
-# The niri used here is the fork in pkgs/niri-global-shortcuts, which adds the
-# GlobalShortcuts portal that upstream niri does not implement.
+# shell is its own AUR tree on top of Hyprland's Lua API and IPC socket, so
+# here the menu becomes a fuzzel launcher (launcher.nix) and the bar is
+# Hyprland's scrolling layout plus its own workspace switching.
 { config, lib, pkgs, ... }:
 
 let
@@ -94,12 +92,12 @@ let
         { label = "System"; command = "omarchy-launch system"; }
         { label = "Keybindings"; command = "omarchy-launch keybindings"; }
         { label = "Omarchy manual"; command = "xdg-open https://omarchy.org/manual/"; }
-        { label = "Niri wiki"; command = "xdg-open https://github.com/YaLTeR/niri/wiki"; }
+        { label = "Hyprland wiki"; command = "xdg-open https://wiki.hypr.land"; }
       ];
       systemEntries = [
         { label = "Lock"; command = "${cfg.swaylock}/bin/swaylock"; }
         { label = "Suspend"; command = "systemctl suspend"; }
-        { label = "Log out"; command = "niri msg action quit"; }
+        { label = "Log out"; command = "hyprctl dispatch exit"; }
         { label = "Reboot"; command = "systemctl reboot"; }
         { label = "Shutdown"; command = "systemctl poweroff"; }
       ];
@@ -139,23 +137,23 @@ let
     hyprpicker = "${cfg.hyprpicker}/bin/hyprpicker";
   };
 
-  niriConfig = pkgs.writeText "niri.kdl" (import ./niri-config.nix {
+  hyprlandConfig = pkgs.writeText "hyprland.conf" (import ./hyprland-config.nix {
     inherit lib bindings theme;
   });
 
-  # The greeter entry. It is a separate package so the session can point niri
-  # at the generated configuration instead of the user's own
-  # ~/.config/niri/config.kdl.
+  # The greeter entry. It is a separate package from Hyprland's own session
+  # because it passes the generated configuration with --config instead of
+  # letting Hyprland find ~/.config/hypr/hyprland.conf.
   sessionPackage = pkgs.symlinkJoin {
     name = "omarchy-session";
     paths = [
       (pkgs.writeTextDir "share/wayland-sessions/omarchy.desktop" ''
         [Desktop Entry]
         Name=Omarchy
-        Comment=Omarchy desktop on niri
-        Exec=env NIRI_CONFIG=/etc/omarchy/niri.kdl ${cfg.package}/bin/niri-session
+        Comment=Omarchy desktop on Hyprland
+        Exec=${cfg.package}/bin/start-hyprland -- --config /etc/omarchy/hyprland.conf
         Type=Application
-        DesktopNames=niri
+        DesktopNames=Hyprland
       '')
     ];
     # services.displayManager.sessionPackages only accepts packages that say
@@ -165,16 +163,17 @@ let
 in
 {
   options.programs.omarchy = {
-    enable = mkEnableOption "the Omarchy desktop, running on niri";
+    enable = mkEnableOption "the Omarchy desktop, running on Hyprland's scrolling layout";
 
     package = mkOption {
       type = types.package;
-      default = pkgs.niri-global-shortcuts;
-      defaultText = literalExpression "pkgs.niri-global-shortcuts";
+      default = pkgs.hyprland;
+      defaultText = literalExpression "pkgs.hyprland";
       description = ''
-        The niri build to use. Defaults to the fork in
-        pkgs/niri-global-shortcuts, which implements the GlobalShortcuts
-        portal. Override to use upstream niri and lose the portal.
+        The Hyprland build to use. The scrolling layout comes from this module's
+        generated configuration; the GlobalShortcuts portal backend comes from
+        the xdg-desktop-portal-hyprland package programs.hyprland installs
+        beside it.
       '';
     };
 
@@ -264,7 +263,7 @@ in
     })
 
     {
-      programs.niri = {
+      programs.hyprland = {
         enable = true;
         package = cfg.package;
       };
@@ -284,16 +283,19 @@ in
         defaultSession = "omarchy";
       };
 
-      # The GlobalShortcuts portal backend lives in the niri fork. Naming it
-      # here is what makes xdg-desktop-portal route
-      # org.freedesktop.impl.portal.GlobalShortcuts to niri instead of the
-      # GNOME backend.
-      xdg.portal.config.niri = {
-        default = [ "gnome" "gtk" ];
+      # programs.hyprland routes every interface to the Hyprland portal by
+      # default through the package's own portals file; naming the routing
+      # here pins GlobalShortcuts to it and puts the rest where Omarchy had
+      # them. The Secret interface is gnome-keyring's, which needs the daemon
+      # behind it.
+      services.gnome.gnome-keyring.enable = true;
+
+      xdg.portal.config.hyprland = {
+        default = [ "hyprland" "gtk" ];
         "org.freedesktop.impl.portal.Access" = "gtk";
         "org.freedesktop.impl.portal.Notification" = "gtk";
         "org.freedesktop.impl.portal.Secret" = "gnome-keyring";
-        "org.freedesktop.impl.portal.GlobalShortcuts" = "niri";
+        "org.freedesktop.impl.portal.GlobalShortcuts" = "hyprland";
       };
 
       # The theme is a set of per-application colour files. They are copied into
@@ -320,7 +322,7 @@ in
 
       environment.etc =
         {
-          "omarchy/niri.kdl".source = niriConfig;
+          "omarchy/hyprland.conf".source = hyprlandConfig;
           "omarchy/theme/colors.toml".text = toToml theme;
         }
         // lib.listToAttrs (map

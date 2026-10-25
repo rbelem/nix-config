@@ -1,8 +1,8 @@
-# The session daemons niri does not start.
+# The session daemons Hyprland does not start.
 #
 # Omarchy's Hyprland stack gets these from its own session: an agent to answer
 # polkit prompts, a daemon to draw notifications, and an idle timer that locks
-# the screen. niri starts the compositor and nothing else, so the session
+# the screen. Hyprland starts the compositor and nothing else, so the session
 # starts them.
 #
 # This returns a configuration fragment rather than a module, for the reason
@@ -44,14 +44,15 @@
     description = "Idle lock and screen blank";
     wantedBy = [ "graphical-session.target" ];
     partOf = [ "graphical-session.target" ];
-    # The timers call `niri`, which is on the PATH the session imported into
-    # the user manager and not on the minimal one a user unit gets by default.
+    # The timers call `hyprctl`, which is on the PATH the session imported
+    # into the user manager and not on the minimal one a user unit gets by
+    # default.
     enableDefaultPath = false;
     serviceConfig = {
       ExecStart = ''
         ${pkgs.swayidle}/bin/swayidle \
           timeout 300 '${swaylock} -f' \
-          timeout 600 'niri msg action power-off-monitors' resume 'niri msg action power-on-monitors' \
+          timeout 600 'hyprctl dispatch dpms off' resume 'hyprctl dispatch dpms on' \
           before-sleep '${swaylock} -f'
       '';
       Restart = "on-failure";

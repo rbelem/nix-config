@@ -1,9 +1,8 @@
 # The Omarchy menu, as a fuzzel launcher.
 #
-# Omarchy renders its menu in a QuickShell application. That shell binds to
-# Hyprland's IPC, so it cannot run under niri. This launcher keeps a subset
-# of the menu's entries and replaces its presentation: one fuzzel list per
-# menu, with the same actions.
+# Omarchy renders its menu in a QuickShell application, which this repository
+# does not package. This launcher keeps a subset of the menu's entries and
+# replaces its presentation: one fuzzel list per menu, with the same actions.
 { lib, menuEntries, systemEntries, appEntries, keybindingEntries }:
 
 let
