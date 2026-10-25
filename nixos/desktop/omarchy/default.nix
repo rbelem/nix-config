@@ -122,6 +122,15 @@ let
   };
 in
 {
+  imports = [
+    ./install-menu.nix
+    ./plugins.nix
+    ./theme.nix
+    ./appconfigs.nix
+    ./update.nix
+    ./shims.nix
+  ];
+
   options.programs.omarchy = {
     enable = mkEnableOption "the Omarchy desktop, running on Hyprland's scrolling layout";
 
@@ -225,6 +234,10 @@ in
     # The QuickShell shell: OMARCHY_PATH, its bin/ on PATH, and what it
     # spawns by bare name.
     (import ./shell.nix { inherit lib pkgs; })
+
+    # The boot splash. The greeter is not here: SDDM reads the vendored theme
+    # in sddm-theme/omarchy, selected below.
+    (import ./login.nix { inherit pkgs; })
 
     {
       programs.hyprland = {
