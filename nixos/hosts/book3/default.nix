@@ -66,6 +66,7 @@ in
     ../../desktop/fonts.nix
     ../../desktop/kde.nix
     ../../desktop/monitor-brightness.nix
+    ../../desktop/touch-scroll.nix
     #../../desktop/openlogi.nix
     ../../desktop/virtual-webcam.nix
     ../../desktop/waydroid.nix
@@ -165,7 +166,10 @@ in
           scrolling = {
             column_width = 0.5,
             direction = "right",
-            follow_focus = true,
+            -- 0: the tape stays where it is on focus changes. With the
+            -- touchscreen drag panning it, 1 snapped back to the focused column
+            -- at every touch-down and threw the pan away.
+            follow_focus = 0,
           },
         })
       '';
@@ -182,8 +186,30 @@ in
             repeat_rate = 40,
             repeat_delay = 250,
             numlock_by_default = true,
+            -- Two monitors: without this the touchscreen is mapped to whichever
+            -- output Hyprland guesses.
+            touchdevice = {
+              output = "eDP-1",
+            },
+            -- 0: hovering must not move focus. A focus change runs the scrolling
+            -- layout's recalculate, which fits the focused column into view
+            -- without consulting follow_focus — that slid the tape whenever the
+            -- pointer crossed a window.
+            follow_mouse = 0,
+          },
+          -- Hyprland 0.56 has no touchscreen -> tape scroll. Touch.cpp only
+          -- focuses a window and, with this, starts a workspace swipe from the
+          -- screen edge — that edge swipe is the only scroll a finger can drive.
+          gestures = {
+            workspace_swipe_touch = true,
           },
         })
+
+        -- Mouse column scrolling. A mouse button cannot modify a bind
+        -- ("External events cannot be combined with other keys"), so the thumb
+        -- buttons are direct steps rather than hold-and-roll.
+        hl.bind("mouse:275", hl.dsp.layout("move +col")) -- back: previous column
+        hl.bind("mouse:276", hl.dsp.layout("move -col")) -- forward: next column
       '';
     in
     [
