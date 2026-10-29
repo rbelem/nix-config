@@ -168,8 +168,9 @@ in
             -- click, and 8:13 is the golden ratio's Fibonacci pair. 0.5 leaves none.
             column_width = 0.4981,
             direction = "right",
-            -- 1: clicking a column fits it into view. Only safe beside
-            -- follow_mouse = 0, which is what stopped hover moving the tape.
+            -- 1: clicking a column fits it into view. Safe beside
+            -- input.follow_mouse = 2, whose keyboard focus stays put on hover —
+            -- a keyboard focus change is what fit the tape uninvited.
             follow_focus = 1,
           },
         })
@@ -192,11 +193,11 @@ in
             touchdevice = {
               output = "eDP-1",
             },
-            -- 0: hovering must not move focus. A focus change runs the scrolling
-            -- layout's recalculate, which fits the focused column into view
-            -- without consulting follow_focus — that slid the tape whenever the
-            -- pointer crossed a window.
-            follow_mouse = 0,
+            -- 2: the pointer surface follows the cursor, so the wheel reaches an
+            -- unfocused window, while keyboard focus only moves when crossing
+            -- monitors. A keyboard focus change is what runs the scrolling
+            -- layout's recalculate fit, which slid the tape on hover at 1.
+            follow_mouse = 2,
           },
           -- Hyprland 0.56 has no touchscreen -> tape scroll. Touch.cpp only
           -- focuses a window and, with this, starts a workspace swipe from the
