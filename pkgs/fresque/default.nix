@@ -36,14 +36,14 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "fresque";
-  version = "2.5.0";
+  version = "2.6.0";
 
   src = fetchgit {
     url = "https://github.com/rbelem/fresque.git";
     # Bump together with the fork's main. rev and version move together:
     # the manifest on that rev carries the version above.
-    rev = "eebbfafc0df7a0781e52bb904ac97cecb7686126";
-    hash = "sha256-jpxwD4vJLcxpqOtvYHciR7FuSmWogHF0tH6fpo4DmnQ=";
+    rev = "842a85b96f0454eb57440f229c53e0716540e41e";
+    hash = "sha256-Ro0IMF+7YWaA4E3r3cRrqt9Pr7J25BY5BuUpQhOREG8=";
   };
 
   nativeBuildInputs = [ makeWrapper ];
