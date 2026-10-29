@@ -1,124 +1,172 @@
 # Custom packages, that can be defined similarly to ones from nixpkgs
 # You can build them using 'nix build .#example' or (legacy) 'nix-build -A example'
 
-{ pkgs ? (import ../nixpkgs.nix) { }, inputs ? { } } @ args:
+{
+  pkgs ? (import ../nixpkgs.nix) { },
+  inputs ? { },
+}@args:
 
 let
   lib = pkgs.lib;
 
   # ASUS GPL source (newer than Merlin — RT-AX88U 3.0.0.4.388_24209)
   # Passed via flake input asus-gpl-rtax88u (path:/home/rodrigo/Workspace/rbelem/RT-AX88U/asuswrt)
-  asus-src = args.asus-src or inputs.asus-gpl-rtax88u or
-    (builtins.throw "ASUS GPL source not available. Run: nix flake lock --update-input asus-gpl-rtax88u");
+  asus-src =
+    args.asus-src or inputs.asus-gpl-rtax88u
+      or (builtins.throw "ASUS GPL source not available. Run: nix flake lock --update-input asus-gpl-rtax88u");
 
   # Merlin source (kept for nvram library which Broadcom doesn't distribute in ASUS GPL)
-  merlin-src = args.merlin-src or (pkgs.fetchFromGitHub {
-    owner = "RMerl";
-    repo = "asuswrt-merlin.ng";
-    rev = "68d0ffc5fe96b7173952af80cc60e48065685873";
-    sha256 = "17ac05gqkl7pmv9bm950nnwrm3gc45485n4al5klxbrsdwrmai2r";
-  });
+  merlin-src =
+    args.merlin-src or (pkgs.fetchFromGitHub {
+      owner = "RMerl";
+      repo = "asuswrt-merlin.ng";
+      rev = "68d0ffc5fe96b7173952af80cc60e48065685873";
+      sha256 = "17ac05gqkl7pmv9bm950nnwrm3gc45485n4al5klxbrsdwrmai2r";
+    });
 
   # target pkgs for aarch64: cross-compile from x86_64, native on aarch64
-  crossPkgs = if pkgs.stdenv.isAarch64 then
-    pkgs  # native aarch64
-  else if pkgs ? pkgsCross.aarch64-multiplatform then
-    pkgs.pkgsCross.aarch64-multiplatform  # cross-compile from x86_64
-  else null;
+  crossPkgs =
+    if pkgs.stdenv.isAarch64 then
+      pkgs # native aarch64
+    else if pkgs ? pkgsCross.aarch64-multiplatform then
+      pkgs.pkgsCross.aarch64-multiplatform # cross-compile from x86_64
+    else
+      null;
 
-in rec {
+in
+rec {
   libfprint-canvasbio-cb2000 = pkgs.callPackage ./libfprint-canvasbio-cb2000 { };
+
+  # Omarchy wallpaper rotation plugin (rbelem/fresque fork, wrapped for NixOS)
+  fresque = pkgs.callPackage ./fresque { };
 
   # === RT-AX88U packages ===
 
   # BSP kernel — cross-compiled with Broadcom blobs
-  rt-ax88u-bsp-kernel = if crossPkgs != null then
-    crossPkgs.callPackage ./rt-ax88u-bsp-kernel { asus-src = asus-src; }
-  else
-    builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
+  rt-ax88u-bsp-kernel =
+    if crossPkgs != null then
+      crossPkgs.callPackage ./rt-ax88u-bsp-kernel { asus-src = asus-src; }
+    else
+      builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
 
   # Minimal initramfs for NixOS boot (busybox + mount + switch_root)
   # Embedded in the kernel via CONFIG_INITRAMFS_SOURCE
-  rt-ax88u-initramfs = if crossPkgs != null then
-    crossPkgs.callPackage ./rt-ax88u-initramfs { }
-  else null;
+  rt-ax88u-initramfs =
+    if crossPkgs != null then crossPkgs.callPackage ./rt-ax88u-initramfs { } else null;
 
   # BSP kernel with initramfs embedded — for firmware image generation
   # Used by rt-ax88u-firmware-ubi to produce bootable UBI images
-  rt-ax88u-bsp-kernel-with-initramfs = if crossPkgs != null && rt-ax88u-initramfs != null then
-    crossPkgs.callPackage ./rt-ax88u-bsp-kernel {
-      asus-src = asus-src;
-      initramfs = rt-ax88u-initramfs;
-    }
-  else
-    rt-ax88u-bsp-kernel;
+  rt-ax88u-bsp-kernel-with-initramfs =
+    if crossPkgs != null && rt-ax88u-initramfs != null then
+      crossPkgs.callPackage ./rt-ax88u-bsp-kernel {
+        asus-src = asus-src;
+        initramfs = rt-ax88u-initramfs;
+      }
+    else
+      rt-ax88u-bsp-kernel;
 
   # Merlin web UI — piecemeal source build from ASUS GPL source tree
   # Each component is cross-compiled for aarch64
   # Individual web UI packages (accessed via .merlin-web-ui.<name>)
-  merlin-web-ui = if crossPkgs != null then let
-    www = crossPkgs.callPackage ./merlin-web-ui/www { asus-src = asus-src; };
-    libshared = crossPkgs.callPackage ./merlin-web-ui/libshared { asus-src = asus-src; };
-    libnvram = crossPkgs.callPackage ./merlin-web-ui/libnvram {
-      # nvram source only in Merlin GPL, not in ASUS GPL
-      inherit merlin-src libshared;
-    };
-    libpasswd = crossPkgs.callPackage ./merlin-web-ui/libpasswd {
-      asus-src = asus-src;
-      libxcrypt = crossPkgs.libxcrypt;
-    };
-    mssl = crossPkgs.callPackage ./merlin-web-ui/mssl {
-      asus-src = asus-src;
-      openssl = crossPkgs.openssl;
-    };
-    libwebapi = crossPkgs.callPackage ./merlin-web-ui/libwebapi {
-      asus-src = asus-src;
-      jsonc = crossPkgs.json_c;
-    };
-    httpd = crossPkgs.callPackage ./merlin-web-ui/httpd {
-      asus-src = asus-src;
-      inherit libshared libnvram libpasswd mssl libwebapi;
-      openssl = crossPkgs.openssl;
-      jsonc = crossPkgs.json_c;
-      libxcrypt = crossPkgs.libxcrypt;
-      geoip = crossPkgs.geoip;
-    };
-  in crossPkgs.symlinkJoin {
-    name = "merlin-web-ui";
-    paths = [ www libshared libnvram libpasswd mssl libwebapi httpd ];
-    meta.description = "All Merlin web UI components";
-  } // { inherit www libshared libnvram libpasswd mssl libwebapi httpd; }
-  else
-    builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
+  merlin-web-ui =
+    if crossPkgs != null then
+      let
+        www = crossPkgs.callPackage ./merlin-web-ui/www { asus-src = asus-src; };
+        libshared = crossPkgs.callPackage ./merlin-web-ui/libshared { asus-src = asus-src; };
+        libnvram = crossPkgs.callPackage ./merlin-web-ui/libnvram {
+          # nvram source only in Merlin GPL, not in ASUS GPL
+          inherit merlin-src libshared;
+        };
+        libpasswd = crossPkgs.callPackage ./merlin-web-ui/libpasswd {
+          asus-src = asus-src;
+          libxcrypt = crossPkgs.libxcrypt;
+        };
+        mssl = crossPkgs.callPackage ./merlin-web-ui/mssl {
+          asus-src = asus-src;
+          openssl = crossPkgs.openssl;
+        };
+        libwebapi = crossPkgs.callPackage ./merlin-web-ui/libwebapi {
+          asus-src = asus-src;
+          jsonc = crossPkgs.json_c;
+        };
+        httpd = crossPkgs.callPackage ./merlin-web-ui/httpd {
+          asus-src = asus-src;
+          inherit
+            libshared
+            libnvram
+            libpasswd
+            mssl
+            libwebapi
+            ;
+          openssl = crossPkgs.openssl;
+          jsonc = crossPkgs.json_c;
+          libxcrypt = crossPkgs.libxcrypt;
+          geoip = crossPkgs.geoip;
+        };
+      in
+      crossPkgs.symlinkJoin {
+        name = "merlin-web-ui";
+        paths = [
+          www
+          libshared
+          libnvram
+          libpasswd
+          mssl
+          libwebapi
+          httpd
+        ];
+        meta.description = "All Merlin web UI components";
+      }
+      // {
+        inherit
+          www
+          libshared
+          libnvram
+          libpasswd
+          mssl
+          libwebapi
+          httpd
+          ;
+      }
+    else
+      builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
 
   # Validation checks for all RT-AX88U packages
-  rt-ax88u-validation = if crossPkgs != null then
-    crossPkgs.callPackage ./rt-ax88u-validation {
-      inherit rt-ax88u-bsp-kernel merlin-web-ui rt-ax88u-firmware-ubi rt-ax88u-initramfs;
-    }
-  else
-    builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
+  rt-ax88u-validation =
+    if crossPkgs != null then
+      crossPkgs.callPackage ./rt-ax88u-validation {
+        inherit
+          rt-ax88u-bsp-kernel
+          merlin-web-ui
+          rt-ax88u-firmware-ubi
+          rt-ax88u-initramfs
+          ;
+      }
+    else
+      builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
 
   # 🟡 TRX firmware image — DEPRECATED (wrong format for CFE)
   # CFE expects UBI .w format, not TRX. Kept for reference.
-  rt-ax88u-firmware = if crossPkgs != null then
-    pkgs.callPackage ./rt-ax88u-firmware {
-      inherit rt-ax88u-bsp-kernel bcm4908lzma addtrx;
-    }
-  else
-    builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
+  rt-ax88u-firmware =
+    if crossPkgs != null then
+      pkgs.callPackage ./rt-ax88u-firmware {
+        inherit rt-ax88u-bsp-kernel bcm4908lzma addtrx;
+      }
+    else
+      builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
 
   # UBI firmware image for RT-AX88U — replaces TRX pipeline
   # Builds UBI .w format with BcmFs-ubifs volume containing vmlinux.lz
   # Uses kernel-with-initramfs so the kernel has embedded initramfs.
   # CFE expects this format. Stock firmware uses identical layout.
-  rt-ax88u-firmware-ubi = if crossPkgs != null then
-    pkgs.callPackage ./rt-ax88u-firmware-ubi {
-      rt-ax88u-bsp-kernel = rt-ax88u-bsp-kernel-with-initramfs;
-      inherit bcm4908lzma;
-    }
-  else
-    builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
+  rt-ax88u-firmware-ubi =
+    if crossPkgs != null then
+      pkgs.callPackage ./rt-ax88u-firmware-ubi {
+        rt-ax88u-bsp-kernel = rt-ax88u-bsp-kernel-with-initramfs;
+        inherit bcm4908lzma;
+      }
+    else
+      builtins.throw "aarch64 cross-compilation not available in this nixpkgs version";
 
   # === Host tools (architecture-independent) ===
 

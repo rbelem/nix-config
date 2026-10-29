@@ -53,6 +53,7 @@ in
     ./keyboard.nix
     ./networking.nix
     ./nvme.nix
+    ./plugins.nix
     ./sensors.nix
     ./shuttle-pod-tools.nix
     ./sound.nix
