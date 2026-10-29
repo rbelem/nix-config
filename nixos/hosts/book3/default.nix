@@ -278,7 +278,25 @@ in
     adw-gtk3
     yaru-theme
     libsecret
+    tdf # terminal PDF viewer; draws via the kitty graphics protocol (ghostty)
+    # tdf ships no .desktop file, so the default-PDF association below has
+    # nothing to point at without this. Ghostty is invoked explicitly because
+    # Terminal=true depends on a default terminal being configured in gio.
+    (makeDesktopItem {
+      name = "tdf";
+      desktopName = "tdf";
+      comment = "Terminal PDF viewer";
+      exec = "ghostty -e tdf %f";
+      mimeTypes = [ "application/pdf" ];
+      categories = [
+        "Office"
+        "Viewer"
+      ];
+    })
   ];
+
+  # PDFs open in tdf from anything that honours xdg-mime (file manager, xdg-open).
+  xdg.mime.defaultApplications."application/pdf" = "tdf.desktop";
 
   system.stateVersion = "23.11"; # Did you read the comment?
 }
