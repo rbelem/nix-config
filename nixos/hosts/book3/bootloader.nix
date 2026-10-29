@@ -51,15 +51,14 @@
 
     consoleLogLevel = 0;
     plymouth.enable = true;
-    # Omarchy's splash, packaged in nixos/desktop/omarchy/login.nix. Revert to
-    # the NixOS default with `plymouth.theme = "bgrt"`: the initrd copies only
-    # the named theme, so the packaged one then costs no boot time.
+    # The splash theme nixarchy ships (theme directory still called
+    # "omarchy"; its module default-deferres theme and themePackages onto its
+    # own package). Revert to the NixOS default with
+    # `plymouth.theme = "bgrt"`: the initrd copies only the named theme, so
+    # the packaged one then costs no boot time.
     plymouth.theme = "omarchy";
-    initrd = {
-      verbose = false;
-      # Show the plymouth login screen to unlock luks
-      systemd.enable = true;
-    };
+    # Scripted initrd no longer exists; systemd initrd (and its plymouth
+    # unlock screen) is now the only mode in NixOS 26.11
   };
 
   #zramSwap.enable = true;
