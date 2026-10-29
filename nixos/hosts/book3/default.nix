@@ -164,12 +164,13 @@ in
             layout = "scrolling",
           },
           scrolling = {
-            column_width = 0.5,
+            -- 0.4981 leaves a 13px strip of the neighbouring column: enough to
+            -- click, and 8:13 is the golden ratio's Fibonacci pair. 0.5 leaves none.
+            column_width = 0.4981,
             direction = "right",
-            -- 0: the tape stays where it is on focus changes. With the
-            -- touchscreen drag panning it, 1 snapped back to the focused column
-            -- at every touch-down and threw the pan away.
-            follow_focus = 0,
+            -- 1: clicking a column fits it into view. Only safe beside
+            -- follow_mouse = 0, which is what stopped hover moving the tape.
+            follow_focus = 1,
           },
         })
       '';
