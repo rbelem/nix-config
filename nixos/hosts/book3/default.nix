@@ -81,6 +81,10 @@ in
   # brings Plasma back; nixos/desktop/kde.nix follows the same switch.
   programs.nixarchy.enable = true;
   programs.nixarchy.user = "rodrigo";
+  # `nixarchy-apply` copies ~/.config/nixarchy/apps.nix into this flake before
+  # rebuilding. The default is /etc/nixos, which here holds only the stock
+  # installer files — not this configuration.
+  programs.nixarchy.flake = "/home/rodrigo/Workspace/github.com/rbelem/nix-config";
 
   # Greeter must select the Nixarchy session (omarchy.desktop): Hyprland's
   # stock uwsm session starts with the user's ~/.config/hypr/hyprland.lua and

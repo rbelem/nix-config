@@ -105,6 +105,8 @@
           };
           modules = [
             ./nixos/hosts/book3
+            # nixarchy-apply writes the app selection here, at the flake root
+            ./nixarchy-apps.nix
             inputs.nixarchy.nixosModules.nixarchy
             inputs.nixarchy.inputs.home-manager.nixosModules.home-manager
             inputs.nixarchy.inputs.disko.nixosModules.disko
