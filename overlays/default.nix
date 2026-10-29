@@ -25,10 +25,10 @@ in {
   modifications = final: prev: rec {
     # Ghostty from git main — overrides nixpkgs release with latest upstream
     # See pkgs/ghostty/default.nix for update instructions
-    ghostty = final.callPackage ../pkgs/ghostty {
-      # Pass pre-override ghostty as base to avoid infinite recursion
-      ghostty = prev.ghostty;
-    };
+    #ghostty = final.callPackage ../pkgs/ghostty {
+    #  # Pass pre-override ghostty as base to avoid infinite recursion
+    #  ghostty = prev.ghostty;
+    #};
   };
 
   # Override systemd to v258 from pinned nixpkgs-old (nixos-25.11).
