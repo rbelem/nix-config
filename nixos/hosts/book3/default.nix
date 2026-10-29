@@ -270,10 +270,14 @@ in
   # omarchy-restart-opencode; adw-gtk3 + yaru-theme provide the GTK3 theme
   # and Yaru-blue icon theme the sync-gtk-theme / sync-qt-kde-theme hooks
   # expect (otherwise the theme retint fails and GTK 3 apps stay Adwaita).
+  # libsecret carries secret-tool, which the devbox init-hook and bitw use to
+  # read the keyring; without it on the system PATH those lookups only work in
+  # a shell that already has the devbox profile.
   environment.systemPackages = with pkgs; [
     psmisc
     adw-gtk3
     yaru-theme
+    libsecret
   ];
 
   system.stateVersion = "23.11"; # Did you read the comment?
