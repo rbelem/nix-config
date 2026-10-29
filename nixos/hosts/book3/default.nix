@@ -138,6 +138,13 @@ in
     users.rodrigo = {
       programs.nixarchy.enable = true;
       home.stateVersion = "26.11";
+
+      # nixarchy only ever references mcp-nixarchy through the versioned store
+      # path in the MCP entries it writes; it never installs it. Landing it here
+      # puts the command on PATH so it can be run and debugged by hand.
+      home.packages = [
+        inputs.mcp-nixarchy.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixarchy
+      ];
     };
   };
 
