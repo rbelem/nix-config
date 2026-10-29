@@ -12,6 +12,10 @@
     # rebuild, fix it there (or via System Settings > Keyboard > Layouts):
     #   kwriteconfig6 --file kxkbrc --group Layout --key VariantList abnt2
     #   qdbus org.kde.KWin /KWin reconfigure
+    #
+    # The Omarchy/Hyprland session also ignores this module on its own:
+    # ~/.config/hypr/input.lua is generated from this block in this host's
+    # default.nix, so the layout keeps a single source of truth there too.
     variant = "abnt2";
     options = "ctrl:nocaps,lv3:ralt_switch_multikey";
   };

@@ -1,10 +1,10 @@
 { config, lib, pkgs, ... }:
 
-# Plasma and the Omarchy desktop are two desktop managers on the same machine.
-# The Omarchy desktop is the one enabled on the laptop; flipping
-# programs.omarchy.enable back to false restores Plasma.
+# Plasma and the nixarchy desktop are two desktop managers on the same
+# machine. The nixarchy desktop is the one enabled on the laptop; flipping
+# programs.nixarchy.enable back to false restores Plasma.
 {
-  config = lib.mkIf (!(config.programs.omarchy.enable or false)) {
+  config = lib.mkIf (!(config.programs.nixarchy.enable or false)) {
 
     services = {
       displayManager = {
