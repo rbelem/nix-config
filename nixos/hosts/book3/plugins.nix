@@ -15,5 +15,7 @@
 # `fresque config set <key> <value>`.
 { pkgs, ... }:
 {
-  programs.nixarchy.plugins.fresque.src = pkgs.fresque;
+  # The plugins option is home-manager's (nixarchy's home layer), so it is set
+  # through the user rather than at the system level, unlike programs.nixarchy.apps.
+  home-manager.users.rodrigo.programs.nixarchy.plugins.fresque.src = pkgs.fresque;
 }
