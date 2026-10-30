@@ -858,11 +858,11 @@
         "zen-browser": "zen-browser"
       },
       "locked": {
-        "lastModified": 1793222304,
-        "narHash": "sha256-rm6YoaaA+t3JJo4RC1GcdEeNJzvQPC1s8CvSrpfDjcI=",
+        "lastModified": 1793266312,
+        "narHash": "sha256-dZpfRcTfdGyHWS+q31bH5NhOoSlbqOornNogVKnuDrY=",
         "owner": "olafkfreund",
         "repo": "nixarchy",
-        "rev": "698dd9225af21d2e641b901da67d48c19d11403e",
+        "rev": "cab7d276c3bbe5728a5ec542d32c30e0eaac8b31",
         "type": "github"
       },
       "original": {
