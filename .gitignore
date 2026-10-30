@@ -6,6 +6,7 @@ result-*
 *~
 # Dev tooling artifacts (not for VCS)
 .codegraph/
+.dcg/
 .opencode/
 .venv/
 graphify-out/
