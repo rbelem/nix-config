@@ -35,14 +35,10 @@ in
   # This one contains whatever you want to overlay
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
-  modifications = final: prev: rec {
-    # Ghostty 1.4.0 from the upstream release tag — overrides nixpkgs' 1.3.1
-    # See pkgs/ghostty/default.nix for update instructions
-    ghostty = final.callPackage ../pkgs/ghostty {
-      # Pass pre-override ghostty as base to avoid infinite recursion
-      ghostty = prev.ghostty;
-    };
-  };
+  # Empty: nixpkgs unstable's ghostty is now the same 1.4.0 tag this repo
+  # pinned (identical source hash), so the override only tracked nixpkgs'
+  # build-arg renames. Add a package here if one needs overriding again.
+  modifications = _final: _prev: { };
 
   # Override systemd to v258 from pinned nixpkgs-old (nixos-25.11).
   # Required because systemd v260+ (#501049) requires kernel >= 5.10,
