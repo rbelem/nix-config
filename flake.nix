@@ -37,8 +37,15 @@
     # built from this flake's nixpkgs. It fetches the upstream Omarchy tree
     # itself; the direct omarchy input this flake used to carry (for the
     # deleted pkgs/omarchy-shell) is gone with it.
+    #
+    # Edge is nixarchy's tested development branch: it pins Omarchy's
+    # `quattro` branch only after building and booting it on NixOS, so it
+    # lags the raw tip by whatever has not passed. Only book3 imports this
+    # input (rt-ax88u and zet do not), so following edge here moves book3
+    # alone. Back to releases with `.../nixarchy/release`, or to main with a
+    # bare url.
     nixarchy = {
-      url = "github:olafkfreund/nixarchy";
+      url = "github:olafkfreund/nixarchy/edge";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
