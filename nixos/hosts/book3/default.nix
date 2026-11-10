@@ -141,6 +141,11 @@ in
       programs.nixarchy.enable = true;
       home.stateVersion = "26.11";
 
+      # nixi pins an ACP adapter per agent, and "codex" pulls in codex-acp and
+      # codex, which this machine doesn't use. mkForce replaces nixarchy's
+      # default agent list instead of concatenating with it.
+      services.nixi.agents = lib.mkForce [ "opencode" ];
+
       # nixarchy only ever references mcp-nixarchy through the versioned store
       # path in the MCP entries it writes; it never installs it. Landing it here
       # puts the command on PATH so it can be run and debugged by hand.
