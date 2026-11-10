@@ -190,11 +190,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1793871777,
-        "narHash": "sha256-DbFyxXHjP4SJDWVVIILkgrUZxj29cDusi8ULXoQGuZ8=",
+        "lastModified": 1794222723,
+        "narHash": "sha256-jehPADpSIsWnyNHw/s44OHF9l6Y75QmW74sqO9cEe0A=",
         "owner": "nixos",
         "repo": "nixos-hardware",
-        "rev": "d645c71a58dbae3eb17ff551a07aea13a541cb1a",
+        "rev": "919c16cf46a7acf9b44b2c2444bc39aa094eaa85",
         "type": "github"
       },
       "original": {
@@ -858,11 +858,11 @@
         "zen-browser": "zen-browser"
       },
       "locked": {
-        "lastModified": 1794032551,
-        "narHash": "sha256-xWszRPnqTymNlkaRDYwnqX9LkrOT7+DUV7gqHqF1FxA=",
+        "lastModified": 1794227938,
+        "narHash": "sha256-vd8PuopS6STGYMIXC3fdy/ObmhzV4TVfufs3i87CIBI=",
         "owner": "olafkfreund",
         "repo": "nixarchy",
-        "rev": "3a94b6443945d31a2b639d9becf0272f784c7d3a",
+        "rev": "856c8112302cb10425e6501df0a8800b16a73472",
         "type": "github"
       },
       "original": {
@@ -1376,11 +1376,11 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1793876309,
-        "narHash": "sha256-Wojg9lIH/hDH91iDVH2/EPw8oDSpxjxhXONbU1yf4Zg=",
+        "lastModified": 1794042290,
+        "narHash": "sha256-ziZn2PvCJE5JEEpqTdxXwJpPB+L3YqoCpTAMCzyaP3U=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "f9a75f41be3a74eab55d3a7679d34ad6cc0da977",
+        "rev": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6",
         "type": "github"
       },
       "original": {
@@ -1409,17 +1409,17 @@
     "omarchy": {
       "flake": false,
       "locked": {
-        "lastModified": 1793854933,
-        "narHash": "sha256-6GIMRXFOa0YAyZRO71oOtTY4mRWAvK/oRBtfM4llfBo=",
+        "lastModified": 1794100817,
+        "narHash": "sha256-B8L5gcbjDkxpHGqAP37y7WM8RemrCjsCPOh1xTOvDIg=",
         "owner": "basecamp",
         "repo": "omarchy",
-        "rev": "6194f4606c585da8b839b87df9120b7d796afedf",
+        "rev": "d9cc361cddf5d75dcb880de3c7fb8b5542ae6e39",
         "type": "github"
       },
       "original": {
         "owner": "basecamp",
         "repo": "omarchy",
-        "rev": "6194f4606c585da8b839b87df9120b7d796afedf",
+        "rev": "d9cc361cddf5d75dcb880de3c7fb8b5542ae6e39",
         "type": "github"
       }
     },
@@ -1431,11 +1431,11 @@
         "openlogi": "openlogi_2"
       },
       "locked": {
-        "lastModified": 1794041135,
-        "narHash": "sha256-CuCxEM1AaAWw9vFXh24urbOBHuZPHSCgAx/WVj9z258=",
+        "lastModified": 1794239258,
+        "narHash": "sha256-narhf48MmFHCvjZo3pNiJ5Zm5NGsxj6tNInkezhL/RI=",
         "owner": "AprilNEA",
         "repo": "OpenLogi",
-        "rev": "cff9a04a9c3c88e2e59ef0e45a2bcf8d2d82db6c",
+        "rev": "16d8cbaffb6368ede4aa7ed45250b98a188f9e34",
         "type": "github"
       },
       "original": {
@@ -1690,7 +1690,7 @@
     "zet-repo": {
       "flake": false,
       "locked": {
-        "lastModified": 1793698675,
+        "lastModified": 1794217030,
         "narHash": "sha256-30A4JlBaYYkgoSMegtP6pm3T0oB3li+kjVCsGp7CXfM=",
         "path": "/home/rodrigo/Workspace/github.com/rbelem/zet",
         "type": "path"
