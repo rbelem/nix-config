@@ -26,7 +26,6 @@
     extraUpFlags = [
       "--advertise-routes=192.168.50.0/24"
       "--accept-dns"
-      "--ssh"                   # Tailscale SSH (auth via tailscale, no password needed)
       "--operator=rodrigo"       # CLI without sudo
     ];
   };
