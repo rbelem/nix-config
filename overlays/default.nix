@@ -35,10 +35,25 @@ in
   # This one contains whatever you want to overlay
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
-  # Empty: nixpkgs unstable's ghostty is now the same 1.4.0 tag this repo
-  # pinned (identical source hash), so the override only tracked nixpkgs'
-  # build-arg renames. Add a package here if one needs overriding again.
-  modifications = _final: _prev: { };
+  modifications = final: prev: {
+    # devbox 0.20.0 (nixpkgs unstable still ships 0.18.4).
+    # Drop this once nixpkgs catches up.
+    devbox = prev.devbox.overrideAttrs (finalAttrs: _old: {
+      version = "0.20.0";
+      src = final.fetchFromGitHub {
+        owner = "jetify-com";
+        repo = "devbox";
+        tag = finalAttrs.version;
+        hash = "sha256-W2PFFNdrbGVIvlRqc5uzNTlg9cgxZGBGCsPtTU3xPGs=";
+      };
+      vendorHash = "sha256-HSWDqEGmqZtkQHw96lYewQFDBWt7zbV3xtFXyf07llM=";
+      ldflags = [
+        "-s"
+        "-w"
+        "-X go.jetify.com/devbox/internal/build.Version=${finalAttrs.version}"
+      ];
+    });
+  };
 
   # Override systemd to v258 from pinned nixpkgs-old (nixos-25.11).
   # Required because systemd v260+ (#501049) requires kernel >= 5.10,
